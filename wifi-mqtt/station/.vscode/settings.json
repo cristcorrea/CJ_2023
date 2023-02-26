@@ -1,0 +1,16 @@
+{
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "files.associations": {
+    "esp_log.h": "c",
+    "event_groups.h": "c",
+    "esp_event.h": "c",
+    "string.h": "c",
+    "esp_wifi.h": "c",
+    "esp_system.h": "c",
+    "esp_http_client.h": "c",
+    "semphr.h": "c"
+  },
+  "idf.adapterTargetName": "esp32",
+  "idf.flashType": "UART",
+  "idf.port": "/dev/ttyUSB0"
+}
