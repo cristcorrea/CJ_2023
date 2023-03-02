@@ -1,8 +1,8 @@
 {
     "project_name":       "bootloader",
     "project_path":       "/home/cris/esp/esp-idf/components/bootloader/subproject",
-    "build_dir":          "/home/cris/Documentos/CJ_ESP32/wifi-mqtt/station/build/bootloader",
-    "config_file":        "/home/cris/Documentos/CJ_ESP32/wifi-mqtt/station/sdkconfig",
+    "build_dir":          "/home/cris/Documentos/CJ_INDOORS/CJ_2023/wifi-mqtt/station/build/bootloader",
+    "config_file":        "/home/cris/Documentos/CJ_INDOORS/CJ_2023/wifi-mqtt/station/sdkconfig",
     "config_defaults":    "",
     "app_elf":            "bootloader.elf",
     "app_bin":            "bootloader.bin",

@@ -36,11 +36,11 @@ void sensores_start(void* params)
     {
       while(true)
       {
-      ESP_LOGI("Main Task", "Inicia medicion de sensores");
+      //ESP_LOGI("Main Task", "Inicia medicion de sensores");
       DHTerrorHandler(readDHT());
       vTaskDelay(pdMS_TO_TICKS(2000));
-      ESP_LOGI(TAG, "Temperature : %f", dht_data.temperature);
-      ESP_LOGI(TAG, "Humidity : %f", dht_data.humidity);
+      ESP_LOGI(TAG, "Temperature : %.1f °C ", dht_data.temperature);
+      ESP_LOGI(TAG, "Humidity : %i %%", dht_data.humidity);
       vTaskDelay(pdMS_TO_TICKS(2000));
       }
     }

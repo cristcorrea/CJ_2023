@@ -1,4 +1,4 @@
-# Install script for directory: /home/cris/Documentos/CJ_ESP32/wifi-mqtt/station/main
+# Install script for directory: /home/cris/Documentos/CJ_INDOORS/CJ_2023/wifi-mqtt/station/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

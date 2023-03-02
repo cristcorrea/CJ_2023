@@ -5,7 +5,7 @@
 typedef struct 
 {
     float temperature;
-    float humidity; 
+    int humidity; 
     
 }dht;
 
