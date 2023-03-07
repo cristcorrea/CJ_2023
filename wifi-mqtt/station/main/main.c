@@ -9,8 +9,10 @@
 #include "wifi.h"
 #include "mqtt.h"
 #include "dht.h"
+#include "mqtt_client.h"
+#include "bh1750.h"
 
-static const char* TAG = "DHT11";
+//static const char* TAG = "DHT11";
 
 
 xSemaphoreHandle conexionWifiSemaforo; // Semaforo para habilitar inicio MQTT
@@ -31,17 +33,17 @@ void conexionMqtt(void* params)
 
 void sensores_start(void* params)
 {
-
+    char mensaje[50];
     if(xSemaphoreTake(conexionMQTTSemaforo, portMAX_DELAY))
     {
       while(true)
       {
-      //ESP_LOGI("Main Task", "Inicia medicion de sensores");
       DHTerrorHandler(readDHT());
-      vTaskDelay(pdMS_TO_TICKS(2000));
-      ESP_LOGI(TAG, "Temperature : %.1f °C ", dht_data.temperature);
-      ESP_LOGI(TAG, "Humidity : %i %%", dht_data.humidity);
-      vTaskDelay(pdMS_TO_TICKS(2000));
+      sprintf(mensaje, "Temp: %.1f °C \n Hum: %i%%", dht_data.temperature, dht_data.humidity);
+      enviar_mensaje_mqtt("sensores/temperatura", mensaje);
+      //ESP_LOGI(TAG, "Temperature : %.1f °C ", dht_data.temperature);
+      //ESP_LOGI(TAG, "Humidity : %i %%", dht_data.humidity);
+      vTaskDelay(pdMS_TO_TICKS(3000));
       }
     }
 }

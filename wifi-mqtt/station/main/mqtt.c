@@ -24,6 +24,8 @@
 
 extern xSemaphoreHandle conexionMQTTSemaforo; 
 
+esp_mqtt_client_handle_t client; 
+
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
@@ -34,7 +36,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         xSemaphoreGive(conexionMQTTSemaforo);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
+        /*msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
         msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
@@ -44,7 +46,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
         msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);*/
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -52,8 +54,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "Where are you from?", 0, 0, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        /*msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "Where are you from?", 0, 0, 0);
+        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);*/
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -92,21 +94,14 @@ void mqtt_start()
         .uri = "mqtt://mqtt.eclipseprojects.io",
 
     };
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config); 
+    client = esp_mqtt_client_init(&mqtt_config); 
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
     esp_mqtt_client_start(client);
 
 }
 
-//"mqtt://mqtt.eclipse.org" no funciona 
-// "mqtt://mqtt.eclipseprojects.io" FUNCIONA!!
-//mqtt://username:password@mqtt.eclipseprojects.io:1884
-/*
-        .uri = "036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud",
-        .port = 8883,
-        .username = "prueba",
-        .password = "43360312",
-
-(&client, "ssl://036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud:8883", "<your_client_id>",
-        MQTTCLIENT_PERSISTENCE_NONE, NULL);
-*/
+void enviar_mensaje_mqtt(char * topic, char * mensaje)
+{
+    int mensaje_id = esp_mqtt_client_publish(client, topic, mensaje, 0, 1, 0);
+    ESP_LOGI(TAG, "Mensaje enviado, ID: %d", mensaje_id);
+}
