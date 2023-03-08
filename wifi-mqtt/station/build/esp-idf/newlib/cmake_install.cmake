@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/cris/Documentos/CJ_INDOORS/CJ_2023/wifi-mqtt/station/build/esp-idf/newlib/port/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/newlib/port/cmake_install.cmake")
 
 endif()
 

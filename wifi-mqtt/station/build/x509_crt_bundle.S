@@ -1,4 +1,4 @@
-/* * Data converted from /home/cris/Documentos/CJ_INDOORS/CJ_2023/wifi-mqtt/station/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded
