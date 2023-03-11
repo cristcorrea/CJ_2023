@@ -70,3 +70,7 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/ulp/libulp.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/main/libmain.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/BH1750/libBH1750.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/DHT/libDHT.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/MQTT/libMQTT.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/WIFI/libWIFI.a

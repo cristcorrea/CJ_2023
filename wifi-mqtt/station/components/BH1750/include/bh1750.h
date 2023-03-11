@@ -1,6 +1,3 @@
-#ifndef BH1750_H
-#define BH1750_H
-
 #define BH1750_ADDRESS1	0x23
 #define BH1750_ADDRESS2	0x5C
 #define BH1750_POWER_DOWN 0x00
@@ -17,4 +14,3 @@ void bh1750_init(void);
 float bh1750_read(void);
 void bh1750_deinit(void);
 
-#endif

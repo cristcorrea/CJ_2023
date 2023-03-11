@@ -105,3 +105,10 @@ void enviar_mensaje_mqtt(char * topic, char * mensaje)
     int mensaje_id = esp_mqtt_client_publish(client, topic, mensaje, 0, 1, 0);
     ESP_LOGI(TAG, "Mensaje enviado, ID: %d", mensaje_id);
 }
+
+/*
+    esp_mqtt_client_config_t mqtt_config = {
+        .uri = "mqtt://mqtt.eclipseprojects.io",
+
+    };
+*/

@@ -43,7 +43,7 @@ void sensores_start(void* params)
       enviar_mensaje_mqtt("sensores/temperatura", mensaje);
       //ESP_LOGI(TAG, "Temperature : %.1f °C ", dht_data.temperature);
       //ESP_LOGI(TAG, "Humidity : %i %%", dht_data.humidity);
-      vTaskDelay(pdMS_TO_TICKS(3000));
+      vTaskDelay(pdMS_TO_TICKS(10000));
       }
     }
 }
@@ -52,6 +52,7 @@ void sensores_start(void* params)
 void app_main(void)
 {
   //Inicializa memoria no volátil NVS
+  
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
@@ -77,4 +78,5 @@ void app_main(void)
             NULL);
 
   wifi_start(); 
+  
 }

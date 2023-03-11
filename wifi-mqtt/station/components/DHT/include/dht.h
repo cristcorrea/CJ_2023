@@ -1,7 +1,3 @@
-#ifndef DHT_H
-#define DHT_H
-
-
 typedef struct 
 {
     float temperature;
@@ -15,4 +11,3 @@ void DHTerrorHandler(int response);
 
 int readDHT();
 
-#endif

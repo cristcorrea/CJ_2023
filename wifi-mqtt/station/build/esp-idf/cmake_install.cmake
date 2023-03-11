@@ -122,6 +122,10 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/ulp/cmake_install.cmake")
   include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/wifi_provisioning/cmake_install.cmake")
   include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/main/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/BH1750/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/DHT/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/MQTT/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/WIFI/cmake_install.cmake")
 
 endif()
 

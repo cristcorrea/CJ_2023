@@ -8,7 +8,10 @@
     "esp_wifi.h": "c",
     "esp_system.h": "c",
     "esp_http_client.h": "c",
-    "semphr.h": "c"
+    "semphr.h": "c",
+    "sdkconfig.h": "c",
+    "i2c.h": "c",
+    "task.h": "c"
   },
   "idf.adapterTargetName": "esp32",
   "idf.flashType": "UART",
