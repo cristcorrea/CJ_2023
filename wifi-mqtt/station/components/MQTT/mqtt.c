@@ -22,6 +22,14 @@
 
 #define TAG "MQTT"
 
+#if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
+static const uint8_t hivemq_certificate_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
+#else
+extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
+#endif
+extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certificate_pem_end");
+
+
 extern xSemaphoreHandle conexionMQTTSemaforo; 
 
 esp_mqtt_client_handle_t client; 
@@ -30,8 +38,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
+    //esp_mqtt_client_handle_t client = event->client;
+    //int msg_id;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -86,12 +94,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-
-
 void mqtt_start()
 {
     esp_mqtt_client_config_t mqtt_config = {
-        .uri = "mqtt://mqtt.eclipseprojects.io",
+        .uri = "mqtts://036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud:8883",
+        .username = "cjindoors",
+        .password = "433603asd",
+        .cert_pem = (const char *)hivemq_certificate_pem_start,
 
     };
     client = esp_mqtt_client_init(&mqtt_config); 
@@ -105,10 +114,3 @@ void enviar_mensaje_mqtt(char * topic, char * mensaje)
     int mensaje_id = esp_mqtt_client_publish(client, topic, mensaje, 0, 1, 0);
     ESP_LOGI(TAG, "Mensaje enviado, ID: %d", mensaje_id);
 }
-
-/*
-    esp_mqtt_client_config_t mqtt_config = {
-        .uri = "mqtt://mqtt.eclipseprojects.io",
-
-    };
-*/

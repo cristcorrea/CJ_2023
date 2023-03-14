@@ -1582,6 +1582,16 @@ rule C_STATIC_LIBRARY_LINKER____idf_DHT_
 
 
 #############################################
+# Rule for compiling ASM files.
+
+rule ASM_COMPILER____idf_MQTT_
+  depfile = $DEP_FILE
+  deps = gcc
+  command = /home/cris/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building ASM object $out
+
+
+#############################################
 # Rule for compiling C files.
 
 rule C_COMPILER____idf_MQTT_

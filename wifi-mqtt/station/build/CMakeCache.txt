@@ -278,9 +278,6 @@ USE_STATIC_MBEDTLS_LIBRARY:BOOL=ON
 __idf_BH1750_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_lwip;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;
 
 //Dependencies for the target
-__idf_BLUFI_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_lwip;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;
-
-//Dependencies for the target
 __idf_DHT_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_lwip;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;
 
 //Dependencies for the target
@@ -525,12 +522,6 @@ mbedtls_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_
 
 //Dependencies for the target
 mbedx509_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_lwip;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;general;__idf_esp32;general;mbedcrypto;
-
-//Value Computed by CMake
-my_project_name_BINARY_DIR:STATIC=/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build
-
-//Value Computed by CMake
-my_project_name_SOURCE_DIR:STATIC=/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station
 
 //Value Computed by CMake
 wifi_station_BINARY_DIR:STATIC=/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build

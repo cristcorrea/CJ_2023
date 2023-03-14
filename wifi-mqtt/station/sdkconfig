@@ -131,10 +131,18 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # Configuration Wifi
 #
-CONFIG_ESP_WIFI_SSID="Cris"
-CONFIG_ESP_WIFI_PASS="433603Asd"
+CONFIG_ESP_WIFI_SSID="Endre"
+CONFIG_ESP_WIFI_PASS="MIGUEL12345"
 CONFIG_WIFI_MAXIMUM_RETRY=12
 # end of Configuration Wifi
+
+#
+# Example Configuration
+#
+CONFIG_BROKER_URI="036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud"
+CONFIG_BROKER_CERTIFICATE_OVERRIDE=""
+CONFIG_BROKER_BIN_SIZE_TO_SEND=20000
+# end of Example Configuration
 
 #
 # Compiler options

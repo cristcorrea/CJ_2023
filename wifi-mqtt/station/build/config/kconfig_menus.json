@@ -2048,6 +2048,54 @@
     {
         "children": [
             {
+                "children": [],
+                "depends_on": null,
+                "help": "URL of an mqtt broker which this example connects to.",
+                "id": "BROKER_URI",
+                "name": "BROKER_URI",
+                "range": null,
+                "title": "Broker URL",
+                "type": "string"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": "Please leave empty if broker certificate included from a textfile; otherwise fill in a base64 part of PEM\nformat certificate",
+                "id": "BROKER_CERTIFICATE_OVERRIDE",
+                "name": "BROKER_CERTIFICATE_OVERRIDE",
+                "range": null,
+                "title": "Broker certificate override",
+                "type": "string"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": null,
+                "id": "BROKER_CERTIFICATE_OVERRIDDEN",
+                "name": "BROKER_CERTIFICATE_OVERRIDDEN",
+                "range": null,
+                "title": null,
+                "type": "bool"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": null,
+                "id": "BROKER_BIN_SIZE_TO_SEND",
+                "name": "BROKER_BIN_SIZE_TO_SEND",
+                "range": null,
+                "title": null,
+                "type": "int"
+            }
+        ],
+        "depends_on": null,
+        "id": "example-configuration",
+        "title": "Example Configuration",
+        "type": "menu"
+    },
+    {
+        "children": [
+            {
                 "children": [
                     {
                         "children": [],
