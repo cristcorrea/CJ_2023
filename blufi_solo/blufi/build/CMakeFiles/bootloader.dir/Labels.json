@@ -2,34 +2,34 @@
 	"sources" : 
 	[
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/CMakeFiles/bootloader"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/CMakeFiles/bootloader"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/CMakeFiles/bootloader.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/CMakeFiles/bootloader.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/CMakeFiles/bootloader-complete.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/CMakeFiles/bootloader-complete.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
 		},
 		{
-			"file" : "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+			"file" : "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
 		}
 	],
 	"target" : 

@@ -5,18 +5,18 @@ cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
   "/home/cris/esp2/esp-idf/components/bootloader/subproject"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/tmp"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src"
-  "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/tmp"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src"
+  "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
 endif()

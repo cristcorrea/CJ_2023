@@ -1,4 +1,4 @@
-# Install script for directory: /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/components/MQTT
+# Install script for directory: /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/components/MQTT
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

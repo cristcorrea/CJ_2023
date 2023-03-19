@@ -1,8 +1,8 @@
 {
     "project_name":       "bootloader",
     "project_path":       "/home/cris/esp2/esp-idf/components/bootloader/subproject",
-    "build_dir":          "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/bootloader",
-    "config_file":        "/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/sdkconfig",
+    "build_dir":          "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/bootloader",
+    "config_file":        "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/sdkconfig",
     "config_defaults":    "",
     "bootloader_elf":     "",
     "app_elf":            "bootloader.elf",

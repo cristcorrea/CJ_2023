@@ -14,7 +14,7 @@
 #include "esp_bt.h"
 
 #include "esp_blufi_api.h"
-#include "blufi_example.h"
+#include "blufi.h"
 
 #include "esp_blufi.h"
 

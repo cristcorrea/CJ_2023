@@ -39,6 +39,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/mbedtls/mbedtls/cmake_install.cmake")
+  include("/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/mbedtls/mbedtls/cmake_install.cmake")
 endif()
 

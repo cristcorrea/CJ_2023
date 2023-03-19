@@ -1,4 +1,4 @@
-/* * Data converted from /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/components/MQTT/hivemq_certificate.pem
+/* * Data converted from /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/components/MQTT/hivemq_certificate.pem
  * (null byte appended)
  */
 .data

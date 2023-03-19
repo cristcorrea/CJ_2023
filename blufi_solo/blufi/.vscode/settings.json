@@ -4,7 +4,13 @@
   "files.associations": {
     "netfwd": "cpp",
     "semphr.h": "c",
-    "compare": "c"
+    "compare": "c",
+    "esp_blufi_api.h": "c",
+    "esp_bt_device.h": "c",
+    "esp_wifi.h": "c",
+    "esp_event.h": "c",
+    "aes.h": "c",
+    "esp_crc.h": "c"
   },
   "idf.flashType": "UART",
   "idf.port": "/dev/ttyUSB0"
