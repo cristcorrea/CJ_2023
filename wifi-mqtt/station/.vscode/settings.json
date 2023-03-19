@@ -11,9 +11,18 @@
     "semphr.h": "c",
     "sdkconfig.h": "c",
     "i2c.h": "c",
-    "task.h": "c"
+    "task.h": "c",
+    "esp_bt.h": "c",
+    "esp_blufi_api.h": "c",
+    "esp_crc.h": "c",
+    "esp_nimble_hci.h": "c",
+    "esp_bt_main.h": "c"
   },
   "idf.adapterTargetName": "esp32",
   "idf.flashType": "UART",
-  "idf.port": "/dev/ttyUSB0"
+  "idf.port": "/dev/ttyUSB0",
+  "cmake.configureOnOpen": true,
+  "idf.openOcdConfigs": [
+    "board/esp32-wrover-kit-3.3v.cfg"
+  ]
 }

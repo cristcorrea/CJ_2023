@@ -36,6 +36,7 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/cxx/libcxx.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/app_trace/libapp_trace.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/asio/libasio.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/libbt.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/cbor/libcbor.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/unity/libunity.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/cmock/libcmock.a

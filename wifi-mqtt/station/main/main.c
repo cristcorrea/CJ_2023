@@ -11,6 +11,7 @@
 #include "dht.h"
 #include "mqtt_client.h"
 #include "bh1750.h"
+#include "blufi_example.h"
 
 //static const char* TAG = "DHT11";
 
@@ -51,7 +52,7 @@ void sensores_start(void* params)
 
 void app_main(void)
 {
-  //Inicializa memoria no volátil NVS
+  //Inicializa memoria no volátil NVS (ahora lo inicia blufi_start)
   
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -59,6 +60,8 @@ void app_main(void)
     ret = nvs_flash_init();
   }
   ESP_ERROR_CHECK(ret);
+  
+
   //---------------------------------
   conexionWifiSemaforo = xSemaphoreCreateBinary(); 
   conexionMQTTSemaforo = xSemaphoreCreateBinary(); 
@@ -78,5 +81,5 @@ void app_main(void)
             NULL);
 
   wifi_start(); 
-  
+  //blufi_start();
 }

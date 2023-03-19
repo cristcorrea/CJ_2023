@@ -410,6 +410,7 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/asio/CMakeFiles/list_install_components.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/install/strip.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/install/local.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/__idf_bt.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/edit_cache.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/rebuild_cache.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/wifi-mqtt/station/build/esp-idf/bt/CMakeFiles/install.dir
