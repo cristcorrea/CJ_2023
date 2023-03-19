@@ -609,6 +609,13 @@
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/main/CMakeFiles/install.dir
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/main/CMakeFiles/install/local.dir
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/main/CMakeFiles/install/strip.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/__idf_DHT.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/edit_cache.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/rebuild_cache.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/list_install_components.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/install.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/install/local.dir
+/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/CMakeFiles/install/strip.dir
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/__idf_MQTT.dir
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/edit_cache.dir
 /home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/rebuild_cache.dir

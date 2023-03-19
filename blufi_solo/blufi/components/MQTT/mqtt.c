@@ -30,7 +30,7 @@ extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certif
 extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certificate_pem_end");
 
 
-//extern xSemaphoreHandle conexionMQTTSemaforo; 
+extern SemaphoreHandle_t semaphoreMqttConection; 
 
 esp_mqtt_client_handle_t client; 
 
@@ -43,6 +43,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        xSemaphoreGive(semaphoreMqttConection); 
         //xSemaphoreGive(conexionMQTTSemaforo);
         /*
         msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);

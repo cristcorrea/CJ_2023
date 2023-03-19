@@ -409,6 +409,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/DHT/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("/home/cris/Documentos/CJ_ESP32/blufi_solo/blufi/build/esp-idf/MQTT/cmake_install.cmake")
 endif()
 

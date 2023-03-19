@@ -19,12 +19,17 @@
 #include "esp_blufi.h"
 
 #include "mqtt.h"
+#include "dht.h"
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
+SemaphoreHandle_t semaphoreMqttConection = NULL; 
+
+dht DHT_DATA;
 
 void mqttServerConection(void* params){
 
-    while(true){
+    while(true)
+    {
         if(xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)){
             ESP_LOGI("Main Task", "Realiza conexión con broker HiveMQ");
             mqtt_start(); 
@@ -32,12 +37,35 @@ void mqttServerConection(void* params){
     }
 }
 
+void sensorStartMeasurement(void* params){
+
+    char message[50]; 
+    if(xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)){
+        while(true)
+        {
+            DHTerrorHandler(readDHT());
+            sprintf(message, "Temp: %.1f °C Hum: %i%%", DHT_DATA.temperature, DHT_DATA.humidity);
+            enviar_mensaje_mqtt("sensores/temperatura", message);
+            vTaskDelay(pdMS_TO_TICKS(10000));
+        }
+        
+    }
+}
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary(); 
+    semaphoreMqttConection = xSemaphoreCreateBinary(); 
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
+                4096,
+                NULL,
+                1,
+                NULL);
+
+    xTaskCreate(&sensorStartMeasurement,
+                "Comenzando mediciones de Temp. & Hum.",
                 4096,
                 NULL,
                 1,
