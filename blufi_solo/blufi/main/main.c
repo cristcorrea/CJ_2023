@@ -23,41 +23,43 @@
 #include "soil.h"
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
-SemaphoreHandle_t semaphoreMqttConection = NULL; 
+SemaphoreHandle_t semaphoreMqttConection = NULL;
 
 dht DHT_DATA;
-soil SOIL_DATA; 
+soil SOIL_DATA;
 
-void mqttServerConection(void* params){
+void mqttServerConection(void *params)
+{
 
-    while(true)
+    while (true)
     {
-        if(xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)){
+        if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY))
+        {
             ESP_LOGI("Main Task", "Realiza conexión con broker HiveMQ");
-            mqtt_start(); 
+            mqtt_start();
         }
     }
 }
 
-void sensorStartMeasurement(void* params){
+void sensorStartMeasurement(void *params)
+{
 
-    char message[50]; 
-    if(xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)){
-        while(true)
+    char message[50];
+    if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY))
+    {
+        while (true)
         {
-            DHTerrorHandler(readDHT());
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i", DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity);
             enviar_mensaje_mqtt("sensores/temperatura", message);
             vTaskDelay(pdMS_TO_TICKS(10000));
         }
-        
     }
 }
 
 void app_main(void)
 {
-    semaphoreWifiConection = xSemaphoreCreateBinary(); 
-    semaphoreMqttConection = xSemaphoreCreateBinary(); 
+    semaphoreWifiConection = xSemaphoreCreateBinary();
+    semaphoreMqttConection = xSemaphoreCreateBinary();
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
@@ -76,5 +78,5 @@ void app_main(void)
     blufi_start();
     soilConfig();
     humidity();
-
+    DHTerrorHandler(readDHT());
 }

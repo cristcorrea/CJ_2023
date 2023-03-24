@@ -45,13 +45,13 @@ void humidity(void)
     while(true)
     {
         int adc_reading = 0; 
-        for(int i = 0; i < 50; i++)
+        for(int i = 0; i < 100; i++)
         {
             adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
             SOIL_DATA.humidity += adc_reading; 
         }
-        SOIL_DATA.humidity /= 50;
-        ESP_LOGI(TAG, "Ultimo valor leido: %i", adc_reading); 
+        SOIL_DATA.humidity /= 100;
+        //ESP_LOGI(TAG, "Ultimo valor leido: %i", adc_reading); 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }

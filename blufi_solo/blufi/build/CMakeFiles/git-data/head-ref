@@ -1,7 +1,1 @@
-0000000000000000000000000000000000000000 deed2583fc1e81927c73fb4e46abaef33a67d675 Cristian C <ccorrea@dc.uba.ar> 1678207138 +0100	clone: from https://github.com/cristcorrea/CJ_2023.git
-deed2583fc1e81927c73fb4e46abaef33a67d675 03499ce7c59b8ab177ff58d1ebbe6458b770cf73 Cristian C <ccorrea@dc.uba.ar> 1678257045 +0100	commit: actualizo wifi-mqtt
-03499ce7c59b8ab177ff58d1ebbe6458b770cf73 192004520f680cd6f23cc95d2651fdc0f2546b47 Cristian C <ccorrea@dc.uba.ar> 1678516446 +0100	commit: creo componentes
-192004520f680cd6f23cc95d2651fdc0f2546b47 8dfde6df82e6aa9bdee5df681cb03c81e1da11d2 Cristian C <ccorrea@dc.uba.ar> 1678772506 +0100	commit: hivemq funcional
-8dfde6df82e6aa9bdee5df681cb03c81e1da11d2 b76ec6eebb3d28568eed6bacf95245e787e313aa Cristian C <ccorrea@dc.uba.ar> 1679225852 +0100	commit: subo blufi_solo
-b76ec6eebb3d28568eed6bacf95245e787e313aa 5ae4ee7dffb3dcf1cd56c62bef04c011ffacd200 Cristian C <ccorrea@dc.uba.ar> 1679231998 +0100	commit: actualizo blufi con dht
-5ae4ee7dffb3dcf1cd56c62bef04c011ffacd200 83cde4a65b3610afd763979a2d7da265ae78d083 Cristian C <ccorrea@dc.uba.ar> 1679254130 +0100	commit: componente BLUFI
+8f64a58480489a7a16890ea11a22634e512d6b8b
