@@ -20,11 +20,13 @@
 
 #include "mqtt.h"
 #include "dht.h"
+#include "soil.h"
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL; 
 
 dht DHT_DATA;
+soil SOIL_DATA; 
 
 void mqttServerConection(void* params){
 
@@ -44,7 +46,7 @@ void sensorStartMeasurement(void* params){
         while(true)
         {
             DHTerrorHandler(readDHT());
-            sprintf(message, "Temp: %.1f °C Hum: %i%%", DHT_DATA.temperature, DHT_DATA.humidity);
+            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i", DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity);
             enviar_mensaje_mqtt("sensores/temperatura", message);
             vTaskDelay(pdMS_TO_TICKS(10000));
         }
@@ -72,5 +74,7 @@ void app_main(void)
                 NULL);
 
     blufi_start();
+    soilConfig();
+    humidity();
 
 }

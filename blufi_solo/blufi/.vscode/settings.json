@@ -10,7 +10,9 @@
     "esp_wifi.h": "c",
     "esp_event.h": "c",
     "aes.h": "c",
-    "esp_crc.h": "c"
+    "esp_crc.h": "c",
+    "driver.h": "c",
+    "gpio.h": "c"
   },
   "idf.flashType": "UART",
   "idf.port": "/dev/ttyUSB0"
