@@ -12,8 +12,11 @@
     "aes.h": "c",
     "esp_crc.h": "c",
     "driver.h": "c",
-    "gpio.h": "c"
+    "gpio.h": "c",
+    "system_error": "c",
+    "rtc.h": "c"
   },
   "idf.flashType": "UART",
-  "idf.port": "/dev/ttyUSB0"
+  "idf.port": "/dev/ttyUSB0",
+  "cmake.configureOnOpen": false
 }

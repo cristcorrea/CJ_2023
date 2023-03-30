@@ -65,4 +65,5 @@ $<TARGET_FILE:__idf_main>
 $<TARGET_FILE:__idf_BLUFI>
 $<TARGET_FILE:__idf_DHT>
 $<TARGET_FILE:__idf_MQTT>
+$<TARGET_FILE:__idf_RTC>
 $<TARGET_FILE:__idf_SOIL>

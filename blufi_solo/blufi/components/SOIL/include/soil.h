@@ -1,6 +1,6 @@
 typedef struct
 {
-    float conductivity;
+    int salinity;
     int humidity; 
 } soil;
 
@@ -8,5 +8,5 @@ extern soil SOIL_DATA;
 
 void soilConfig(void); 
 
-//void conductivity(void);
 void humidity(void);
+void salt(void);

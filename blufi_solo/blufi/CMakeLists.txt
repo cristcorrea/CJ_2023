@@ -6,7 +6,8 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(blufi_demo)
 
 set(COMPONENTS_DIR components)
-set(EXTRA_COMPONENT_DIRS "${COMPONENTS_DIR}/MQTT"
+set(EXTRA_COMPONENT_DIRS  "${COMPONENTS_DIR}/MQTT"
                           "${COMPONENTS_DIR}/DHT"
                           "${COMPONENTS_DIR}/BLUFI"
-                          "${COMPONENTS_DIR}/SOIL")
+                          "${COMPONENTS_DIR}/SOIL"
+                          "${COMPONENTS_DIR}/RTC")

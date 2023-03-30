@@ -11,13 +11,33 @@
 
 #define TAG "Soil"
 
-//#define HUMID_CH ADC1_CHANNEL_4
-//#define CONDUC_CH ADC1_CHANNEL_6
-
-
 
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
+
+
+static void countingSort(int  muestras[])
+{
+    int contador[4096];
+    for(int i = 0; i < 4096; i++)
+    {
+        contador[i] = 0;
+    }
+    for(int j = 0; j < 24; j++)
+    {
+        contador[muestras[j]]++;
+    }
+    int l = 0;
+    for(int k = 0; k < 4096; k++)
+    {
+        while(contador[k] != 0) 
+        {
+            muestras[l] = k;
+            contador[k]--;
+            l++;
+        }
+    }
+}
 
 void soilConfig(void)
 {
@@ -42,19 +62,36 @@ void soilConfig(void)
 
 void humidity(void)
 {
-    while(true)
+    int adc_reading = 0; 
+    for(int i = 0; i < 100; i++)
     {
-        int adc_reading = 0; 
-        for(int i = 0; i < 100; i++)
-        {
-            adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
-            SOIL_DATA.humidity += adc_reading; 
-        }
-        SOIL_DATA.humidity /= 100;
-        //ESP_LOGI(TAG, "Ultimo valor leido: %i", adc_reading); 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
+        SOIL_DATA.humidity += adc_reading; 
+        vTaskDelay(pdMS_TO_TICKS(2));
     }
+    SOIL_DATA.humidity /= 100;
 }
+
+void salt(void)
+{
+    int muestras[120];
+    int valor = 0;  
+    int res = 0; 
+    for(int i = 0; i < 120; i++)
+    {
+        adc_oneshot_read(adc1_handle, ADC_CHANNEL_6, &valor);
+        muestras[i] = valor; 
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+    countingSort(muestras);
+    for(int j = 0; j < 119; j++)
+    {
+        res += muestras[j];
+    }
+    res /= 118; 
+    SOIL_DATA.salinity = res; 
+}
+
 
 
 

@@ -15,15 +15,16 @@
 
 #include "esp_blufi_api.h"
 #include "blufi.h"
-
 #include "esp_blufi.h"
 
 #include "mqtt.h"
 #include "dht.h"
 #include "soil.h"
+#include "rtc.h"
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
+
 
 dht DHT_DATA;
 soil SOIL_DATA;
@@ -41,7 +42,7 @@ void mqttServerConection(void *params)
     }
 }
 
-void sensorStartMeasurement(void *params)
+void mqttSendMessage(void *params)
 {
 
     char message[50];
@@ -49,17 +50,43 @@ void sensorStartMeasurement(void *params)
     {
         while (true)
         {
-            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i", DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity);
+            vTaskDelay(pdMS_TO_TICKS(60000)); // envia cada 1 min
+            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i", 
+            DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity, SOIL_DATA.salinity);
             enviar_mensaje_mqtt("sensores/temperatura", message);
-            vTaskDelay(pdMS_TO_TICKS(10000));
         }
     }
 }
+
+void airSensorMeasurement(void *params)
+{
+
+    while(true)
+    {
+        DHTerrorHandler(readDHT());
+        vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 30 seg.
+    }
+
+}
+
+void soilSensorMeasurement(void *params)
+{
+    soilConfig();
+    while(true)
+    {
+        humidity(); 
+        vTaskDelay(pdMS_TO_TICKS(30000));
+    }
+
+}
+
 
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreMqttConection = xSemaphoreCreateBinary();
+
+    blufi_start();
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
@@ -68,15 +95,28 @@ void app_main(void)
                 1,
                 NULL);
 
-    xTaskCreate(&sensorStartMeasurement,
-                "Comenzando mediciones de Temp. & Hum.",
+    xTaskCreate(&mqttSendMessage,
+                "Comienza envio de datos MQTT",
                 4096,
                 NULL,
                 1,
                 NULL);
 
-    blufi_start();
-    soilConfig();
-    humidity();
-    DHTerrorHandler(readDHT());
+    xTaskCreate(&airSensorMeasurement,
+                "Comenzando mediciones de sensores",
+                4096,
+                NULL,
+                1,
+                NULL);
+
+    xTaskCreate(&soilSensorMeasurement,
+                "Comenzando mediciones de sensores",
+                4096,
+                NULL,
+                1,
+                NULL);
+
+    //dataUpdate();
+
+
 }
