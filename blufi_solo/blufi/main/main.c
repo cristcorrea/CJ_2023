@@ -12,15 +12,23 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_bt.h"
-
 #include "esp_blufi_api.h"
-#include "blufi.h"
 #include "esp_blufi.h"
-
+/* Librerias RTC */
+#include "esp_attr.h"
+#include "esp_netif_sntp.h"
+#include "lwip/ip_addr.h"
+#include "esp_sntp.h"
+#include "esp_netif.h"
+/* Librerias componentes */
+#include "rtcj.h"
 #include "mqtt.h"
 #include "dht.h"
 #include "soil.h"
-#include "rtc.h"
+#include "blufi.h"
+#include "storage.h"
+
+//TAREA: MEJORAR ORDEN DE INICIO DE TAREAS - COLOCAR FUNCIONES DE SENSORES EN ESPERA DE SEMAFORO - 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
@@ -34,9 +42,10 @@ void mqttServerConection(void *params)
 
     while (true)
     {
-        if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY))
+        if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
         {
             ESP_LOGI("Main Task", "Realiza conexión con broker HiveMQ");
+            adjust_time();
             mqtt_start();
         }
     }
@@ -46,11 +55,11 @@ void mqttSendMessage(void *params)
 {
 
     char message[50];
-    if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY))
+    if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {
         while (true)
         {
-            vTaskDelay(pdMS_TO_TICKS(60000)); // envia cada 1 min
+            vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía 
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity, SOIL_DATA.salinity);
             enviar_mensaje_mqtt("sensores/temperatura", message);
@@ -116,7 +125,6 @@ void app_main(void)
                 1,
                 NULL);
 
-    //dataUpdate();
 
 
 }

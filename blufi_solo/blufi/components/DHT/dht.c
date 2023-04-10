@@ -16,7 +16,7 @@
 #define DHT_TIMEOUT_ERROR -2
 
 #define gpio_num 4
-  
+
 
 static const char* TAG = "DHT_start";
 

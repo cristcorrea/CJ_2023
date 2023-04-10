@@ -630,6 +630,13 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/install.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/install/local.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/MQTT/CMakeFiles/install/strip.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/__idf_POMP.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/edit_cache.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/rebuild_cache.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/list_install_components.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/install.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/install/local.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/CMakeFiles/install/strip.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/RTC/CMakeFiles/__idf_RTC.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/RTC/CMakeFiles/edit_cache.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/RTC/CMakeFiles/rebuild_cache.dir
@@ -644,3 +651,10 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/SOIL/CMakeFiles/install.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/SOIL/CMakeFiles/install/local.dir
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/SOIL/CMakeFiles/install/strip.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/__idf_STORAGE.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/edit_cache.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/rebuild_cache.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/list_install_components.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/install.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/install/local.dir
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/CMakeFiles/install/strip.dir

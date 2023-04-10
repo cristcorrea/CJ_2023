@@ -65,5 +65,7 @@
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/BLUFI/libBLUFI.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/DHT/libDHT.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/MQTT/libMQTT.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/POMP/libPOMP.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/RTC/libRTC.a
 /home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/SOIL/libSOIL.a
+/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/build/esp-idf/STORAGE/libSTORAGE.a

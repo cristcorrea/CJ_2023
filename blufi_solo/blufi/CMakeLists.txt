@@ -10,4 +10,6 @@ set(EXTRA_COMPONENT_DIRS  "${COMPONENTS_DIR}/MQTT"
                           "${COMPONENTS_DIR}/DHT"
                           "${COMPONENTS_DIR}/BLUFI"
                           "${COMPONENTS_DIR}/SOIL"
-                          "${COMPONENTS_DIR}/RTC")
+                          "${COMPONENTS_DIR}/RTC"
+                          "${COMPONENTS_DIR}/POMP"
+                          "${COMPONENTS_DIR}/STORAGE")

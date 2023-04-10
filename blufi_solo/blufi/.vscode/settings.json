@@ -14,7 +14,15 @@
     "driver.h": "c",
     "gpio.h": "c",
     "system_error": "c",
-    "rtc.h": "c"
+    "rtc.h": "c",
+    "time.h": "c",
+    "esp_log.h": "c",
+    "nvs.h": "c",
+    "esp_system.h": "c",
+    "array": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "string.h": "c"
   },
   "idf.flashType": "UART",
   "idf.port": "/dev/ttyUSB0",

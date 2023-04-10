@@ -36,15 +36,13 @@ esp_mqtt_client_handle_t client;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    //ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        xSemaphoreGive(semaphoreMqttConection); 
-        //xSemaphoreGive(conexionMQTTSemaforo);
+        xSemaphoreGive(semaphoreMqttConection);
         /*
         msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
@@ -65,8 +63,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        /*msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "Where are you from?", 0, 0, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);*/
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -82,13 +78,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-            /*
-            log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
-            log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
-            ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-            */
-
         }
         break;
     default:
