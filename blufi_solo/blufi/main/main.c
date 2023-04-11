@@ -14,14 +14,8 @@
 #include "esp_bt.h"
 #include "esp_blufi_api.h"
 #include "esp_blufi.h"
-/* Librerias RTC */
-#include "esp_attr.h"
-#include "esp_netif_sntp.h"
-#include "lwip/ip_addr.h"
-#include "esp_sntp.h"
-#include "esp_netif.h"
 /* Librerias componentes */
-#include "rtcj.h"
+#include "ntp.h"
 #include "mqtt.h"
 #include "dht.h"
 #include "soil.h"
@@ -32,6 +26,7 @@
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
+SemaphoreHandle_t semaphoreRTC = NULL;
 
 
 dht DHT_DATA;
@@ -47,6 +42,7 @@ void mqttServerConection(void *params)
             ESP_LOGI("Main Task", "Realiza conexión con broker HiveMQ");
             adjust_time();
             mqtt_start();
+            xSemaphoreGive(semaphoreRTC);
         }
     }
 }
@@ -67,17 +63,20 @@ void mqttSendMessage(void *params)
     }
 }
 
-void airSensorMeasurement(void *params)
+void sensorsMeasurement(void *params)
 {
-
-    while(true)
+    soilConfig();
+    if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
     {
-        DHTerrorHandler(readDHT());
-        vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 30 seg.
+        while(true)
+        {
+            DHTerrorHandler(readDHT());
+            humidity(); 
+            vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 30 seg.
+        }
     }
-
 }
-
+/*
 void soilSensorMeasurement(void *params)
 {
     soilConfig();
@@ -88,12 +87,13 @@ void soilSensorMeasurement(void *params)
     }
 
 }
-
+*/
 
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreMqttConection = xSemaphoreCreateBinary();
+    semaphoreRTC           = xSemaphoreCreateBinary();
 
     blufi_start();
 
@@ -111,20 +111,10 @@ void app_main(void)
                 1,
                 NULL);
 
-    xTaskCreate(&airSensorMeasurement,
+    xTaskCreate(&sensorsMeasurement,
                 "Comenzando mediciones de sensores",
                 4096,
                 NULL,
                 1,
                 NULL);
-
-    xTaskCreate(&soilSensorMeasurement,
-                "Comenzando mediciones de sensores",
-                4096,
-                NULL,
-                1,
-                NULL);
-
-
-
 }
