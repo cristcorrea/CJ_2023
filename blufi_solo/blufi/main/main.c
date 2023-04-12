@@ -22,7 +22,6 @@
 #include "blufi.h"
 #include "storage.h"
 
-//TAREA: MEJORAR ORDEN DE INICIO DE TAREAS - COLOCAR FUNCIONES DE SENSORES EN ESPERA DE SEMAFORO - 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
@@ -76,18 +75,6 @@ void sensorsMeasurement(void *params)
         }
     }
 }
-/*
-void soilSensorMeasurement(void *params)
-{
-    soilConfig();
-    while(true)
-    {
-        humidity(); 
-        vTaskDelay(pdMS_TO_TICKS(30000));
-    }
-
-}
-*/
 
 void app_main(void)
 {
