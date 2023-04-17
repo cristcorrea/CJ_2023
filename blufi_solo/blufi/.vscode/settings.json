@@ -22,7 +22,9 @@
     "array": "cpp",
     "string": "cpp",
     "string_view": "cpp",
-    "string.h": "c"
+    "string.h": "c",
+    "esp_gap_ble_api.h": "c",
+    "blufi.h": "c"
   },
   "idf.flashType": "UART",
   "idf.port": "/dev/ttyUSB0",

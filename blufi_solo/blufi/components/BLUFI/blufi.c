@@ -13,6 +13,7 @@
 #include "nvs_flash.h"
 #include "esp_bt.h"
 
+
 #include "esp_blufi_api.h"
 #include "blufi.h"
 
@@ -26,6 +27,8 @@
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param);
 
 #define WIFI_LIST_NUM   10
+
+static const char* TAG = "BLUFI.C";
 
 static wifi_config_t sta_config;
 static wifi_config_t ap_config;
@@ -271,6 +274,7 @@ static esp_blufi_callbacks_t example_callbacks = {
     .checksum_func = blufi_crc_checksum,
 };
 
+
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param)
 {
     /* actually, should post to blufi_task handle the procedure,
@@ -284,9 +288,25 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
         BLUFI_INFO("BLUFI deinit finish\n");
         break;
-    case ESP_BLUFI_EVENT_BLE_CONNECT:
+    case ESP_BLUFI_EVENT_BLE_CONNECT: // aca debo intentar capturar la MAC
+
         BLUFI_INFO("BLUFI ble connect\n");
         ble_is_connected = true;
+        /*
+        esp_bd_addr_t mac_bd; 
+        memcpy(mac_bd, param->connect.remote_bda, 6);
+        uint8_t remote_mac[6];
+        memset(remote_mac, 0, 6);
+        memcpy(remote_mac, mac_bd, 6);   
+        ESP_LOGI(TAG,"La dirección MAC del dispositivo cliente es: %02X:%02X:%02X:%02X:%02X:%02X\n", 
+           remote_mac[0],
+           remote_mac[1],
+           remote_mac[2],
+           remote_mac[3],
+           remote_mac[4],
+           remote_mac[5]);
+
+        */
         esp_blufi_adv_stop();
         blufi_security_init();
         break;
@@ -347,6 +367,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         break;
 	case ESP_BLUFI_EVENT_RECV_STA_BSSID:
         memcpy(sta_config.sta.bssid, param->sta_bssid.bssid, 6);
+        // Codigo agregado para carpturar MAC
+        // 
         sta_config.sta.bssid_set = 1;
         esp_wifi_set_config(WIFI_IF_STA, &sta_config);
         BLUFI_INFO("Recv STA BSSID %s\n", sta_config.sta.ssid);
