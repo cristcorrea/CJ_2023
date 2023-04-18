@@ -1,6 +1,0 @@
-source "/home/cris/esp2/esp-idf/components/bootloader/Kconfig.projbuild"
-source "/home/cris/esp2/esp-idf/components/esp_app_format/Kconfig.projbuild"
-source "/home/cris/esp2/esp-idf/components/esp_rom/Kconfig.projbuild"
-source "/home/cris/esp2/esp-idf/components/esptool_py/Kconfig.projbuild"
-source "/home/cris/esp2/esp-idf/components/partition_table/Kconfig.projbuild"
-source "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/blufi/main/Kconfig.projbuild"
