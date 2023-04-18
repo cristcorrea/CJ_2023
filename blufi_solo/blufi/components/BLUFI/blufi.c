@@ -366,9 +366,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         /* TODO */
         break;
 	case ESP_BLUFI_EVENT_RECV_STA_BSSID:
-        memcpy(sta_config.sta.bssid, param->sta_bssid.bssid, 6);
-        // Codigo agregado para carpturar MAC
-        // 
+        memcpy(sta_config.sta.bssid, param->sta_bssid.bssid, 6); 
         sta_config.sta.bssid_set = 1;
         esp_wifi_set_config(WIFI_IF_STA, &sta_config);
         BLUFI_INFO("Recv STA BSSID %s\n", sta_config.sta.ssid);

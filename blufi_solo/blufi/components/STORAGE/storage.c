@@ -10,7 +10,7 @@
 #include "storage.h"
 
 
-void NVS_read(char *data, char *Get_Data)
+void NVS_read(char *data, char *Get_Data) // data es la referencia
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
@@ -42,7 +42,7 @@ void NVS_read(char *data, char *Get_Data)
     nvs_close(my_handle);
 }
 
-void NVS_write(char *data, char *write_string)
+void NVS_write(char *data, char *write_string) // data es la referencia
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
