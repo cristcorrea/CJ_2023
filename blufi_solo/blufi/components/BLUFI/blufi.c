@@ -437,7 +437,9 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         uint8_t cj_id;
         //memset(cj_id, 0, param->custom_data.data_len);
         memcpy(&cj_id, param->custom_data.data, param->custom_data.data_len); 
-        ESP_LOGI(TAG, "Recibido por custom data: %x", cj_id);  
+        ESP_LOGI(TAG, "Recibido por custom data: %x", cj_id);
+        //char palabra[4]  = "hola";
+        //strcat((char*) cj_id[param->custom_data.data_len]), palabra);  
         //BLUFI_INFO("Recv Custom Data %" PRIu32 "\n", param->custom_data.data_len);
         //esp_log_buffer_hex("Custom Data", param->custom_data.data, param->custom_data.data_len);
         break;
