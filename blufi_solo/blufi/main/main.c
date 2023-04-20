@@ -31,6 +31,17 @@ SemaphoreHandle_t semaphoreRTC = NULL;
 dht DHT_DATA;
 soil SOIL_DATA;
 
+typedef struct
+{
+    char *UUDI;
+    uint8_t hum_sup;
+    uint8_t hum_inf;
+
+
+}config_data;
+
+config_data configuration; 
+
 void mqttServerConection(void *params)
 {
 
