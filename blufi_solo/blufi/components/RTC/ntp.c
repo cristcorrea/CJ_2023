@@ -8,6 +8,8 @@
 #include "lwip/ip_addr.h"
 #include "esp_sntp.h"
 #include "esp_netif.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "RTC";
 
@@ -15,9 +17,10 @@ static const char *TAG = "RTC";
 void adjust_time(void)
 {
     ESP_LOGI(TAG, "Initializing and starting SNTP");
-    sntp_setservername(1, "pool.ntp.org");
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
     sntp_init();
-
+    
     time_t now = 0;
     struct tm timeinfo = { 0 };
     int retry = 0;

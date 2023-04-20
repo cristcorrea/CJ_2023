@@ -64,7 +64,7 @@ void mqttSendMessage(void *params)
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {
         while (true)
-        {
+        {   
             vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía 
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity, SOIL_DATA.salinity);
