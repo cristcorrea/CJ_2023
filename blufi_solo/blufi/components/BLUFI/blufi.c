@@ -419,16 +419,16 @@ static EventGroupHandle_t wifi_event_group;
         break;
     }
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
+        /*
         char *UUID; 
         UUID = (char *) malloc(16);
         strcpy(UUID, (char*) param->custom_data.data);
         ESP_LOGI(TAG, "Recibido: %s - Almacenado en: %u\n", UUID, *UUID);
-        /*
+        */
         char cj_id[sizeof(param->custom_data.data)];
         //memset(cj_id, 0, param->custom_data.data_len);
         memcpy(cj_id, param->custom_data.data, param->custom_data.data_len); 
         ESP_LOGI(TAG, "Recibido por custom data: %s\n", cj_id);
-        */
         break;
 	case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */

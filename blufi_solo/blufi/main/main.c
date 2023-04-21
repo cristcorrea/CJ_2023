@@ -14,6 +14,7 @@
 #include "esp_bt.h"
 #include "esp_blufi_api.h"
 #include "esp_blufi.h"
+#include "time.h"
 /* Librerias componentes */
 #include "ntp.h"
 #include "mqtt.h"
@@ -30,12 +31,12 @@ SemaphoreHandle_t semaphoreRTC = NULL;
 
 dht DHT_DATA;
 soil SOIL_DATA;
-
+/*Estructura para manipular configuración*/
 typedef struct
 {
-    char *UUDI;
-    uint8_t hum_sup;
-    uint8_t hum_inf;
+    char *UUDI;         // debe almacenar el identificador recibido en custom message
+    uint8_t hum_sup;    // limite superior de humedad
+    uint8_t hum_inf;    // Limite inferior de humedad     
 
 
 }config_data;
@@ -60,14 +61,21 @@ void mqttServerConection(void *params)
 void mqttSendMessage(void *params)
 {
 
-    char message[50];
+    char message[120];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {
         while (true)
         {   
-            vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía 
-            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i", 
-            DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity, SOIL_DATA.salinity);
+            vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía
+            time_t now = 0;
+            struct tm timeinfo = {0};
+            time(&now);
+            localtime_r(&now, &timeinfo);
+            char strftime_buf[64]; 
+            strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i Time: %s", 
+            DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
+             SOIL_DATA.salinity, strftime_buf);
             enviar_mensaje_mqtt("sensores/temperatura", message);
         }
     }
