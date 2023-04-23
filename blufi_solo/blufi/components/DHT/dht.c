@@ -39,18 +39,15 @@ int getSignalLevel( int usTimeOut, bool state )
 
 void DHTerrorHandler(int response)
 {
- // Modificar manejo de error 
 	switch(response) {
 
 		case DHT_TIMEOUT_ERROR :
 			intentos++;
-			printf( "Sensor Timeout. Repitiendo medición %i.\n", intentos );
+			ESP_LOGE(TAG,"Sensor Timeout. Repitiendo medición %i.\n", intentos);
 			break;
 
 		case DHT_CHECKSUM_ERROR:
-			//ESP_LOGI( TAG, "CheckSum error\n" );
-			printf( "CheckSum error. Repitiendo, medición %i.\n", intentos );
-			DHTerrorHandler(readDHT());
+			ESP_LOGE(TAG,"Sensor CHECKSUM. Repitiendo medición %i.\n", intentos);
 			break;
 
 		case DHT_OK:
@@ -58,9 +55,7 @@ void DHTerrorHandler(int response)
 			break;
 
 		default :
-			//ESP_LOGI( TAG, "Unknown error\n" );
-			printf( "Unknown error.  Repitiendo, medición %i.\n", intentos );
-			DHTerrorHandler(readDHT());
+			ESP_LOGE(TAG,"Sensor Unknown. Repitiendo medición %i.\n", intentos);
 	}
 }
 
