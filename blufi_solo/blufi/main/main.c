@@ -15,6 +15,7 @@
 #include "esp_blufi_api.h"
 #include "esp_blufi.h"
 #include "time.h"
+#include "driver/gpio.h"
 /* Librerias componentes */
 #include "ntp.h"
 #include "mqtt.h"
@@ -22,6 +23,8 @@
 #include "soil.h"
 #include "blufi.h"
 #include "storage.h"
+
+#define POWER_CTRL 4
 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
@@ -83,9 +86,12 @@ void mqttSendMessage(void *params)
 
 void sensorsMeasurement(void *params)
 {
+    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
+	gpio_set_level(POWER_CTRL, 1);
     soilConfig();
     if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
-    {
+    {   
+        vTaskDelay(2000/portTICK_PERIOD_MS);
         while(true)
         {
             DHTerrorHandler(readDHT());

@@ -34,10 +34,10 @@ void adjust_time(void)
     localtime_r(&now, &timeinfo);
 
     char strftime_buf[64];
-    setenv("TZ", "EST5EDT,M3.2.0/2,M11.1.0", 1);
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1); // Roma 
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "The current date/time in New York is: %s", strftime_buf);
+    ESP_LOGI(TAG, "The current date/time in Roma is: %s", strftime_buf);
 
 }

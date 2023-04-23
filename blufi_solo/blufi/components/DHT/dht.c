@@ -15,8 +15,7 @@
 #define DHT_CHECKSUM_ERROR -1
 #define DHT_TIMEOUT_ERROR -2
 
-#define gpio_num 4
-
+#define gpio_num 16
 
 static const char* TAG = "DHT_start";
 
@@ -40,16 +39,12 @@ int getSignalLevel( int usTimeOut, bool state )
 
 void DHTerrorHandler(int response)
 {
- 
+ // Modificar manejo de error 
 	switch(response) {
 
 		case DHT_TIMEOUT_ERROR :
-			printf( "Sensor Timeout. Repitiendo medición %i.\n", intentos );
-			if(intentos < 20)
-			{ 
-				DHTerrorHandler(readDHT());
-			} 
 			intentos++;
+			printf( "Sensor Timeout. Repitiendo medición %i.\n", intentos );
 			break;
 
 		case DHT_CHECKSUM_ERROR:
@@ -84,20 +79,21 @@ int readDHT()
 
 	gpio_set_direction( gpio_num, GPIO_MODE_OUTPUT );
 
-	// pull down for 20 ms for a smooth and nice wake up
-	gpio_set_level( gpio_num, 0 );
+	// 20 ms en cero para activar el dht11 (se necesitan 18 ms sengun datasheet)
+	gpio_set_level(gpio_num, 0);
 	esp_rom_delay_us( 20000 );
 
-	// pull up for 25 us for a gentile asking for data
+	// pull up por 25 us a la espera de datos (20 a 40 us segun datasheet)
 	gpio_set_level( gpio_num, 1 );
 	esp_rom_delay_us( 25 );
 
 	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );		
 
-	// == DHT will keep the line low for 80 us and then high for 80us ====
+	// DHT pone a low la linea por 80 us y luego en high por 80 us 
+	// -- 80us low ------------------------
 
 	uSec = getSignalLevel( 85, 0 );
-//	ESP_LOGI( TAG, "Response = %d", uSec );
+
 	if( uSec<0 )
 	{
 		ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 1");
@@ -107,13 +103,12 @@ int readDHT()
 	// -- 80us up ------------------------
 
 	uSec = getSignalLevel( 85, 1 );
-//	ESP_LOGI( TAG, "Response = %d", uSec );
 	if( uSec<0 ) 
 	{
 		ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 2");
 		return DHT_TIMEOUT_ERROR;
 	}
-	// == No errors, read the 40 data bits ================
+	// == Si no hay errores lee los 40 data bits ================
 
 	for( int k = 0; k < 40; k++ ) 
 	{
