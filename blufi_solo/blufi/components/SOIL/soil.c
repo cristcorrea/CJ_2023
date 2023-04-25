@@ -63,13 +63,24 @@ void soilConfig(void)
 void humidity(void)
 {
     int adc_reading = 0; 
+    int result = 0; 
     for(int i = 0; i < 100; i++)
     {
         adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
-        SOIL_DATA.humidity += adc_reading; 
+        result += adc_reading; 
         vTaskDelay(pdMS_TO_TICKS(2));
     }
-    SOIL_DATA.humidity /= 100;
+    result /= 100;
+
+    SOIL_DATA.humidity = -0.0526 * result + 184;
+    if(SOIL_DATA.humidity > 100)
+    {
+        SOIL_DATA.humidity = 100;
+    }
+    if(SOIL_DATA.humidity < 0)
+    {
+        SOIL_DATA.humidity = 0; 
+    }
 }
 
 void salt(void)

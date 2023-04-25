@@ -79,9 +79,9 @@ void mqttSendMessage(void *params)
             localtime_r(&now, &timeinfo);
             char strftime_buf[64]; 
             strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i Time: %s", 
+            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%%  Time: %s", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
-             SOIL_DATA.salinity, strftime_buf);
+             strftime_buf);
             enviar_mensaje_mqtt("sensores/cristian", message);
         }
     }
