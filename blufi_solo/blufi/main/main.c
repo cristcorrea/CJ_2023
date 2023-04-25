@@ -25,6 +25,9 @@
 #include "storage.h"
 
 #define POWER_CTRL 4
+#define ERASED     35 
+
+static const char* TAG = "ISR";
 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
@@ -79,7 +82,7 @@ void mqttSendMessage(void *params)
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i Salt: %i Time: %s", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
              SOIL_DATA.salinity, strftime_buf);
-            enviar_mensaje_mqtt("sensores/temperatura", message);
+            enviar_mensaje_mqtt("sensores/cristian", message);
         }
     }
 }
@@ -91,7 +94,7 @@ void sensorsMeasurement(void *params)
     soilConfig();
     if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
     {   
-        vTaskDelay(2000/portTICK_PERIOD_MS);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
         while(true)
         {
             DHTerrorHandler(readDHT());
@@ -100,6 +103,37 @@ void sensorsMeasurement(void *params)
         }
     }
 }
+
+
+void erased_nvs(void *params)
+{
+    gpio_config_t isr_config;
+    isr_config.pin_bit_mask = (1ULL << ERASED);
+    isr_config.mode = GPIO_MODE_INPUT;
+    isr_config.pull_up_en = GPIO_PULLUP_ENABLE;
+    isr_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    isr_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&isr_config);
+    while(true)
+    {
+        int button_state = gpio_get_level(ERASED);
+        if(button_state == 0)
+        {
+            vTaskDelay(3000/portTICK_PERIOD_MS);
+            button_state = gpio_get_level(ERASED);
+            if(button_state == 0)
+            {
+                ESP_LOGE(TAG, "Entra a borrar NVS");
+                vTaskDelay(1000/portTICK_PERIOD_MS);
+                nvs_flash_erase();
+                esp_restart();
+
+            }
+        }
+        vTaskDelay(10/portTICK_PERIOD_MS);
+    }
+}
+
 
 void app_main(void)
 {
@@ -129,4 +163,13 @@ void app_main(void)
                 NULL,
                 1,
                 NULL);
+
+    xTaskCreate(&erased_nvs,
+                "Habilita borrado de NVS",
+                2048,
+                NULL,
+                1,
+                NULL);
+
 }
+

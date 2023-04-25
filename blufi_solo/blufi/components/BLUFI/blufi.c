@@ -288,7 +288,7 @@ static EventGroupHandle_t wifi_event_group;
         case ESP_BLUFI_EVENT_DEINIT_FINISH:
             BLUFI_INFO("BLUFI deinit finish\n");
             break;
-        case ESP_BLUFI_EVENT_BLE_CONNECT: // aca debo intentar capturar la MAC
+        case ESP_BLUFI_EVENT_BLE_CONNECT: 
 
             BLUFI_INFO("BLUFI ble connect\n");
             ble_is_connected = true;
@@ -429,6 +429,9 @@ static EventGroupHandle_t wifi_event_group;
         //memset(cj_id, 0, param->custom_data.data_len);
         memcpy(cj_id, param->custom_data.data, param->custom_data.data_len); 
         ESP_LOGI(TAG, "Recibido por custom data: %s\n", cj_id);
+        char bluetooth_mac[4] = "Hola"; 
+        esp_err_t ret = esp_blufi_send_custom_data(&bluetooth_mac, sizeof(bluetooth_mac));
+
         break;
 	case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */
