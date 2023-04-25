@@ -27,8 +27,20 @@ void adjust_time(void)
     const int retry_count = 15;
     while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
     {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+        ESP_LOGI(TAG, "Waiting for system time to be set (pool.ntp)... (%d/%d)", retry, retry_count);
         vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+    if(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && retry == 15)
+    {
+        sntp_stop();
+        sntp_setservername(0, "time.google.com");
+        sntp_init();
+        retry = 0; 
+        while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+        {
+            ESP_LOGI(TAG, "Waiting for system time to be set (google)... (%d/%d)", retry, retry_count);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
     }
     time(&now);
     localtime_r(&now, &timeinfo);

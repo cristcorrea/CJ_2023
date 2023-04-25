@@ -114,6 +114,7 @@ void erased_nvs(void *params)
     isr_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
     isr_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&isr_config);
+
     while(true)
     {
         int button_state = gpio_get_level(ERASED);
@@ -123,7 +124,7 @@ void erased_nvs(void *params)
             button_state = gpio_get_level(ERASED);
             if(button_state == 0)
             {
-                ESP_LOGE(TAG, "Entra a borrar NVS");
+                ESP_LOGE(TAG, "Borrando NVS...");
                 vTaskDelay(1000/portTICK_PERIOD_MS);
                 nvs_flash_erase();
                 esp_restart();
