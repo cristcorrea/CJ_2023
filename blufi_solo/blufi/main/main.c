@@ -28,11 +28,15 @@
 #define ERASED     35 
 
 static const char* TAG = "ISR";
+static const char* TAGQ = "Queue"; 
 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
 SemaphoreHandle_t semaphoreRTC = NULL;
+
+QueueHandle_t blufi_queue; 
+
 
 
 dht DHT_DATA;
@@ -40,7 +44,7 @@ soil SOIL_DATA;
 /*Estructura para manipular configuración*/
 typedef struct
 {
-    char *UUDI;         // debe almacenar el identificador recibido en custom message
+    char UUID[14];      // debe almacenar el identificador recibido en custom message
     uint8_t hum_sup;    // limite superior de humedad
     uint8_t hum_inf;    // Limite inferior de humedad     
 
@@ -67,9 +71,15 @@ void mqttServerConection(void *params)
 void mqttSendMessage(void *params)
 {
 
-    char message[120];
+    char message[140];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
-    {
+    {   
+        if(xQueueReceive(blufi_queue, &configuration.UUID, pdMS_TO_TICKS(100)))
+        {
+            NVS_write("queue", &configuration.UUID);        
+
+        }
+
         while (true)
         {   
             vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía
@@ -82,7 +92,10 @@ void mqttSendMessage(void *params)
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%%  Time: %s", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
              strftime_buf);
-            enviar_mensaje_mqtt("sensores/cristian", message);
+            /*aca tengo que chequear que el UUID sea correcto*/
+            ESP_LOGI(TAGQ, "Topic creado: %s", configuration.UUID);
+            enviar_mensaje_mqtt(configuration.UUID, message);
+
         }
     }
 }
@@ -99,7 +112,7 @@ void sensorsMeasurement(void *params)
         {
             DHTerrorHandler(readDHT());
             humidity(); 
-            vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 30 seg.
+            vTaskDelay(pdMS_TO_TICKS(50000)); // mide cada 50 seg.
         }
     }
 }
@@ -143,6 +156,10 @@ void app_main(void)
     semaphoreRTC           = xSemaphoreCreateBinary();
 
     blufi_start();
+
+    blufi_queue = xQueueCreate(10, sizeof(char[13]));
+
+    NVS_read("queue", configuration.UUID);
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",

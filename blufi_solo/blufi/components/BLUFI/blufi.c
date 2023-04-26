@@ -12,12 +12,10 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_bt.h"
-
-
 #include "esp_blufi_api.h"
 #include "blufi.h"
-
 #include "esp_blufi.h"
+#include "freertos/queue.h"
 
 
 #define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 10
@@ -32,6 +30,8 @@ static const char* TAG = "BLUFI.C";
 
 static wifi_config_t sta_config;
 static wifi_config_t ap_config;
+
+extern QueueHandle_t blufi_queue; 
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -279,6 +279,7 @@ static EventGroupHandle_t wifi_event_group;
     {
         /* actually, should post to blufi_task handle the procedure,
         * now, as a example, we do it more simply */
+
         switch (event) {
         case ESP_BLUFI_EVENT_INIT_FINISH:
             BLUFI_INFO("BLUFI init finish\n");
@@ -426,9 +427,12 @@ static EventGroupHandle_t wifi_event_group;
         ESP_LOGI(TAG, "Recibido: %s - Almacenado en: %u\n", UUID, *UUID);
         */
         char cj_id[sizeof(param->custom_data.data)];
-        //memset(cj_id, 0, param->custom_data.data_len);
         memcpy(cj_id, param->custom_data.data, param->custom_data.data_len); 
         ESP_LOGI(TAG, "Recibido por custom data: %s\n", cj_id);
+        if(!xQueueSend(blufi_queue, &cj_id, pdMS_TO_TICKS(100)))
+        {
+            ESP_LOGE(TAG, "Mensaje de blufi_queue %s no enviado", cj_id);
+        }
         char bluetooth_mac[4] = "Hola"; 
         esp_err_t ret = esp_blufi_send_custom_data(&bluetooth_mac, sizeof(bluetooth_mac));
 
