@@ -23,6 +23,8 @@
 #include "soil.h"
 #include "blufi.h"
 #include "storage.h"
+#include "bh1750.h" 
+#include "pomp.h"
 
 #define POWER_CTRL 4
 #define ERASED     35 
@@ -148,6 +150,35 @@ void erased_nvs(void *params)
     }
 }
 
+void light_meter(void * params)
+{
+    bh1750_init();
+    while(true)
+    {
+        bh1750_read();
+        vTaskDelay(20000/portTICK_PERIOD_MS);
+    }
+}
+
+
+void pomp(void * params)
+{
+    riego_config();
+    while(true)
+    {
+        if(SOIL_DATA.humidity < configuration.hum_inf)
+        {
+            // frenar medicion de humidity() para no entrar en conflicto
+            while(SOIL_DATA.humidity < configuration.hum_sup)
+            {
+                regar();
+                humidity();
+                vTaskDelay(20/portTICK_PERIOD_MS);
+            }
+        }
+        vTaskDelay(10/portTICK_PERIOD_MS);
+    }
+}
 
 void app_main(void)
 {
@@ -188,6 +219,21 @@ void app_main(void)
                 NULL,
                 1,
                 NULL);
+
+    xTaskCreate(&light_meter,
+                "Inicia medicion de luz ambiente",
+                2048,
+                NULL,
+                1,
+                NULL);
+
+    xTaskCreate(&pomp,
+                "Inicia control de riego",
+                2048,
+                NULL,
+                1,
+                NULL);
+
 
 }
 
