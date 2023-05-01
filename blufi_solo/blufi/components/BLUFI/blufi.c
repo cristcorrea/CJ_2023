@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -16,12 +17,15 @@
 #include "blufi.h"
 #include "esp_blufi.h"
 #include "freertos/queue.h"
+#include "esp_mac.h"
+#include "esp_bt_device.h"
 
+#include "storage.h"
 
 #define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 10
 #define EXAMPLE_INVALID_REASON                255
 #define EXAMPLE_INVALID_RSSI                  -128
-
+#define TAMANIO_ARRAY   18
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param);
 
 #define WIFI_LIST_NUM   10
@@ -121,12 +125,17 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         info.sta_ssid = gl_sta_ssid;
         info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
-        xSemaphoreGive(semaphoreWifiConection);
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+            ESP_LOGE(TAG, "IP obtenida. Reiniciando...\n");
+            vTaskDelay(2000/portTICK_PERIOD_MS);
+            esp_restart();
+
         } else {
-            BLUFI_INFO("BLUFI BLE is not connected yet\n");
+            esp_blufi_deinit();
         }
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        xSemaphoreGive(semaphoreWifiConection);
         break;
     }
     default:
@@ -160,6 +169,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
+            // Agregado
+            esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &gl_sta_conn_info);
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
@@ -420,21 +431,18 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     break;
 }
 case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
-    /*
-    char *UUID; 
-    UUID = (char *) malloc(16);
-    strcpy(UUID, (char*) param->custom_data.data);
-    ESP_LOGI(TAG, "Recibido: %s - Almacenado en: %u\n", UUID, *UUID);
-    */
-    char cj_id[sizeof(param->custom_data.data)];
-    memcpy(cj_id, param->custom_data.data, param->custom_data.data_len); 
+
+    char cj_id[TAMANIO_ARRAY];
+    memset(&cj_id, 0, sizeof(char) * TAMANIO_ARRAY);
+    memcpy(&cj_id, param->custom_data.data, sizeof(char) *  TAMANIO_ARRAY-1); 
     ESP_LOGI(TAG, "Recibido por custom data: %s\n", cj_id);
-    if(!xQueueSend(blufi_queue, &cj_id, pdMS_TO_TICKS(100)))
-    {
-        ESP_LOGE(TAG, "Mensaje de blufi_queue %s no enviado", cj_id);
-    }
-    char bluetooth_mac[4] = "Hola"; 
-    esp_err_t ret = esp_blufi_send_custom_data(&bluetooth_mac, sizeof(bluetooth_mac));
+    NVS_write("queue", &cj_id);        
+
+    char mac[6];
+    memset(mac, 0, sizeof(char) * 6);
+    memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);
+    esp_err_t ret = esp_blufi_send_custom_data(&mac, 6);
+
 
     break;
 case ESP_BLUFI_EVENT_RECV_USERNAME:

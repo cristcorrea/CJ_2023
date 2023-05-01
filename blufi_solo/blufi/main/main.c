@@ -46,7 +46,7 @@ soil SOIL_DATA;
 /*Estructura para manipular configuración*/
 typedef struct
 {
-    char UUID[14];      // debe almacenar el identificador recibido en custom message
+    char UUID[17];      // debe almacenar el identificador recibido en custom message
     uint8_t hum_sup;    // limite superior de humedad
     uint8_t hum_inf;    // Limite inferior de humedad     
 
@@ -62,7 +62,6 @@ void mqttServerConection(void *params)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
         {
-            ESP_LOGI("Main Task", "Realiza conexión con broker HiveMQ");
             adjust_time();
             mqtt_start();
             xSemaphoreGive(semaphoreRTC);
@@ -76,11 +75,6 @@ void mqttSendMessage(void *params)
     char message[140];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {   
-        if(xQueueReceive(blufi_queue, &configuration.UUID, pdMS_TO_TICKS(100)))
-        {
-            NVS_write("queue", &configuration.UUID);        
-
-        }
 
         while (true)
         {   
@@ -94,8 +88,6 @@ void mqttSendMessage(void *params)
             sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%%  Time: %s", 
             DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
              strftime_buf);
-            /*aca tengo que chequear que el UUID sea correcto*/
-            ESP_LOGI(TAGQ, "Topic creado: %s", configuration.UUID);
             enviar_mensaje_mqtt(configuration.UUID, message);
 
         }
@@ -233,7 +225,6 @@ void app_main(void)
                 NULL,
                 1,
                 NULL);
-
-
+    
 }
 
