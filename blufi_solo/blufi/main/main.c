@@ -39,10 +39,22 @@ SemaphoreHandle_t semaphoreRTC = NULL;
 
 QueueHandle_t blufi_queue; 
 
-
-
 dht DHT_DATA;
 soil SOIL_DATA;
+
+typedef struct
+{
+    int humedad_amb; 
+    int temperatura_amb; 
+    int humedad_suelo; 
+    int intensidad_luz; 
+    bool estado_riego; 
+
+}sensor_data;
+
+sensor_data mediciones; 
+
+
 /*Estructura para manipular configuración*/
 typedef struct
 {
@@ -75,7 +87,11 @@ void mqttSendMessage(void *params)
     char message[140];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {   
-
+        char topic_sus[19];
+        memset(topic_sus, 0, 18);
+        memcpy(topic_sus, configuration.UUID, 18);
+        strcat(topic_sus, "R");
+        suscribirse(topic_sus);
         while (true)
         {   
             vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía

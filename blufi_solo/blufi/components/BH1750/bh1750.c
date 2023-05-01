@@ -26,6 +26,9 @@ static const char *TAG = "bh1750";
 #define ACK_VAL    0x0         /*!< I2C ack value */
 #define NACK_VAL   0x1         /*!< I2C nack value */
 
+
+
+
 int bh1750_I2C_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt);
 int bh1750_I2C_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt);
 
