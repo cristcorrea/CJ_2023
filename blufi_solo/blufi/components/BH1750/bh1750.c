@@ -9,6 +9,7 @@
 #include "freertos/task.h"
 
 #include "bh1750.h"
+#include "header.h"
 
 static const char *TAG = "bh1750";
 
@@ -27,7 +28,7 @@ static const char *TAG = "bh1750";
 #define NACK_VAL   0x1         /*!< I2C nack value */
 
 
-
+extern sensor_data mediciones; 
 
 int bh1750_I2C_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt);
 int bh1750_I2C_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt);
@@ -39,7 +40,7 @@ void bh1750_reset(void) {
 	vTaskDelay(10 / portTICK_PERIOD_MS); // sleep 10ms
 }
 
-float bh1750_read(void) {
+void bh1750_read(void) {
 	uint8_t buf[32];
 	uint8_t mode = BH1750_MODE;
 	uint8_t sleepms = 1;
@@ -69,20 +70,19 @@ float bh1750_read(void) {
 	ret=bh1750_I2C_write(I2C_ADDR, mode, NULL, 0);
     if (ret != ESP_OK) {
     	bh1750_reset();
-    	return -1;
+    	//return -1;
     }
 
 	vTaskDelay(sleepms / portTICK_PERIOD_MS); // sleep ms
 	ret=bh1750_I2C_read(I2C_ADDR, 0xFF, buf, 2);
     if (ret != ESP_OK) {
     	bh1750_reset();
-    	return 0;
+    	//return 0;
     }
 	uint16_t luxraw = (uint16_t)(((uint16_t)(buf[0]<<8))|((uint16_t)buf[1]));
 	luxval = (float)luxraw/1.2/resdiv;
-	ESP_LOGI(TAG, "sensraw=%u lux=%f", luxraw,luxval);
 
-	return luxval;
+	mediciones.intensidad_luz = luxval;
 }
 
 void bh1750_init(void) {

@@ -13,4 +13,5 @@ set(EXTRA_COMPONENT_DIRS  "${COMPONENTS_DIR}/MQTTCJ"
                           "${COMPONENTS_DIR}/RTC"
                           "${COMPONENTS_DIR}/POMP"
                           "${COMPONENTS_DIR}/STORAGE"
-                          "${COMPONENTS_DIR}/BH1750")
+                          "${COMPONENTS_DIR}/BH1750"
+                          "${COMPONENTS_DIR}/HEADER")

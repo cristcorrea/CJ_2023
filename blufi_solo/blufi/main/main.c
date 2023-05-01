@@ -25,13 +25,12 @@
 #include "storage.h"
 #include "bh1750.h" 
 #include "pomp.h"
+#include "header.h"
 
 #define POWER_CTRL 4
 #define ERASED     35 
 
-static const char* TAG = "ISR";
-static const char* TAGQ = "Queue"; 
-
+static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreMqttConection = NULL;
@@ -39,31 +38,7 @@ SemaphoreHandle_t semaphoreRTC = NULL;
 
 QueueHandle_t blufi_queue; 
 
-dht DHT_DATA;
-soil SOIL_DATA;
-
-typedef struct
-{
-    int humedad_amb; 
-    int temperatura_amb; 
-    int humedad_suelo; 
-    int intensidad_luz; 
-    bool estado_riego; 
-
-}sensor_data;
-
 sensor_data mediciones; 
-
-
-/*Estructura para manipular configuración*/
-typedef struct
-{
-    char UUID[17];      // debe almacenar el identificador recibido en custom message
-    uint8_t hum_sup;    // limite superior de humedad
-    uint8_t hum_inf;    // Limite inferior de humedad     
-
-
-}config_data;
 
 config_data configuration; 
 
@@ -101,9 +76,9 @@ void mqttSendMessage(void *params)
             localtime_r(&now, &timeinfo);
             char strftime_buf[64]; 
             strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%%  Time: %s", 
-            DHT_DATA.temperature, DHT_DATA.humidity, SOIL_DATA.humidity,
-             strftime_buf);
+            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%% Lux: %i Time: %s", 
+            mediciones.temperatura_amb, mediciones.humedad_amb, mediciones.humedad_suelo,
+             mediciones.intensidad_luz, strftime_buf);
             enviar_mensaje_mqtt(configuration.UUID, message);
 
         }
@@ -174,10 +149,10 @@ void pomp(void * params)
     riego_config();
     while(true)
     {
-        if(SOIL_DATA.humidity < configuration.hum_inf)
+        if(mediciones.humedad_suelo < configuration.hum_inf)
         {
             // frenar medicion de humidity() para no entrar en conflicto
-            while(SOIL_DATA.humidity < configuration.hum_sup)
+            while(mediciones.humedad_suelo < configuration.hum_sup)
             {
                 regar();
                 humidity();

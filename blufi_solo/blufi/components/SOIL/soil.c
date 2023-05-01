@@ -8,6 +8,7 @@
 #include "esp_adc/adc_oneshot.h"
 
 #include "soil.h"
+#include "header.h"
 
 #define TAG "Soil"
 
@@ -15,29 +16,7 @@
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
 
-
-static void countingSort(int  muestras[])
-{
-    int contador[4096];
-    for(int i = 0; i < 4096; i++)
-    {
-        contador[i] = 0;
-    }
-    for(int j = 0; j < 24; j++)
-    {
-        contador[muestras[j]]++;
-    }
-    int l = 0;
-    for(int k = 0; k < 4096; k++)
-    {
-        while(contador[k] != 0) 
-        {
-            muestras[l] = k;
-            contador[k]--;
-            l++;
-        }
-    }
-}
+extern sensor_data mediciones; 
 
 void soilConfig(void)
 {
@@ -72,17 +51,18 @@ void humidity(void)
     }
     result /= 100;
 
-    SOIL_DATA.humidity = -0.0526 * result + 184;
-    if(SOIL_DATA.humidity > 100)
+    mediciones.humedad_suelo = -0.0526 * result + 184;
+    if(mediciones.humedad_suelo > 100)
     {
-        SOIL_DATA.humidity = 100;
+        mediciones.humedad_suelo = 100;
     }
-    if(SOIL_DATA.humidity < 0)
+    if(mediciones.humedad_suelo < 0)
     {
-        SOIL_DATA.humidity = 0; 
+        mediciones.humedad_suelo = 0; 
     }
 }
 
+/*
 void salt(void)
 {
     int muestras[120];
@@ -102,7 +82,7 @@ void salt(void)
     res /= 118; 
     SOIL_DATA.salinity = res; 
 }
-
+*/
 
 
 

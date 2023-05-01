@@ -8,6 +8,7 @@
 #include "freertos/task.h"
 
 #include "dht.h"
+#include "header.h"
 
 #define MAXdhtData 5	// to complete 40 = 5*8 Bits
 
@@ -20,6 +21,9 @@
 static const char* TAG = "DHT_start";
 
 int intentos = 0;
+
+extern sensor_data mediciones; 
+
 
 int getSignalLevel( int usTimeOut, bool state )
 {
@@ -135,16 +139,18 @@ int readDHT()
 
 	}
 
-	DHT_DATA.humidity = dhtData[0];					
 
-	DHT_DATA.temperature = dhtData[2];
-	DHT_DATA.temperature *= 10;		
-	DHT_DATA.temperature += dhtData[3]; 
-	DHT_DATA.temperature /= 10; 
+	mediciones.humedad_suelo = dhtData[0];			
+
+	mediciones.temperatura_amb = dhtData[2];
+	mediciones.temperatura_amb *= 10;
+	mediciones.temperatura_amb += dhtData[3];
+	mediciones.temperatura_amb /= 10; 
+
 	
 
 	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
-			DHT_DATA.temperature *= -1;
+			mediciones.temperatura_amb *= -1;
 
 
 	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF))

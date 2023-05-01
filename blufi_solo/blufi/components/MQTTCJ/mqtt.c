@@ -20,6 +20,8 @@
 
 #include "mqtt.h"
 
+#include "esp_bt_device.h"
+
 #define TAG "MQTT"
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
@@ -43,20 +45,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         xSemaphoreGive(semaphoreMqttConection);
-        /*
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-        */
         break;
+
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
         break;
@@ -71,9 +61,39 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_DATA:
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        printf("DATA=%.*s\r\n", event->data_len, event->data);
+        //ESP_LOGI(TAG, "Tamaño recibido: %i\n", event->data_len);
+        char mac[7];
+        memset(mac, 0, sizeof(char) * 6);
+        memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6); 
+
+        char rec_mac[13]; 
+        memset(rec_mac, 0, sizeof(char) * 13);
+        memcpy(rec_mac, event->data, sizeof(char) * 12);
+        //ESP_LOGI(TAG, "mac rec: %s\n",rec_mac);
+
+        char mac_final[6];
+        int i, j; 
+        for(i = 0, j = 0; i < 12; i += 2, j++)
+        {
+            char hex[3];
+            strncpy(hex, rec_mac + i, 2);
+            hex[2] = '\0';
+            mac_final[j] = strtol(hex, NULL, 16);
+        }
+        if(memcmp(mac, mac_final, sizeof(char)*6) == 0)
+        {
+            ESP_LOGI(TAG, "Ok!!\n");
+        }
+        /*
+        ESP_LOGI(TAG, "mac final: %x%x%x%x%x%x \n", mac_final[0], mac_final[1],mac_final[2],
+            mac_final[3],mac_final[4], mac_final[5]);
+
+        char str_data[18];
+        memset(&str_data, 0, event->data_len);
+        memcpy(&str_data, event->data, event->data_len);
+
+        ESP_LOGI("MQTT Suscrip", "Recibido: %s\n", str_data);
+        */
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
