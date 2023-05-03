@@ -17,3 +17,5 @@ typedef struct
     int regar; 
 
 }config_data;
+
+void read_config(char str[], config_data *cfg);

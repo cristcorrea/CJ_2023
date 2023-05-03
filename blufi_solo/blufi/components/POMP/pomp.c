@@ -21,7 +21,6 @@ void riego_config()
 
 void regar()
 {
-    riego_config();
     gpio_set_level(BOMBA, 1);
     vTaskDelay(5000/portTICK_PERIOD_MS);
     gpio_set_level(BOMBA, 0);

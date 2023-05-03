@@ -21,6 +21,8 @@
 #include "mqtt.h"
 
 #include "esp_bt_device.h"
+#include "header.h"
+#include "storage.h"
 
 #define TAG "MQTT"
 
@@ -33,6 +35,8 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 
 
 extern SemaphoreHandle_t semaphoreMqttConection; 
+
+extern config_data configuration;
 
 esp_mqtt_client_handle_t client; 
 
@@ -61,7 +65,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_DATA:
-        //ESP_LOGI(TAG, "Tamaño recibido: %i\n", event->data_len);
         char mac[7];
         memset(mac, 0, sizeof(char) * 6);
         memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6); 
@@ -69,7 +72,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         char rec_mac[13]; 
         memset(rec_mac, 0, sizeof(char) * 13);
         memcpy(rec_mac, event->data, sizeof(char) * 12);
-        //ESP_LOGI(TAG, "mac rec: %s\n",rec_mac);
 
         char mac_final[6];
         int i, j; 
@@ -82,17 +84,16 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         }
         if(memcmp(mac, mac_final, sizeof(char)*6) == 0)
         {
-            ESP_LOGI(TAG, "Ok!!\n");
-        }
-        /*
-        ESP_LOGI(TAG, "mac final: %x%x%x%x%x%x \n", mac_final[0], mac_final[1],mac_final[2],
-            mac_final[3],mac_final[4], mac_final[5]);
 
+            read_config(event->data, &configuration);
+            ESP_LOGI(TAG, "Configuration H: %i L: %i R: %i", configuration.hum_sup, configuration.hum_inf, configuration.regar);
+
+        }   
+        /*
         char str_data[18];
         memset(&str_data, 0, event->data_len);
         memcpy(&str_data, event->data, event->data_len);
 
-        ESP_LOGI("MQTT Suscrip", "Recibido: %s\n", str_data);
         */
         break;
     case MQTT_EVENT_ERROR:

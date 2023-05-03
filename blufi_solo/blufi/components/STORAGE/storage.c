@@ -10,7 +10,7 @@
 #include "storage.h"
 
 
-void NVS_read(char *data, char *Get_Data) // data es la referencia
+int NVS_read(char *data, char *Get_Data) // data es la referencia
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
@@ -31,12 +31,15 @@ void NVS_read(char *data, char *Get_Data) // data es la referencia
                 printf("Done\n");
                 printf("Read data: %s\n", dato_leido);
                 strcpy(Get_Data, dato_leido);
+                return 1; 
                 break;
             case ESP_ERR_NVS_NOT_FOUND:
                 printf("The value is not initialized yet!\n");
+                return 0; 
                 break;
             default :
                 printf("Error (%s) reading!\n", esp_err_to_name(err));
+                return 0; 
         }
     }
     nvs_close(my_handle);

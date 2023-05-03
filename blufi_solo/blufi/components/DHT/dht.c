@@ -140,7 +140,7 @@ int readDHT()
 	}
 
 
-	mediciones.humedad_suelo = dhtData[0];			
+	mediciones.humedad_amb = dhtData[0];			
 
 	mediciones.temperatura_amb = dhtData[2];
 	mediciones.temperatura_amb *= 10;

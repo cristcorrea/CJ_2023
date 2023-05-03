@@ -173,7 +173,10 @@ void app_main(void)
 
     blufi_queue = xQueueCreate(10, sizeof(char[13]));
 
-    NVS_read("queue", configuration.UUID);
+    if(NVS_read("queue", configuration.UUID) == 1)
+    {
+        NVS_read("configuration"); // continuar desde aca 
+    }
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
