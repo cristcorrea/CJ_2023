@@ -14,7 +14,7 @@ typedef struct
     char UUID[17];  // debe almacenar el identificador recibido en custom message
     int hum_sup;    // limite superior de humedad
     int hum_inf;    // Limite inferior de humedad     
-    int regar; 
+    int regar;      // Acciona riego manual 
 
 }config_data;
 

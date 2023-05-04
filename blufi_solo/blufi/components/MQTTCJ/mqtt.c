@@ -84,7 +84,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         }
         if(memcmp(mac, mac_final, sizeof(char)*6) == 0)
         {
-
+            char stored = '0';
+            NVS_write("config_data", event->data);
+            NVS_write("config_len", event->data_len);
+            stored = '1'; 
+            NVS_write("stored", stored);
             read_config(event->data, &configuration);
             ESP_LOGI(TAG, "Configuration H: %i L: %i R: %i", configuration.hum_sup, configuration.hum_inf, configuration.regar);
 
