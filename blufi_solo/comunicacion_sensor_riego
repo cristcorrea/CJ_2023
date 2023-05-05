@@ -1,0 +1,29 @@
+Tipos de entradas al esp: 
+
+C			- consulta (se envía a cada esp vinculado al iniciar la app)
+xxxxxxxxxxxxRx 		- acciona el riego manual (botón)- Después de la R: 1 = activado, 0 = desactivado
+xxxxxxxxxxxxAx		- activa/desactiva riego automatico (botón) - Después de la A: 1 = activado, 0 = desactivado
+xxxxxxxxxxxxHxxLxxF	- configura límites de riego (botón) - Enteros del 0 al 100.
+
+Envio de datos desde esp:  
+
+xxxxxxxxxxxxSxxHxxTxxLxxMxxIxxAx - respuesta a la consulta de datos C
+
+
+C = consulta
+R = riego
+A = automático
+S = suelo
+H = humedad
+L = luz
+M = maximo (limite superior riego)
+I = inferior (limite inferior riego)
+F = final
+
+
+Letras disponibles
+
+B D E G J K N O P Q U V W X Y Z
+
+
+Puedo hacer un switch case con el char que esta inmediatamente después de la MAC. 

@@ -173,29 +173,9 @@ void app_main(void)
 
     blufi_queue = xQueueCreate(10, sizeof(char[13]));
     NVS_read("queue", configuration.UUID);
-    char result_stored[2];
-    if(NVS_read("stored", result_stored) == 1)
-    {   
+    
+    //read_config(config_stored, &configuration);
         
-        int result;
-        char config_len[2];
-        memset(config_len, 0, 2);
-        result = NVS_read("config_len", config_len);
-        if(result != 1)
-        {
-            ESP_LOGE("NVS", "Error de lectura 1");
-        }
-        char config_stored[atoi(config_len[0])+1];
-        memset(config_stored, 0, atoi(config_len[0])+1);
-        result = NVS_read("config_data", config_stored);
-        if(result != 1)
-        {
-            ESP_LOGE("NVS", "Error de lectura 2");
-        }
-        read_config(config_stored, &configuration);
-        
-
-    }
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",

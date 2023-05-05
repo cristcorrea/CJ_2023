@@ -65,40 +65,69 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_DATA:
-        char mac[7];
-        memset(mac, 0, sizeof(char) * 6);
-        memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6); 
 
-        char rec_mac[13]; 
-        memset(rec_mac, 0, sizeof(char) * 13);
-        memcpy(rec_mac, event->data, sizeof(char) * 12);
-
-        char mac_final[6];
-        int i, j; 
-        for(i = 0, j = 0; i < 12; i += 2, j++)
+        // Primero tengo que filtrar si el tamaño de lo que arriba es menor a 12
+        if(event->data_len < 12)
         {
-            char hex[3];
-            strncpy(hex, rec_mac + i, 2);
-            hex[2] = '\0';
-            mac_final[j] = strtol(hex, NULL, 16);
+            // Si es menor, entonces me solicita configuración
+            // Chequeo que el caracter recibido sea la C  
+            char consulta[2];
+            memset(consulta, 0, sizeof(char) * 2);
+            memcpy(consulta, event->data, sizeof(char));
+            if(consulta[0] == 'C')
+            {
+                // Enviar datos de la consulta
+            }
+        }else{
+            char mac[7];
+            memset(mac, 0, sizeof(char) * 6);
+            memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);  // Guardo la mac del esp en "mac"
+
+            char rec_mac[13];                               
+            memset(rec_mac, 0, sizeof(char) * 13);
+            memcpy(rec_mac, event->data, sizeof(char) * 12);          // mac recibida por mqtt
+
+            char mac_final[6];                                        // pasa de un array de 12 a 6
+            int i, j; 
+            for(i = 0, j = 0; i < 12; i += 2, j++)
+            {
+                char hex[3];
+                strncpy(hex, rec_mac + i, 2);
+                hex[2] = '\0';
+                mac_final[j] = strtol(hex, NULL, 16);
+            }
+            if(memcmp(mac, mac_final, sizeof(char)*6) == 0)           // compara las dos mac  
+            {
+                char confg_recibida[event->data_len];
+                memset(confg_recibida, 0, sizeof(char) * event->data_len);
+                memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
+                char letra = confg_recibida[13];
+                switch (letra)
+                {
+                case 'R':
+                    // Enciende el riego manual 
+                    break;
+                
+                case 'A':
+                    // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
+                    break;
+                
+                case 'H':
+                    // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA
+                    recibe_confg_hum(event->data, &configuration);
+                    NVS_write("config_hum", );
+                    break; 
+                }
+                /*
+                NVS_write("config_data", event->data);
+                NVS_write("config_len", event->data_len);
+                read_config(event->data, &configuration);
+                ESP_LOGI(TAG, "Configuration H: %i L: %i R: %i", configuration.hum_sup, configuration.hum_inf, configuration.regar);
+                */
+            }   
         }
-        if(memcmp(mac, mac_final, sizeof(char)*6) == 0)
-        {
-            char stored = '0';
-            NVS_write("config_data", event->data);
-            NVS_write("config_len", event->data_len);
-            stored = '1'; 
-            NVS_write("stored", stored);
-            read_config(event->data, &configuration);
-            ESP_LOGI(TAG, "Configuration H: %i L: %i R: %i", configuration.hum_sup, configuration.hum_inf, configuration.regar);
 
-        }   
-        /*
-        char str_data[18];
-        memset(&str_data, 0, event->data_len);
-        memcpy(&str_data, event->data, event->data_len);
 
-        */
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
