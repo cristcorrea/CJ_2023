@@ -21,6 +21,7 @@
 #include "esp_bt_device.h"
 
 #include "storage.h"
+#include "header.h"
 
 #define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 10
 #define EXAMPLE_INVALID_REASON                255
@@ -59,6 +60,8 @@ static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern SemaphoreHandle_t semaphoreWifiConection; 
+
+extern config_data configuration; 
 
 static void example_record_wifi_conn_info(int rssi, uint8_t reason)
 {
@@ -442,7 +445,9 @@ case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
     memset(mac, 0, sizeof(char) * 6);
     memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);
     esp_err_t ret = esp_blufi_send_custom_data(&mac, 6);
-
+    memset(configuration.MAC, 0, sizeof(char) * 7);
+    memcpy(configuration.MAC, mac, sizeof(char) * 6);
+    
 
     break;
 case ESP_BLUFI_EVENT_RECV_USERNAME:

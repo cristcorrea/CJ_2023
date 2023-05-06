@@ -4,14 +4,14 @@ typedef struct
     float temperatura_amb; 
     int humedad_suelo; 
     int intensidad_luz; 
-    int modo_riego;
 
 }sensor_data;
 
-/*Estructura para manipular configuración*/
+/*Estructura para guardar configuración*/
 typedef struct
 {
     char UUID[17];      // debe almacenar el identificador recibido en custom message
+    char MAC[7];
     int hum_sup;        // limite superior de humedad
     int hum_inf;        // Limite inferior de humedad     
     int regar;          // Acciona riego manual 

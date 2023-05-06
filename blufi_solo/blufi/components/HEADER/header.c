@@ -2,7 +2,7 @@
 #include <string.h>
 
 
-void read_config(char str[], config_data *cfg)
+void recibe_confg_hum(char str[], config_data *cfg)
 {
     int posH = strcspn(str, "H");
     int posL = strcspn(str, "L");

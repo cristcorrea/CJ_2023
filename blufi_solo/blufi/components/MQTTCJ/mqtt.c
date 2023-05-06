@@ -23,6 +23,7 @@
 #include "esp_bt_device.h"
 #include "header.h"
 #include "storage.h"
+#include "time.h"
 
 #define TAG "MQTT"
 
@@ -37,6 +38,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 extern SemaphoreHandle_t semaphoreMqttConection; 
 
 extern config_data configuration;
+extern sensor_data mediciones; 
 
 esp_mqtt_client_handle_t client; 
 
@@ -77,16 +79,31 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             if(consulta[0] == 'C')
             {
                 // Enviar datos de la consulta
+            time_t now = 0;
+            struct tm timeinfo = {0};
+            time(&now);
+            localtime_r(&now, &timeinfo);
+            char strftime_buf[64]; 
+            strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+            char message[140];
+            sprintf(message, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
+            configuration.MAC, mediciones.humedad_suelo,
+            mediciones.humedad_amb, mediciones.temperatura_amb,
+            mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
+            strftime_buf, configuration.control_riego);
+            enviar_mensaje_mqtt(configuration.UUID, message);
+
             }
         }else{
+            /*
             char mac[7];
             memset(mac, 0, sizeof(char) * 6);
             memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);  // Guardo la mac del esp en "mac"
-
+            */
             char rec_mac[13];                               
             memset(rec_mac, 0, sizeof(char) * 13);
             memcpy(rec_mac, event->data, sizeof(char) * 12);          // mac recibida por mqtt
-
+            
             char mac_final[6];                                        // pasa de un array de 12 a 6
             int i, j; 
             for(i = 0, j = 0; i < 12; i += 2, j++)
@@ -96,38 +113,43 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 hex[2] = '\0';
                 mac_final[j] = strtol(hex, NULL, 16);
             }
-            if(memcmp(mac, mac_final, sizeof(char)*6) == 0)           // compara las dos mac  
+            if(memcmp(configuration.MAC, mac_final, sizeof(char)*6) == 0)           // compara las dos mac  
             {
                 char confg_recibida[event->data_len];
                 memset(confg_recibida, 0, sizeof(char) * event->data_len);
                 memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
                 char letra = confg_recibida[13];
+                int err; 
                 switch (letra)
                 {
                 case 'R':
-                    // Enciende el riego manual 
+                    // Enciende el riego manual
+                     ESP_LOGI(TAG, "Aca tendria que regar");
                     break;
                 
                 case 'A':
                     // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
+                    configuration.control_riego = atoi(event->data[14]);
+                    err = NVS_write_i8("control_riego", &configuration.control_riego);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse control_riego\n");}else{
+                        ESP_LOGI(TAG, "control_riego almacenado");
+                    }
                     break;
                 
                 case 'H':
                     // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA
                     recibe_confg_hum(event->data, &configuration);
-                    NVS_write("config_hum", );
+                    err = NVS_write_i8("hum_H", &configuration.hum_sup);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
+                    err = NVS_write_i8("hum_H", &configuration.hum_inf);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
+                        ESP_LOGI(TAG, "Datos de riego almacenados");
+                    }
+
                     break; 
                 }
-                /*
-                NVS_write("config_data", event->data);
-                NVS_write("config_len", event->data_len);
-                read_config(event->data, &configuration);
-                ESP_LOGI(TAG, "Configuration H: %i L: %i R: %i", configuration.hum_sup, configuration.hum_inf, configuration.regar);
-                */
             }   
         }
-
-
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");

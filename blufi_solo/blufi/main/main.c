@@ -40,7 +40,7 @@ QueueHandle_t blufi_queue;
 
 sensor_data mediciones; 
 
-config_data configuration; 
+config_data configuration;
 
 void mqttServerConection(void *params)
 {
@@ -59,7 +59,7 @@ void mqttServerConection(void *params)
 void mqttSendMessage(void *params)
 {
 
-    char message[140];
+    char message[100];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {   
         char topic_sus[19];
@@ -70,6 +70,7 @@ void mqttSendMessage(void *params)
         while (true)
         {   
             vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía
+            /*
             time_t now = 0;
             struct tm timeinfo = {0};
             time(&now);
@@ -80,6 +81,7 @@ void mqttSendMessage(void *params)
             mediciones.temperatura_amb, mediciones.humedad_amb, mediciones.humedad_suelo,
              mediciones.intensidad_luz, strftime_buf);
             enviar_mensaje_mqtt(configuration.UUID, message);
+            */
 
         }
     }
@@ -173,9 +175,6 @@ void app_main(void)
 
     blufi_queue = xQueueCreate(10, sizeof(char[13]));
     NVS_read("queue", configuration.UUID);
-    
-    //read_config(config_stored, &configuration);
-        
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
