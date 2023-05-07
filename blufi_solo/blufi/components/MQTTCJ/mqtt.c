@@ -45,8 +45,6 @@ esp_mqtt_client_handle_t client;
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     esp_mqtt_event_handle_t event = event_data;
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -91,7 +89,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mediciones.humedad_amb, mediciones.temperatura_amb,
             mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
             strftime_buf, configuration.control_riego);
-            char topicA[] = "28111683387413616";
             enviar_mensaje_mqtt(configuration.UUID, message);
 
             }
@@ -211,5 +208,5 @@ void enviar_mensaje_mqtt(char * topic, char * mensaje)
 
 void suscribirse(char * topic)
 {
-    int mensaje_id = esp_mqtt_client_subscribe(client, topic, 1);
+    esp_mqtt_client_subscribe(client, topic, 1);
 }
