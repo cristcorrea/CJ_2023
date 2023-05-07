@@ -91,20 +91,22 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mediciones.humedad_amb, mediciones.temperatura_amb,
             mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
             strftime_buf, configuration.control_riego);
+            char topicA[] = "28111683387413616";
             enviar_mensaje_mqtt(configuration.UUID, message);
 
             }
         }else{
-            /*
+            
             char mac[7];
-            memset(mac, 0, sizeof(char) * 6);
+            memset(mac, 0, sizeof(char) * 7);
             memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);  // Guardo la mac del esp en "mac"
-            */
+            
             char rec_mac[13];                               
             memset(rec_mac, 0, sizeof(char) * 13);
             memcpy(rec_mac, event->data, sizeof(char) * 12);          // mac recibida por mqtt
             
-            char mac_final[6];                                        // pasa de un array de 12 a 6
+            char mac_final[7];                                        // pasa de un array de 12 a 6
+            memset(mac_final, 0, sizeof(char) * 7);
             int i, j; 
             for(i = 0, j = 0; i < 12; i += 2, j++)
             {
@@ -113,41 +115,59 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 hex[2] = '\0';
                 mac_final[j] = strtol(hex, NULL, 16);
             }
-            if(memcmp(configuration.MAC, mac_final, sizeof(char)*6) == 0)           // compara las dos mac  
+
+            ESP_LOGI(TAG, "Recibida: %x%x%x%x%x%x - MAC: %x%x%x%x%x%x\n",
+             mac_final[0],mac_final[1],mac_final[2],mac_final[3],mac_final[4],mac_final[5],
+             mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+             int result = memcmp(mac, mac_final, sizeof(char)*6);
+
+            if(result == 0)           // compara las dos mac  
             {
+                
                 char confg_recibida[event->data_len];
                 memset(confg_recibida, 0, sizeof(char) * event->data_len);
                 memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
-                char letra = confg_recibida[13];
+                char letra = confg_recibida[12];
+                ESP_LOGI(TAG, "Data len: %i, letra %c\n", event->data_len, letra);
                 int err; 
+                
                 switch (letra)
                 {
                 case 'R':
                     // Enciende el riego manual
-                     ESP_LOGI(TAG, "Aca tendria que regar");
+                     ESP_LOGI(TAG, "Aca tendria que regar\n");
                     break;
                 
                 case 'A':
                     // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
-                    configuration.control_riego = atoi(event->data[14]);
+                    ESP_LOGI(TAG, "Despues de la A: %c\n", confg_recibida[13]);
+                    if(confg_recibida[13] == '1')
+                    {
+                        configuration.control_riego = 1;
+                    }else{
+                        configuration.control_riego = 0;
+                    }
                     err = NVS_write_i8("control_riego", &configuration.control_riego);
-                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse control_riego\n");}else{
-                        ESP_LOGI(TAG, "control_riego almacenado");
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
+                        ESP_LOGI(TAG, "control_riego almacenado\n");
+
                     }
                     break;
                 
                 case 'H':
-                    // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA
+                    // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA funciona ok!
                     recibe_confg_hum(event->data, &configuration);
-                    err = NVS_write_i8("hum_H", &configuration.hum_sup);
+                    err = NVS_write_i8("hum_sup", &configuration.hum_sup);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
-                    err = NVS_write_i8("hum_H", &configuration.hum_inf);
+                    err = NVS_write_i8("hum_inf", &configuration.hum_inf);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
                         ESP_LOGI(TAG, "Datos de riego almacenados");
                     }
 
                     break; 
                 }
+            }else{
+                ESP_LOGI(TAG, "Falla la comparacion. Result: %i\n", result);
             }   
         }
         break;

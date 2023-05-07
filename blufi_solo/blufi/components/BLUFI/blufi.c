@@ -435,20 +435,25 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 }
 case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-    char cj_id[TAMANIO_ARRAY];
-    memset(&cj_id, 0, sizeof(char) * TAMANIO_ARRAY);
-    memcpy(&cj_id, param->custom_data.data, sizeof(char) *  TAMANIO_ARRAY-1); 
-    ESP_LOGI(TAG, "Recibido por custom data: %s\n", cj_id);
-    NVS_write("queue", &cj_id);        
-
-    char mac[6];
-    memset(mac, 0, sizeof(char) * 6);
-    memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);
-    esp_err_t ret = esp_blufi_send_custom_data(&mac, 6);
-    memset(configuration.MAC, 0, sizeof(char) * 7);
-    memcpy(configuration.MAC, mac, sizeof(char) * 6);
-    
-
+    //char mac[6];
+    //memset(mac, 0, sizeof(char) * 6);
+    memcpy(configuration.MAC, esp_bt_dev_get_address(), sizeof(char) * 6);
+    NVS_write("MAC", configuration.MAC);
+    esp_err_t ret = esp_blufi_send_custom_data(&configuration.MAC, 6);
+    //memset(configuration.MAC, 0, sizeof(char) * 7);
+    //memcpy(configuration.MAC, mac, sizeof(char) * 6);
+    if(ret == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Mac enviada: %x%x%x%x%x%x",
+        configuration.MAC[0],configuration.MAC[1],
+        configuration.MAC[2],configuration.MAC[3],
+        configuration.MAC[4],configuration.MAC[5]);
+    }else{
+        ESP_LOGI(TAG, "Fallo al enviar");
+    }
+    memset(&configuration.UUID, 0, sizeof(char) * 18);
+    memcpy(&configuration.UUID, param->custom_data.data, sizeof(char) * 17); 
+    NVS_write("UUID", configuration.UUID);
     break;
 case ESP_BLUFI_EVENT_RECV_USERNAME:
     /* Not handle currently */

@@ -62,11 +62,13 @@ void mqttSendMessage(void *params)
     char message[100];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {   
-        char topic_sus[19];
+        char topic_sus[18];
         memset(topic_sus, 0, 18);
-        memcpy(topic_sus, configuration.UUID, 18);
+        memcpy(topic_sus, configuration.UUID, 17);
         strcat(topic_sus, "R");
         suscribirse(topic_sus);
+        ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
+
         while (true)
         {   
             vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía
@@ -174,7 +176,25 @@ void app_main(void)
     blufi_start();
 
     blufi_queue = xQueueCreate(10, sizeof(char[13]));
-    NVS_read("queue", configuration.UUID);
+
+
+    if(NVS_read("UUID", configuration.UUID) == ESP_OK)
+    {
+        NVS_read("MAC", configuration.MAC);
+
+        if(NVS_read_i8("control_riego", &configuration.control_riego) != 0)
+        {
+            configuration.control_riego = 0; 
+        }
+        if(NVS_read_i8("hum_sup", &configuration.hum_sup) != 0)
+        {
+            configuration.hum_sup = 60;
+        }
+        if(NVS_read_i8("hum_inf", &configuration.hum_inf) != 0)
+        {
+            configuration.hum_inf = 20;
+        }
+    }
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
