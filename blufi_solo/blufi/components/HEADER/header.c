@@ -1,5 +1,6 @@
 #include "header.h"
 #include <string.h>
+#include <stdint.h>
 
 
 void recibe_confg_hum(char str[], config_data *cfg)

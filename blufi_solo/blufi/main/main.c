@@ -59,7 +59,6 @@ void mqttServerConection(void *params)
 void mqttSendMessage(void *params)
 {
 
-    char message[100];
     if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
     {   
         char topic_sus[18];
@@ -177,23 +176,53 @@ void app_main(void)
 
     blufi_queue = xQueueCreate(10, sizeof(char[13]));
 
-
     if(NVS_read("UUID", configuration.UUID) == ESP_OK)
     {
         NVS_read("MAC", configuration.MAC);
 
-        if(NVS_read_i8("control_riego", &configuration.control_riego) != 0)
+        nvs_handle_t my_handle;
+        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+
+
+        if(err != ESP_OK)
+        {
+            ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        }else{
+            int result = 0; 
+            if(nvs_get_i32(my_handle, "control_riego", &result) != ESP_OK)
+            {
+                configuration.control_riego = 0;
+            }else{
+                configuration.control_riego = result; 
+            }
+            if(nvs_get_i32(my_handle, "hum_sup", &result))
+            {
+                configuration.hum_sup = 60;
+            }else{
+                configuration.hum_sup = result; 
+            }
+            if(nvs_get_i32(my_handle, "hum_inf", &result))
+            {
+                configuration.hum_inf = 20; 
+            }else{
+                configuration.hum_inf = result;
+            }
+            nvs_close(my_handle);
+        }
+        /*
+        if(NVS_read_i8("control_riego", configuration.control_riego) != 0)
         {
             configuration.control_riego = 0; 
         }
-        if(NVS_read_i8("hum_sup", &configuration.hum_sup) != 0)
+        if(NVS_read_i8("hum_sup", configuration.hum_sup) != 0)
         {
             configuration.hum_sup = 60;
         }
-        if(NVS_read_i8("hum_inf", &configuration.hum_inf) != 0)
+        if(NVS_read_i8("hum_inf", configuration.hum_inf) != 0)
         {
             configuration.hum_inf = 20;
         }
+        */
     }
 
     xTaskCreate(&mqttServerConection,

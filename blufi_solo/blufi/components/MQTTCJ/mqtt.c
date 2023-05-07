@@ -147,7 +147,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     }else{
                         configuration.control_riego = 0;
                     }
-                    err = NVS_write_i8("control_riego", &configuration.control_riego);
+                    err = NVS_write_i8("control_riego", configuration.control_riego);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
                         ESP_LOGI(TAG, "control_riego almacenado\n");
 
@@ -157,9 +157,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 case 'H':
                     // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA funciona ok!
                     recibe_confg_hum(event->data, &configuration);
-                    err = NVS_write_i8("hum_sup", &configuration.hum_sup);
+                    err = NVS_write_i8("hum_sup", configuration.hum_sup);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
-                    err = NVS_write_i8("hum_inf", &configuration.hum_inf);
+                    err = NVS_write_i8("hum_inf", configuration.hum_inf);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
                         ESP_LOGI(TAG, "Datos de riego almacenados");
                     }
