@@ -24,6 +24,7 @@
 #include "header.h"
 #include "storage.h"
 #include "time.h"
+#include "pomp.h"
 
 #define TAG "MQTT"
 
@@ -34,11 +35,11 @@ extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certif
 #endif
 extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certificate_pem_end");
 
-
-extern SemaphoreHandle_t semaphoreMqttConection; 
+extern SemaphoreHandle_t semaphoreRTC;
 
 extern config_data configuration;
 extern sensor_data mediciones; 
+extern TaskHandle_t xHandle;
 
 esp_mqtt_client_handle_t client; 
 
@@ -47,8 +48,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     esp_mqtt_event_handle_t event = event_data;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        xSemaphoreGive(semaphoreMqttConection);
+        //ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED\n");
+        char topic_sus[18];
+        memset(topic_sus, 0, 18);
+        memcpy(topic_sus, configuration.UUID, 17);
+        strcat(topic_sus, "R");
+        suscribirse(topic_sus);
+        ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
         break;
 
     case MQTT_EVENT_DISCONNECTED:
@@ -57,6 +63,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+        xSemaphoreGive(semaphoreRTC);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -76,19 +83,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             memcpy(consulta, event->data, sizeof(char));
             if(consulta[0] == 'C')
             {
-                // Enviar datos de la consulta
-            time_t now = 0;
-            struct tm timeinfo = {0};
-            time(&now);
-            localtime_r(&now, &timeinfo);
-            char strftime_buf[64]; 
-            strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+            
+            // Enviar datos de la consulta
             char message[140];
             sprintf(message, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
             configuration.MAC, mediciones.humedad_suelo,
             mediciones.humedad_amb, mediciones.temperatura_amb,
             mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
-            strftime_buf, configuration.control_riego);
+            mediciones.ultimo_riego, configuration.control_riego);
             enviar_mensaje_mqtt(configuration.UUID, message);
 
             }
@@ -125,24 +127,25 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 memset(confg_recibida, 0, sizeof(char) * event->data_len);
                 memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
                 char letra = confg_recibida[12];
-                ESP_LOGI(TAG, "Data len: %i, letra %c\n", event->data_len, letra);
                 int err; 
                 
                 switch (letra)
                 {
                 case 'R':
                     // Enciende el riego manual
-                     ESP_LOGI(TAG, "Aca tendria que regar\n");
+                    regar();
+                    ultimo_riego();           
                     break;
                 
                 case 'A':
                     // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
-                    ESP_LOGI(TAG, "Despues de la A: %c\n", confg_recibida[13]);
                     if(confg_recibida[13] == '1')
                     {
                         configuration.control_riego = 1;
+                        vTaskResume(xHandle);
                     }else{
                         configuration.control_riego = 0;
+                        vTaskSuspend(xHandle);
                     }
                     err = NVS_write_i8("control_riego", configuration.control_riego);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{

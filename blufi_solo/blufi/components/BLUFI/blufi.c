@@ -36,7 +36,6 @@ static const char* TAG = "BLUFI.C";
 static wifi_config_t sta_config;
 static wifi_config_t ap_config;
 
-extern QueueHandle_t blufi_queue; 
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;

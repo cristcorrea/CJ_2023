@@ -1,6 +1,10 @@
 #include "header.h"
 #include <string.h>
 #include <stdint.h>
+#include "time.h"
+
+
+extern sensor_data mediciones;
 
 
 void recibe_confg_hum(char str[], config_data *cfg)
@@ -16,4 +20,14 @@ void recibe_confg_hum(char str[], config_data *cfg)
     memcpy(hum_L, str+posL+1, posF-posL);
     cfg->hum_sup = atoi(hum_H);
     cfg->hum_inf = atoi(hum_L);
+}
+
+void ultimo_riego()
+{
+    time_t now = 0;
+    struct tm timeinfo = {0};
+    time(&now);
+    localtime_r(&now, &timeinfo); 
+    strftime(mediciones.ultimo_riego, sizeof(mediciones.ultimo_riego), "%c", &timeinfo);
+
 }

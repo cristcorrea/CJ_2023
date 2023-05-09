@@ -33,10 +33,12 @@
 static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
-SemaphoreHandle_t semaphoreMqttConection = NULL;
 SemaphoreHandle_t semaphoreRTC = NULL;
+SemaphoreHandle_t semaphoreLux = NULL;
 
-QueueHandle_t blufi_queue; 
+
+TaskHandle_t xHandle = NULL;
+TaskHandle_t xHandle2 = NULL;
 
 sensor_data mediciones; 
 
@@ -51,56 +53,24 @@ void mqttServerConection(void *params)
         {
             adjust_time();
             mqtt_start();
-            xSemaphoreGive(semaphoreRTC);
         }
     }
 }
 
-void mqttSendMessage(void *params)
-{
-
-    if (xSemaphoreTake(semaphoreMqttConection, portMAX_DELAY)) // establecida la conexión con el broker
-    {   
-        char topic_sus[18];
-        memset(topic_sus, 0, 18);
-        memcpy(topic_sus, configuration.UUID, 17);
-        strcat(topic_sus, "R");
-        suscribirse(topic_sus);
-        ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
-
-        while (true)
-        {   
-            vTaskDelay(pdMS_TO_TICKS(60000)); // espera 1 minuto y envía
-            /*
-            time_t now = 0;
-            struct tm timeinfo = {0};
-            time(&now);
-            localtime_r(&now, &timeinfo);
-            char strftime_buf[64]; 
-            strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-            sprintf(message, "Temp: %.1f °C Hum: %i%% Soil: %i%% Lux: %i Time: %s", 
-            mediciones.temperatura_amb, mediciones.humedad_amb, mediciones.humedad_suelo,
-             mediciones.intensidad_luz, strftime_buf);
-            enviar_mensaje_mqtt(configuration.UUID, message);
-            */
-
-        }
-    }
-}
 
 void sensorsMeasurement(void *params)
 {
-    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
-	gpio_set_level(POWER_CTRL, 1);
-    soilConfig();
     if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
     {   
-        vTaskDelay(5000/portTICK_PERIOD_MS);
+        gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
+        gpio_set_level(POWER_CTRL, 1);
+        soilConfig();
+        //xSemaphoreGive(semaphoreLux);
         while(true)
         {
             DHTerrorHandler(readDHT());
-            humidity(); 
-            vTaskDelay(pdMS_TO_TICKS(50000)); // mide cada 50 seg.
+            humidity();
+            vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 50 seg.
         }
     }
 }
@@ -136,45 +106,54 @@ void erased_nvs(void *params)
     }
 }
 
-void light_meter(void * params)
-{
-    bh1750_init();
-    while(true)
-    {
-        bh1750_read();
-        vTaskDelay(20000/portTICK_PERIOD_MS);
-    }
-}
 
-
-void pomp(void * params)
+void riego_auto(void * params)
 {
     riego_config();
     while(true)
     {
+        ESP_LOGI("RIEGO AUTO", "Entra a tarea de riego automático\n");
+
         if(mediciones.humedad_suelo < configuration.hum_inf)
         {
             // frenar medicion de humidity() para no entrar en conflicto
-            while(mediciones.humedad_suelo < configuration.hum_sup)
+            int cant_riegos = 0;
+            vTaskSuspend(xHandle2);
+            while(mediciones.humedad_suelo < configuration.hum_sup && cant_riegos < 10)
             {
                 regar();
                 humidity();
                 vTaskDelay(20/portTICK_PERIOD_MS);
+                cant_riegos += 1;
             }
+            ultimo_riego();
+            vTaskResume(xHandle2);
         }
-        vTaskDelay(10/portTICK_PERIOD_MS);
+        vTaskDelay(20000/portTICK_PERIOD_MS);
+    }
+}
+
+void lux_sensor(void * params)
+{
+    if(xSemaphoreTake(semaphoreLux, portMAX_DELAY))
+    {
+        bh1750_init();
+
+        while(true)
+        {
+            bh1750_read();
+            vTaskDelay(pdMS_TO_TICKS(30000));
+        }
     }
 }
 
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
-    semaphoreMqttConection = xSemaphoreCreateBinary();
     semaphoreRTC           = xSemaphoreCreateBinary();
+    semaphoreLux           = xSemaphoreCreateBinary();
 
     blufi_start();
-
-    blufi_queue = xQueueCreate(10, sizeof(char[13]));
 
     if(NVS_read("UUID", configuration.UUID) == ESP_OK)
     {
@@ -209,42 +188,23 @@ void app_main(void)
             }
             nvs_close(my_handle);
         }
-        /*
-        if(NVS_read_i8("control_riego", configuration.control_riego) != 0)
-        {
-            configuration.control_riego = 0; 
-        }
-        if(NVS_read_i8("hum_sup", configuration.hum_sup) != 0)
-        {
-            configuration.hum_sup = 60;
-        }
-        if(NVS_read_i8("hum_inf", configuration.hum_inf) != 0)
-        {
-            configuration.hum_inf = 20;
-        }
-        */
+
     }
 
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
                 4096,
                 NULL,
-                1,
+                3,
                 NULL);
 
-    xTaskCreate(&mqttSendMessage,
-                "Comienza envio de datos MQTT",
-                4096,
-                NULL,
-                1,
-                NULL);
 
     xTaskCreate(&sensorsMeasurement,
                 "Comenzando mediciones de sensores",
-                4096,
+                8192,
                 NULL,
-                1,
-                NULL);
+                2,
+                xHandle2);
 
     xTaskCreate(&erased_nvs,
                 "Habilita borrado de NVS",
@@ -253,19 +213,20 @@ void app_main(void)
                 1,
                 NULL);
 
-    xTaskCreate(&light_meter,
-                "Inicia medicion de luz ambiente",
+    xTaskCreate(&riego_auto,
+                "Inicia control de riego",
+                2048,
+                NULL,
+                1,
+                xHandle);
+
+    xTaskCreate(&lux_sensor,
+                "Controla medicion de luz",
                 2048,
                 NULL,
                 1,
                 NULL);
 
-    xTaskCreate(&pomp,
-                "Inicia control de riego",
-                2048,
-                NULL,
-                1,
-                NULL);
-    
+    vTaskSuspend(xHandle);
 }
 

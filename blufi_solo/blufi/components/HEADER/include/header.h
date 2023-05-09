@@ -5,6 +5,7 @@ typedef struct
     float temperatura_amb; 
     int humedad_suelo; 
     int intensidad_luz; 
+    char ultimo_riego[64];
 
 }sensor_data;
 
@@ -21,3 +22,4 @@ typedef struct
 }config_data;
 
 void recibe_confg_hum(char str[], config_data *cfg);
+void ultimo_riego(void);
