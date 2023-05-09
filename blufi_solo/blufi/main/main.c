@@ -65,7 +65,7 @@ void sensorsMeasurement(void *params)
         gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
         gpio_set_level(POWER_CTRL, 1);
         soilConfig();
-        //xSemaphoreGive(semaphoreLux);
+        xSemaphoreGive(semaphoreLux);
         while(true)
         {
             DHTerrorHandler(readDHT());
@@ -96,7 +96,6 @@ void erased_nvs(void *params)
             if(button_state == 0)
             {
                 ESP_LOGE(TAG, "Borrando NVS...");
-                vTaskDelay(1000/portTICK_PERIOD_MS);
                 nvs_flash_erase();
                 esp_restart();
 
@@ -158,6 +157,7 @@ void app_main(void)
     if(NVS_read("UUID", configuration.UUID) == ESP_OK)
     {
         NVS_read("MAC", configuration.MAC);
+        NVS_read("ultimo_riego", mediciones.ultimo_riego);
 
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
@@ -204,7 +204,7 @@ void app_main(void)
                 8192,
                 NULL,
                 2,
-                xHandle2);
+                &xHandle2);
 
     xTaskCreate(&erased_nvs,
                 "Habilita borrado de NVS",
@@ -218,7 +218,7 @@ void app_main(void)
                 2048,
                 NULL,
                 1,
-                xHandle);
+                &xHandle);
 
     xTaskCreate(&lux_sensor,
                 "Controla medicion de luz",

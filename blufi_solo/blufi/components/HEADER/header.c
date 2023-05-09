@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "time.h"
+#include "storage.h"
 
 
 extern sensor_data mediciones;
@@ -29,5 +30,6 @@ void ultimo_riego()
     time(&now);
     localtime_r(&now, &timeinfo); 
     strftime(mediciones.ultimo_riego, sizeof(mediciones.ultimo_riego), "%c", &timeinfo);
+    NVS_write("ultimo_riego", mediciones.ultimo_riego);
 
 }
