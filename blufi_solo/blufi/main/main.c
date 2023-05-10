@@ -46,7 +46,7 @@ config_data configuration;
 
 void mqttServerConection(void *params)
 {
-
+    vTaskSuspend(&xHandle);
     while (true)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
@@ -65,7 +65,7 @@ void sensorsMeasurement(void *params)
         gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
         gpio_set_level(POWER_CTRL, 1);
         soilConfig();
-        //xSemaphoreGive(semaphoreLux);
+        xSemaphoreGive(semaphoreLux);
         while(true)
         {
             DHTerrorHandler(readDHT());
@@ -227,6 +227,5 @@ void app_main(void)
                 1,
                 NULL);
 
-    vTaskSuspend(xHandle);
 }
 
