@@ -46,7 +46,7 @@ config_data configuration;
 
 void mqttServerConection(void *params)
 {
-
+    vTaskSuspend(&xHandle);
     while (true)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
@@ -227,6 +227,5 @@ void app_main(void)
                 1,
                 NULL);
 
-    vTaskSuspend(xHandle);
 }
 

@@ -13,7 +13,7 @@ typedef struct
 typedef struct
 {
     char UUID[18];      // debe almacenar el identificador recibido en custom message
-    char MAC[7];        // almacena la mac del esp
+    char MAC[13];        // almacena la mac del esp
     int hum_sup;        // limite superior de humedad
     int hum_inf;        // Limite inferior de humedad     
     int regar;          // Acciona riego manual 
@@ -23,3 +23,4 @@ typedef struct
 
 void recibe_confg_hum(char str[], config_data *cfg);
 void ultimo_riego(void);
+void bytesToHex(unsigned char* bytes, int size, char* hexString); 

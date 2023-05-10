@@ -103,7 +103,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             char rec_mac[13];                               
             memset(rec_mac, 0, sizeof(char) * 13);
             memcpy(rec_mac, event->data, sizeof(char) * 12);          // mac recibida por mqtt
-            
+            /*
             char mac_final[7];                                        // pasa de un array de 12 a 6
             memset(mac_final, 0, sizeof(char) * 7);
             int i, j; 
@@ -114,11 +114,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 hex[2] = '\0';
                 mac_final[j] = strtol(hex, NULL, 16);
             }
+            */
 
-            ESP_LOGI(TAG, "Recibida: %x%x%x%x%x%x - MAC: %x%x%x%x%x%x\n",
-             mac_final[0],mac_final[1],mac_final[2],mac_final[3],mac_final[4],mac_final[5],
-             mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-             int result = memcmp(mac, mac_final, sizeof(char)*6);
+            ESP_LOGI(TAG, "Rec: %s Loc: %s\n", rec_mac, configuration.MAC);
+            
+
+            int result = memcmp(configuration.MAC, rec_mac, sizeof(char)*12);
 
             if(result == 0)           // compara las dos mac  
             {

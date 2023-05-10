@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "header.h"
 #include <string.h>
 #include <stdint.h>
@@ -32,4 +33,12 @@ void ultimo_riego()
     strftime(mediciones.ultimo_riego, sizeof(mediciones.ultimo_riego), "%c", &timeinfo);
     NVS_write("ultimo_riego", mediciones.ultimo_riego);
 
+}
+
+void bytesToHex(unsigned char* bytes, int size, char* hexString) 
+{
+    for (int i = 0; i < size; i++) {
+        sprintf(hexString + (i * 2), "%02X", bytes[i]);
+    }
+    hexString[size * 2] = '\0';
 }
