@@ -74,26 +74,30 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_DATA:
 
         // Primero tengo que filtrar si el tamaño de lo que arriba es menor a 12
-        if(event->data_len < 3)
+        if(event->data[0] == 'C')
         {   
             //char consulta[2];
             //memcpy(consulta, event->data, sizeof(char));
+            ESP_LOGI(TAG, "entra al C\n");
             char *message = malloc(140);
             if (message == NULL) {
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
             } else {
             // Construir el mensaje
+
             snprintf(message, 140, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
                      configuration.MAC, mediciones.humedad_suelo,
                      mediciones.humedad_amb, mediciones.temperatura_amb,
                      mediciones.intensidad_luz, configuration.hum_sup,
                      configuration.hum_inf, mediciones.ultimo_riego,
                      configuration.control_riego);
-            /*
+            
             enviar_mensaje_mqtt(configuration.UUID, message);
             // Liberar la memoria del buffer dinámico
             free(message);
+            
             // Enviar datos de la consulta
+            /*
             char message[140];
             sprintf(message, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
             configuration.MAC, mediciones.humedad_suelo,
