@@ -67,7 +67,7 @@ void NVS_write(char *data, char *write_string) // data es la referencia
 int NVS_write_i8(char *name, int datos)
 {
     nvs_handle_t my_handle;
-    esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+    esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);
     if(err != ESP_OK)
     {
         return err; 
@@ -88,7 +88,7 @@ int NVS_write_i8(char *name, int datos)
     nvs_close(my_handle); 
     return err;    
 }
-
+/*
 int NVS_read_i8(char *name, int datos)
 {
     nvs_handle_t my_handle;
@@ -113,3 +113,4 @@ int NVS_read_i8(char *name, int datos)
     nvs_close(my_handle);
     return err; 
 }
+*/

@@ -11,6 +11,7 @@ extern sensor_data mediciones;
 
 void recibe_confg_hum(char str[], config_data *cfg)
 {
+    /*
     int posH = strcspn(str, "H");
     int posL = strcspn(str, "L");
     int posF = strcspn(str, "F");
@@ -22,6 +23,14 @@ void recibe_confg_hum(char str[], config_data *cfg)
     memcpy(hum_L, str+posL+1, posF-posL);
     cfg->hum_sup = atoi(hum_H);
     cfg->hum_inf = atoi(hum_L);
+    */
+    int posH = strcspn(str, "H");
+    int posL = strcspn(str, "L");
+    int posF = strcspn(str, "F");
+    char *hum_H = str + posH + 1;
+    char *hum_L = str + posL + 1;
+    cfg->hum_sup = strtol(hum_H, NULL, 10);
+    cfg->hum_inf = strtol(hum_L, NULL, 10);
 }
 
 void ultimo_riego()

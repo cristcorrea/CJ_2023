@@ -59,11 +59,11 @@ void mqttServerConection(void *params)
 
 void sensorsMeasurement(void *params)
 {
+    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
+    gpio_set_level(POWER_CTRL, 1);
+    soilConfig();
     if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
     {   
-        gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
-        gpio_set_level(POWER_CTRL, 1);
-        soilConfig();
         xSemaphoreGive(semaphoreLux);
         while(true)
         {
@@ -159,7 +159,7 @@ void app_main(void)
         NVS_read("ultimo_riego", mediciones.ultimo_riego);
 
         nvs_handle_t my_handle;
-        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+        esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);
 
 
         if(err != ESP_OK)
@@ -194,15 +194,15 @@ void app_main(void)
                 "Conectando con HiveMQ Broker",
                 4096,
                 NULL,
-                3,
+                1,
                 NULL);
 
 
     xTaskCreate(&sensorsMeasurement,
                 "Comenzando mediciones de sensores",
-                8192,
+                4096,
                 NULL,
-                2,
+                1,
                 &xHandle2);
 
     xTaskCreate(&erased_nvs,

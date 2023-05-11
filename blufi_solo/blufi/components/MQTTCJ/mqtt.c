@@ -74,16 +74,26 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_DATA:
 
         // Primero tengo que filtrar si el tamaño de lo que arriba es menor a 12
-        if(event->data_len < 12)
-        {
-            // Si es menor, entonces me solicita configuración
-            // Chequeo que el caracter recibido sea la C  
-            char consulta[2];
-            memset(consulta, 0, sizeof(char) * 2);
-            memcpy(consulta, event->data, sizeof(char));
-            if(consulta[0] == 'C')
-            {
-            
+        if(event->data_len < 3)
+        {   
+            //char consulta[2];
+            //memcpy(consulta, event->data, sizeof(char));
+            char *message = malloc(140);
+            if (message == NULL) {
+                ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
+            } else {
+            // Construir el mensaje
+            snprintf(message, 140, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
+                     configuration.MAC, mediciones.humedad_suelo,
+                     mediciones.humedad_amb, mediciones.temperatura_amb,
+                     mediciones.intensidad_luz, configuration.hum_sup,
+                     configuration.hum_inf, mediciones.ultimo_riego,
+                     configuration.control_riego);
+            /*
+            // Enviar el mensaje
+            enviar_mensaje_mqtt(configuration.UUID, message);
+            // Liberar la memoria del buffer dinámico
+            free(message);
             // Enviar datos de la consulta
             char message[140];
             sprintf(message, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
@@ -92,34 +102,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
             mediciones.ultimo_riego, configuration.control_riego);
             enviar_mensaje_mqtt(configuration.UUID, message);
-
+            */
             }
         }else{
-            
-            char mac[7];
-            memset(mac, 0, sizeof(char) * 7);
-            memcpy(mac, esp_bt_dev_get_address(), sizeof(char) * 6);  // Guardo la mac del esp en "mac"
-            
-            char rec_mac[13];                               
-            memset(rec_mac, 0, sizeof(char) * 13);
-            memcpy(rec_mac, event->data, sizeof(char) * 12);          // mac recibida por mqtt
-            /*
-            char mac_final[7];                                        // pasa de un array de 12 a 6
-            memset(mac_final, 0, sizeof(char) * 7);
-            int i, j; 
-            for(i = 0, j = 0; i < 12; i += 2, j++)
-            {
-                char hex[3];
-                strncpy(hex, rec_mac + i, 2);
-                hex[2] = '\0';
-                mac_final[j] = strtol(hex, NULL, 16);
-            }
-            */
+    
 
-            ESP_LOGI(TAG, "Rec: %s Loc: %s\n", rec_mac, configuration.MAC);
-            
-
-            int result = memcmp(configuration.MAC, rec_mac, sizeof(char)*12);
+            int result = memcmp(configuration.MAC, event->data, sizeof(char)*12);
 
             if(result == 0)           // compara las dos mac  
             {
@@ -128,6 +116,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 memset(confg_recibida, 0, sizeof(char) * event->data_len);
                 memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
                 char letra = confg_recibida[12];
+                
+
                 int err; 
                 
                 switch (letra)
@@ -157,7 +147,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 
                 case 'H':
                     // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA funciona ok!
+                    ESP_LOGI(TAG, "Entra a H\n");
                     recibe_confg_hum(event->data, &configuration);
+                    ESP_LOGI(TAG, "Entra a H 2\n");
                     err = NVS_write_i8("hum_sup", configuration.hum_sup);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
                     err = NVS_write_i8("hum_inf", configuration.hum_inf);
