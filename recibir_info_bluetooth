@@ -1,0 +1,39 @@
+#define MAX_DATA_LENGTH 10
+
+static uint8_t received_data[MAX_DATA_LENGTH];
+
+...
+
+static void esp_gatts_cb(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
+{
+    ...
+
+    switch (event) {
+        ...
+
+        case ESP_GATTS_WRITE_EVT:
+            if (param->write.is_prep == false) {
+                if (param->write.len <= MAX_DATA_LENGTH) {
+                    memcpy(received_data, param->write.value, param->write.len);
+                    printf("Received data: %s\n", received_data);
+
+                    // Split data into two integers
+                    int data_1, data_2;
+                    sscanf(received_data, "%d; %d", &data_1, &data_2);
+                    
+                    // Save the two integers in an array
+                    int received_numbers[2] = {data_1, data_2};
+                }
+            }
+            break;
+
+        ...
+    }
+}
+
+
+En este ejemplo, el array received_data se inicializa con una longitud máxima de 10 bytes. Cuando se recibe un paquete de datos en la función de devolución de llamada ESP_GATTS_WRITE_EVT, se comprueba que el paquete de datos tenga una longitud menor o igual a la longitud máxima del array received_data. Luego, se copian los datos recibidos en el array received_data utilizando la función memcpy.
+
+A continuación, se utiliza la función sscanf para extraer los dos números enteros del paquete de datos. En este caso, se espera que el paquete de datos tenga el formato "2000; 50", por lo que se utiliza la cadena de formato "%d; %d" para extraer dos números enteros separados por un punto y coma.
+
+Por último, se guardan los dos números enteros en un array llamado received_numbers. Con este ejemplo, se puede guardar los datos recibidos en un array y manipularlos según sea necesario.

@@ -1,0 +1,11 @@
+Estructura de comunicación ESP's <-> Dispositivo móvil 
+
+Todos los sensores publican la información a través del mismo topic "A", entregando ademas la mac de quien lo envía. 
+El dispositivo movil se conecta a un solo topic "A" para recibir los datos de los sensores.
+
+Todos los sensores se suscriben a un topic "B" para recibir datos de configuración. 
+El dispositivo movil publica en el topic "B" la configuración de un sensor. Dentro de los datos se envía la mac del
+sensor correspondiente. 
+
+El dispositivo movil obtiene un UUID y lo se trasmite al sensor a traves de custom data. 
+El sensor publicará en un topic llamado UUID_E y se suscribirá a un topic llamado UUID_R. 

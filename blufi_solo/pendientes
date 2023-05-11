@@ -1,0 +1,11 @@
+COSAS QUE FALTAN: 
+
+De la app: 
+
+* Debe tomar los valores de hum_sup e hum_inf
+* Debe enviar la MAC en configuraciones 
+
+Del sensor: 
+
+* Debe tomar la ultima hora al regar 
+
