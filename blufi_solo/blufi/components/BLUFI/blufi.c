@@ -130,13 +130,11 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
             ESP_LOGE(TAG, "IP obtenida. Reiniciando...\n");
-            vTaskDelay(2000/portTICK_PERIOD_MS);
             esp_restart();
 
         } else {
             esp_blufi_deinit();
         }
-        vTaskDelay(5000/portTICK_PERIOD_MS);
         xSemaphoreGive(semaphoreWifiConection);
         break;
     }
@@ -434,11 +432,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 }
 case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-    unsigned char bytes[7];
-    memset(bytes, 0, sizeof(char) * 7);
-    memset(configuration.MAC, 0, sizeof(char) * 13);
-    memcpy(bytes, esp_bt_dev_get_address(), sizeof(char) * 6);
-    bytesToHex(bytes, 6, configuration.MAC);
+
+    bytesToHex(esp_bt_dev_get_address(), 6, configuration.MAC);
 
     NVS_write("MAC", configuration.MAC);
     esp_err_t ret = esp_blufi_send_custom_data(&configuration.MAC, 12);
@@ -447,7 +442,7 @@ case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
     {
         ESP_LOGI(TAG, "Mac enviada: %s\n", configuration.MAC);
     }else{
-        ESP_LOGI(TAG, "Fallo al enviar");
+        ESP_LOGI(TAG, "Fallo al enviar\n");
     }
     memset(&configuration.UUID, 0, sizeof(char) * 18);
     memcpy(&configuration.UUID, param->custom_data.data, sizeof(char) * 17); 

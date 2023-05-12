@@ -62,6 +62,7 @@ void sensorsMeasurement(void *params)
     gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
     gpio_set_level(POWER_CTRL, 1);
     soilConfig();
+    vTaskDelay(pdMS_TO_TICKS(2000));
     if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
     {   
         xSemaphoreGive(semaphoreLux);
@@ -69,7 +70,7 @@ void sensorsMeasurement(void *params)
         {
             DHTerrorHandler(readDHT());
             humidity();
-            vTaskDelay(pdMS_TO_TICKS(30000)); // mide cada 50 seg.
+            vTaskDelay(pdMS_TO_TICKS(3000));
         }
     }
 }
@@ -90,7 +91,7 @@ void erased_nvs(void *params)
         int button_state = gpio_get_level(ERASED);
         if(button_state == 0)
         {
-            vTaskDelay(3000/portTICK_PERIOD_MS);
+            vTaskDelay(pdMS_TO_TICKS(3000));
             button_state = gpio_get_level(ERASED);
             if(button_state == 0)
             {
@@ -100,7 +101,7 @@ void erased_nvs(void *params)
 
             }
         }
-        vTaskDelay(10/portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -114,20 +115,19 @@ void riego_auto(void * params)
 
         if(mediciones.humedad_suelo < configuration.hum_inf)
         {
-            // frenar medicion de humidity() para no entrar en conflicto
             int cant_riegos = 0;
-            vTaskSuspend(xHandle2);
+            vTaskSuspend(xHandle2); //suspende tarea de medicion de humedad de suelo y DHT11
             while(mediciones.humedad_suelo < configuration.hum_sup && cant_riegos < 10)
             {
                 regar();
                 humidity();
-                vTaskDelay(20/portTICK_PERIOD_MS);
+                vTaskDelay(pdMS_TO_TICKS(20));
                 cant_riegos += 1;
             }
             ultimo_riego();
             vTaskResume(xHandle2);
         }
-        vTaskDelay(20000/portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
 
@@ -140,7 +140,7 @@ void lux_sensor(void * params)
         while(true)
         {
             bh1750_read();
-            vTaskDelay(pdMS_TO_TICKS(30000));
+            vTaskDelay(pdMS_TO_TICKS(2000));
         }
     }
 }

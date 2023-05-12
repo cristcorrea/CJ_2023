@@ -88,29 +88,3 @@ int NVS_write_i8(char *name, int datos)
     nvs_close(my_handle); 
     return err;    
 }
-/*
-int NVS_read_i8(char *name, int datos)
-{
-    nvs_handle_t my_handle;
-    esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return err;
-    } else  {
-        err = nvs_get_i32(my_handle, name, datos);
-        switch (err)
-        {
-        case ESP_OK:
-            ESP_LOGI(TAG, "Leido\n");
-            break;
-        
-        case ESP_ERR_NVS_NOT_FOUND:
-            ESP_LOGI(TAG, "Valor no leido\n");
-            break;
-        }
-    }
-    nvs_close(my_handle);
-    return err; 
-}
-*/

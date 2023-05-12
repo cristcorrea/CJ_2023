@@ -73,53 +73,38 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
 
-        // Primero tengo que filtrar si el tamaño de lo que arriba es menor a 12
         if(event->data[0] == 'C')
         {   
-            //char consulta[2];
-            //memcpy(consulta, event->data, sizeof(char));
-            ESP_LOGI(TAG, "entra al C\n");
+ 
             char *message = malloc(140);
+
             if (message == NULL) {
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
             } else {
-            // Construir el mensaje
-
-            snprintf(message, 140, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
-                     configuration.MAC, mediciones.humedad_suelo,
-                     mediciones.humedad_amb, mediciones.temperatura_amb,
-                     mediciones.intensidad_luz, configuration.hum_sup,
-                     configuration.hum_inf, mediciones.ultimo_riego,
-                     configuration.control_riego);
-            
-            enviar_mensaje_mqtt(configuration.UUID, message);
-            // Liberar la memoria del buffer dinámico
-            free(message);
-            
-            // Enviar datos de la consulta
-            /*
-            char message[140];
-            sprintf(message, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
-            configuration.MAC, mediciones.humedad_suelo,
-            mediciones.humedad_amb, mediciones.temperatura_amb,
-            mediciones.intensidad_luz, configuration.hum_sup, configuration.hum_inf, 
-            mediciones.ultimo_riego, configuration.control_riego);
-            enviar_mensaje_mqtt(configuration.UUID, message);
-            */
+  
+                snprintf(message, 140, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
+                        configuration.MAC, mediciones.humedad_suelo,
+                        mediciones.humedad_amb, mediciones.temperatura_amb,
+                        mediciones.intensidad_luz, configuration.hum_sup,
+                        configuration.hum_inf, mediciones.ultimo_riego,
+                        configuration.control_riego);
+                
+                enviar_mensaje_mqtt(configuration.UUID, message);
+                // Liberar la memoria del buffer dinámico
+                free(message);
             }
         }else{
-    
 
-            int result = memcmp(configuration.MAC, event->data, sizeof(char)*12);
-
-            if(result == 0)           // compara las dos mac  
+            if(memcmp(configuration.MAC, event->data, sizeof(char)*12) == 0)  
             {
-                
+                /*
                 char confg_recibida[event->data_len];
                 memset(confg_recibida, 0, sizeof(char) * event->data_len);
                 memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
                 char letra = confg_recibida[12];
-                
+                */
+
+                char letra = event->data[12];
 
                 int err; 
                 
@@ -133,7 +118,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 
                 case 'A':
                     // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
-                    if(confg_recibida[13] == '1')
+                    if(event->data[13] == '1')
                     {
                         configuration.control_riego = 1;
                         vTaskResume(xHandle);
@@ -157,14 +142,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
                     err = NVS_write_i8("hum_inf", configuration.hum_inf);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
-                        ESP_LOGI(TAG, "Datos de riego almacenados");
+                        ESP_LOGI(TAG, "Datos de riego almacenados\n");
                     }
 
                     break; 
                 }
-            }else{
-                ESP_LOGI(TAG, "Falla la comparacion. Result: %i\n", result);
-            }   
+            }  
         }
         break;
     case MQTT_EVENT_ERROR:
