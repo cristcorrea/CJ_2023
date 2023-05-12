@@ -97,12 +97,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
             if(memcmp(configuration.MAC, event->data, sizeof(char)*12) == 0)  
             {
-                /*
-                char confg_recibida[event->data_len];
-                memset(confg_recibida, 0, sizeof(char) * event->data_len);
-                memcpy(confg_recibida, event->data, sizeof(char) * event->data_len);
-                char letra = confg_recibida[12];
-                */
 
                 char letra = event->data[12];
 
