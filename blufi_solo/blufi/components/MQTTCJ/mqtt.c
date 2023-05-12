@@ -48,12 +48,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     esp_mqtt_event_handle_t event = event_data;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
-        //ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED\n");
-        //char topic_sus[18];
-        //memset(topic_sus, 0, 18);
-        //memcpy(topic_sus, configuration.UUID, 17);
-        //strcat(topic_sus, "R");
-        //suscribirse(topic_sus);
+
         char * topic_sus = malloc(18); 
         memset(topic_sus, 0, 18);
         memcpy(topic_sus, configuration.UUID, sizeof(char) * 18);
@@ -135,9 +130,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 
                 case 'H':
                     // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA funciona ok!
-                    ESP_LOGI(TAG, "Entra a H\n");
                     recibe_confg_hum(event->data, &configuration);
-                    ESP_LOGI(TAG, "Entra a H 2\n");
                     err = NVS_write_i8("hum_sup", configuration.hum_sup);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
                     err = NVS_write_i8("hum_inf", configuration.hum_inf);
