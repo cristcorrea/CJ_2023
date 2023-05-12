@@ -49,12 +49,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         //ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED\n");
-        char topic_sus[18];
-        memset(topic_sus, 0, 18);
-        memcpy(topic_sus, configuration.UUID, 17);
-        strcat(topic_sus, "R");
-        suscribirse(topic_sus);
-        ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
+        //char topic_sus[18];
+        //memset(topic_sus, 0, 18);
+        //memcpy(topic_sus, configuration.UUID, 17);
+        //strcat(topic_sus, "R");
+        //suscribirse(topic_sus);
+        suscribirse(strcat(configuration.UUID,"R"));
+        ESP_LOGI(TAG, "Suscrito al topic: %s\n", strcat(configuration.UUID, "R"));
         break;
 
     case MQTT_EVENT_DISCONNECTED:
