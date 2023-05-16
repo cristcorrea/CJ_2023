@@ -49,13 +49,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
 
-        char * topic_sus = malloc(18); 
+        char * topic_sus = (char *)malloc(18); 
         memset(topic_sus, 0, 18);
         memcpy(topic_sus, configuration.UUID, sizeof(char) * 18);
         strcat(topic_sus, "R");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
         free(topic_sus);
+        topic_sus = NULL; 
         break;
 
     case MQTT_EVENT_DISCONNECTED:
@@ -77,7 +78,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         if(event->data[0] == 'C')
         {   
  
-            char *message = malloc(140);
+            char *message = (char *)malloc(140);
 
             if (message == NULL) {
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
@@ -93,6 +94,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 enviar_mensaje_mqtt(configuration.UUID, message);
                 // Liberar la memoria del buffer dinámico
                 free(message);
+                message = NULL; 
             }
         }else{
 
