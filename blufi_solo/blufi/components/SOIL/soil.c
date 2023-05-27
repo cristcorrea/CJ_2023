@@ -62,27 +62,5 @@ void humidity(void)
     }
 }
 
-/*
-void salt(void)
-{
-    int muestras[120];
-    int valor = 0;  
-    int res = 0; 
-    for(int i = 0; i < 120; i++)
-    {
-        adc_oneshot_read(adc1_handle, ADC_CHANNEL_6, &valor);
-        muestras[i] = valor; 
-        vTaskDelay(pdMS_TO_TICKS(2));
-    }
-    countingSort(muestras);
-    for(int j = 0; j < 119; j++)
-    {
-        res += muestras[j];
-    }
-    res /= 118; 
-    SOIL_DATA.salinity = res; 
-}
-*/
-
 
 

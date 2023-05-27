@@ -49,9 +49,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
 
-        char * topic_sus = (char *)malloc(18); 
-        memset(topic_sus, 0, 18);
-        memcpy(topic_sus, configuration.UUID, sizeof(char) * 18);
+        char * topic_sus = (char *)malloc(13); 
+        memset(topic_sus, 0, 13);
+        memcpy(topic_sus, configuration.MAC, sizeof(char) * 12);
         strcat(topic_sus, "R");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
@@ -84,14 +84,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
             } else {
   
-                snprintf(message, 140, "%sS%iH%iT%.1fL%iM%iI%iU%sA%i",
-                        configuration.MAC, mediciones.humedad_suelo,
+                snprintf(message, 140, "%iH%iT%.1fL%iU%s",
+                        mediciones.humedad_suelo,
                         mediciones.humedad_amb, mediciones.temperatura_amb,
-                        mediciones.intensidad_luz, configuration.hum_sup,
-                        configuration.hum_inf, mediciones.ultimo_riego,
-                        configuration.control_riego);
+                        mediciones.intensidad_luz, mediciones.ultimo_riego
+                        );
                 
-                enviar_mensaje_mqtt(configuration.UUID, message);
+                enviar_mensaje_mqtt(configuration.MAC, message);
                 // Liberar la memoria del buffer dinámico
                 free(message);
                 message = NULL; 

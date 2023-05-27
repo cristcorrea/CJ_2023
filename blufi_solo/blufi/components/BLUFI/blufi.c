@@ -444,9 +444,13 @@ case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
     }else{
         ESP_LOGI(TAG, "Fallo al enviar\n");
     }
+
+    /*
+    Ya no utilizaremos UUID
     memset(&configuration.UUID, 0, sizeof(char) * 18);
     memcpy(&configuration.UUID, param->custom_data.data, sizeof(char) * 17); 
     NVS_write("UUID", configuration.UUID);
+    */
     break;
 case ESP_BLUFI_EVENT_RECV_USERNAME:
     /* Not handle currently */
