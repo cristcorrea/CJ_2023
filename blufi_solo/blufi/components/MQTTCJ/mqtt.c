@@ -28,11 +28,9 @@
 
 #define TAG "MQTT"
 
-#if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
-static const uint8_t hivemq_certificate_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
-#else
+
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
-#endif
+
 extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certificate_pem_end");
 
 extern SemaphoreHandle_t semaphoreRTC;
