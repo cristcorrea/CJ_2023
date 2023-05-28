@@ -92,9 +92,12 @@ void update_ota()
 							
 							esp_http_client_config_t ota_client_config = {
 								.url = file->valuestring,
-								.cert_pem = (const char*)certificate_pem_start,
+								.cert_pem = (char*)certificate_pem_start,
 							};
-							esp_err_t ret = esp_https_ota(&ota_client_config);
+							esp_https_ota_config_t ota_config = {
+								.http_config = &ota_client_config,
+							};
+							esp_err_t ret = esp_https_ota(&ota_config);
 							if (ret == ESP_OK) {
 								printf("OTA OK, restarting...\n");
 								esp_restart();
