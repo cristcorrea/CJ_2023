@@ -26,6 +26,7 @@
 #include "bh1750.h" 
 #include "pomp.h"
 #include "header.h"
+#include "ota.h"
 
 #define POWER_CTRL 4
 #define ERASED     35 
@@ -35,6 +36,7 @@ static const char* TAG = "Button press";
 SemaphoreHandle_t semaphoreWifiConection = NULL;
 SemaphoreHandle_t semaphoreRTC = NULL;
 SemaphoreHandle_t semaphoreLux = NULL;
+SemaphoreHandle_t semaphoreOta = NULL; 
 
 
 TaskHandle_t xHandle = NULL;
@@ -50,7 +52,7 @@ void mqttServerConection(void *params)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
         {
-            adjust_time();
+            adjust_time(configuration.time_zone);
             mqtt_start();
         }
     }
@@ -136,7 +138,7 @@ void lux_sensor(void * params)
     if(xSemaphoreTake(semaphoreLux, portMAX_DELAY))
     {
         bh1750_init();
-
+        xSemaphoreGive(semaphoreOta);
         while(true)
         {
             bh1750_read();
@@ -145,15 +147,29 @@ void lux_sensor(void * params)
     }
 }
 
+void ota_update(void * params)
+{
+    if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
+    {
+        while(true)
+        {   
+            update_ota();
+            vTaskDelay(pdMS_TO_TICKS(4200000000));
+        }
+    }
+   
+}
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreRTC           = xSemaphoreCreateBinary();
     semaphoreLux           = xSemaphoreCreateBinary();
+    semaphoreOta           = xSemaphoreCreateBinary();
 
     blufi_start();
 
-    if(NVS_read("UUID", configuration.UUID) == ESP_OK)
+    if(NVS_read("time_zone", configuration.time_zone) == ESP_OK)
     {
         NVS_read("MAC", configuration.MAC);
         NVS_read("ultimo_riego", mediciones.ultimo_riego);
@@ -225,6 +241,14 @@ void app_main(void)
                 NULL,
                 1,
                 NULL);
+
+    xTaskCreate(&ota_update,
+                "Instala nueva versión de firmware",
+                4048,
+                NULL,
+                2,
+                NULL);
+        
                 
     vTaskSuspend(xHandle);
 

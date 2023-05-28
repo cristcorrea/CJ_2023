@@ -1,4 +1,4 @@
-void adjust_time(void);
+void adjust_time(char * time_zone);
 
 
 

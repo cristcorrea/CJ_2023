@@ -18,8 +18,8 @@
 const char *TAG = "HTTPS_OTA";
 
 // server certificates
-extern const char server_cert_pem_start[] asm("_binary_certs_pem_start");
-extern const char server_cert_pem_end[] asm("_binary_certs_pem_end");
+extern const uint8_t certificate_pem_start[] asm("_binary_certificate_pem_start");
+extern const uint8_t certificate_pem_end[] asm("_binary_certificate_pem_end");
 
 // receive buffer
 char rcv_buffer[200];
@@ -92,7 +92,7 @@ void update_ota()
 							
 							esp_http_client_config_t ota_client_config = {
 								.url = file->valuestring,
-								.cert_pem = server_cert_pem_start,
+								.cert_pem = (const char*)certificate_pem_start,
 							};
 							esp_err_t ret = esp_https_ota(&ota_client_config);
 							if (ret == ESP_OK) {

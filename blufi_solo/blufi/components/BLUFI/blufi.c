@@ -170,7 +170,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
             // Agregado
-            esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &gl_sta_conn_info);
+            //esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &gl_sta_conn_info);
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
@@ -182,9 +182,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
     case WIFI_EVENT_AP_START:
+        /*
         esp_wifi_get_mode(&mode);
 
-        /* TODO: get config or information of softap, then set to report extra_info */
+        // TODO: get config or information of softap, then set to report extra_info 
         if (ble_is_connected == true) {
             if (gl_sta_connected) {
                 esp_blufi_extra_info_t info;
@@ -202,8 +203,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         } else {
             BLUFI_INFO("BLUFI BLE is not connected yet\n");
         }
+        */
         break;
     case WIFI_EVENT_SCAN_DONE: {
+        /*
         uint16_t apCount = 0;
         esp_wifi_scan_get_ap_num(&apCount);
         if (apCount == 0) {
@@ -215,6 +218,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             BLUFI_ERROR("malloc error, ap_list is NULL");
             break;
         }
+        
         ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&apCount, ap_list));
         esp_blufi_ap_record_t * blufi_ap_list = (esp_blufi_ap_record_t *)malloc(apCount * sizeof(esp_blufi_ap_record_t));
         if (!blufi_ap_list) {
@@ -239,6 +243,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_scan_stop();
         free(ap_list);
         free(blufi_ap_list);
+        */
         break;
     }
     case WIFI_EVENT_AP_STACONNECTED: {
@@ -334,6 +339,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         esp_blufi_send_error_info(param->report_error.state);
         break;
     case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
+        /*
         wifi_mode_t mode;
         esp_blufi_extra_info_t info;
 
@@ -352,7 +358,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &gl_sta_conn_info);
         }
         BLUFI_INFO("BLUFI get wifi status from AP\n");
-
+        */
         break;
     }
     case ESP_BLUFI_EVENT_RECV_SLAVE_DISCONNECT_BLE:
@@ -445,12 +451,11 @@ case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
         ESP_LOGI(TAG, "Fallo al enviar\n");
     }
 
-    /*
-    Ya no utilizaremos UUID
-    memset(&configuration.UUID, 0, sizeof(char) * 18);
-    memcpy(&configuration.UUID, param->custom_data.data, sizeof(char) * 17); 
-    NVS_write("UUID", configuration.UUID);
-    */
+    char * time_zone_ = strdup(&param->custom_data.data);
+
+    NVS_write("time_zone", configuration.time_zone);
+
+
     break;
 case ESP_BLUFI_EVENT_RECV_USERNAME:
     /* Not handle currently */

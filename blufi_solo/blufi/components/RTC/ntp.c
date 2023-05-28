@@ -11,10 +11,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+
 static const char *TAG = "RTC";
 
 
-void adjust_time(void)
+void adjust_time(char * time_zone)
 {
     ESP_LOGI(TAG, "Initializing and starting SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -28,7 +29,7 @@ void adjust_time(void)
     while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
     {
         ESP_LOGI(TAG, "Waiting for system time to be set (pool.ntp)... (%d/%d)", retry, retry_count);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
     if(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && retry == 15)
     {
@@ -39,14 +40,14 @@ void adjust_time(void)
         while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
         {
             ESP_LOGI(TAG, "Waiting for system time to be set (google)... (%d/%d)", retry, retry_count);
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
     time(&now);
     localtime_r(&now, &timeinfo);
 
     char strftime_buf[64];
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1); // Roma 
+    setenv("TZ", time_zone, 1); 
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
