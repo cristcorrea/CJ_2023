@@ -146,6 +146,7 @@ void lux_sensor(void * params)
     }
 }
 
+//
 void ota_update(void * params)
 {
     if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
@@ -153,7 +154,7 @@ void ota_update(void * params)
         while(true)
         {   
             update_ota();
-            vTaskDelay(pdMS_TO_TICKS(3600000 * 12));
+            vTaskDelay(pdMS_TO_TICKS(5000));
         }
     }
    
@@ -250,7 +251,7 @@ void app_main(void)
                 "Instala nueva versión de firmware",
                 8048,
                 NULL,
-                2,
+                5,
                 NULL);
         
                 

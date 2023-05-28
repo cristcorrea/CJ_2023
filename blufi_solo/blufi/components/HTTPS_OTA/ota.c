@@ -22,7 +22,7 @@ extern const uint8_t certificate_pem_start[] asm("_binary_certificate_pem_start"
 extern const uint8_t certificate_pem_end[] asm("_binary_certificate_pem_end");
 
 // receive buffer
-char rcv_buffer[58];
+char rcv_buffer[73];
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -95,7 +95,7 @@ void update_ota()
 							
 							esp_http_client_config_t ota_client_config = {
 								.url = file->valuestring,
-								//.cert_pem = (char*)certificate_pem_start,
+								.cert_pem = (char*)certificate_pem_start,
 							};
 							esp_https_ota_config_t ota_config = {
 								.http_config = &ota_client_config,
