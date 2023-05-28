@@ -28,6 +28,8 @@
 
 #define TAG "MQTT"
 
+#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
+#define MOSQUITTO_ID "esp32_client"
 
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
 
@@ -155,6 +157,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 void mqtt_start()
 {
+
     esp_mqtt_client_config_t mqtt_config = {
         .broker = {
             .address.uri = "mqtts://036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud:8883",

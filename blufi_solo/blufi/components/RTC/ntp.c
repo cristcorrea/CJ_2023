@@ -14,6 +14,7 @@
 
 static const char *TAG = "RTC";
 
+extern SemaphoreHandle_t semaphoreOta;
 
 void adjust_time(char * time_zone)
 {
@@ -52,5 +53,6 @@ void adjust_time(char * time_zone)
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time in Roma is: %s", strftime_buf);
+    xSemaphoreGive(semaphoreOta);
 
 }

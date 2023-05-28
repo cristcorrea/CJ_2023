@@ -138,7 +138,6 @@ void lux_sensor(void * params)
     if(xSemaphoreTake(semaphoreLux, portMAX_DELAY))
     {
         bh1750_init();
-        xSemaphoreGive(semaphoreOta);
         while(true)
         {
             bh1750_read();
@@ -154,7 +153,7 @@ void ota_update(void * params)
         while(true)
         {   
             update_ota();
-            vTaskDelay(pdMS_TO_TICKS(4200000000));
+            vTaskDelay(pdMS_TO_TICKS(3600000 * 12));
         }
     }
    
@@ -169,9 +168,14 @@ void app_main(void)
 
     blufi_start();
 
-    if(NVS_read("time_zone", configuration.time_zone) == ESP_OK)
+    if(NVS_read("MAC", configuration.MAC) == ESP_OK)
     {
-        NVS_read("MAC", configuration.MAC);
+        if(NVS_read("time_zone", configuration.time_zone) != ESP_OK)
+        {   
+            configuration.time_zone = (char *) malloc(strlen("CET-1CEST,M3.5.0,M10.5.0/3") + 1);
+            strcpy(configuration.time_zone, "CET-1CEST,M3.5.0,M10.5.0/3"); 
+            
+        }
         NVS_read("ultimo_riego", mediciones.ultimo_riego);
 
         nvs_handle_t my_handle;
@@ -244,7 +248,7 @@ void app_main(void)
 
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
-                4048,
+                8048,
                 NULL,
                 2,
                 NULL);

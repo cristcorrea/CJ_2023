@@ -12,8 +12,8 @@
 #include "esp_https_ota.h"
 #include "strings.h"
 
-#define FIRMWARE_VERSION	0.1
-#define UPDATE_JSON_URL		"https://esp32tutorial.netsons.org/https_ota/firmware.json"
+#define FIRMWARE_VERSION	1.0
+#define UPDATE_JSON_URL		"http://check.cjindoors.com/firmware.json"
 
 const char *TAG = "HTTPS_OTA";
 
@@ -22,9 +22,7 @@ extern const uint8_t certificate_pem_start[] asm("_binary_certificate_pem_start"
 extern const uint8_t certificate_pem_end[] asm("_binary_certificate_pem_end");
 
 // receive buffer
-char rcv_buffer[200];
-
-// esp_http_client event handler
+char rcv_buffer[58];
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -42,7 +40,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
         break;
     case HTTP_EVENT_ON_DATA:
-        ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+        if (!esp_http_client_is_chunked_response(evt->client)) {
+				strncpy(rcv_buffer, (char*)evt->data, evt->data_len);
+				ESP_LOGI(TAG, "datos copiados: %s\n", rcv_buffer);
+            }
         break;
     case HTTP_EVENT_ON_FINISH:
         ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
@@ -60,7 +61,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 void update_ota()
 {
         printf("Looking for a new firmware...\n");
-	
 		// configure the esp_http_client
 		esp_http_client_config_t config = {
         .url = UPDATE_JSON_URL,
@@ -70,17 +70,20 @@ void update_ota()
 	
 		// downloading the json file
 		esp_err_t err = esp_http_client_perform(client);
-		if(err == ESP_OK) {
-			
-			// parse the json file	
+		int code = esp_http_client_get_status_code(client);
+
+		if(err == ESP_OK && code == 200) {
+
 			cJSON *json = cJSON_Parse(rcv_buffer);
+			
 			if(json == NULL) printf("downloaded file is not a valid json, aborting...\n");
-			else {	
+			else {
+
 				cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
 				cJSON *file = cJSON_GetObjectItemCaseSensitive(json, "file");
 				
 				// check the version
-				if(!cJSON_IsNumber(version)) printf("unable to read new version, aborting...\n");
+				if(!cJSON_IsNumber(version)) printf("unable to read new version , aborting...\n");
 				else {
 					
 					double new_version = version->valuedouble;
@@ -92,7 +95,7 @@ void update_ota()
 							
 							esp_http_client_config_t ota_client_config = {
 								.url = file->valuestring,
-								.cert_pem = (char*)certificate_pem_start,
+								//.cert_pem = (char*)certificate_pem_start,
 							};
 							esp_https_ota_config_t ota_config = {
 								.http_config = &ota_client_config,
@@ -111,10 +114,14 @@ void update_ota()
 				}
 			}
 		}
-		else printf("unable to download the json file, aborting...\n");
-		
+		else{
+			ESP_LOGI(TAG, "unable to download the json file, code: %i\n", code);
+
+		}
 		// cleanup
 		esp_http_client_cleanup(client);
 		
 		printf("\n");
 }
+
+
