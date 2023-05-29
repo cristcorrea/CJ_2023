@@ -95,7 +95,6 @@ int readDHT()
 
 	if( uSec<0 )
 	{
-		ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 1\n");
 		return DHT_TIMEOUT_ERROR;
 	} 
 
@@ -104,7 +103,6 @@ int readDHT()
 	uSec = getSignalLevel( 85, 1 );
 	if( uSec<0 ) 
 	{
-		ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 2\n");
 		return DHT_TIMEOUT_ERROR;
 	}
 	// == Si no hay errores lee los 40 data bits ================
@@ -117,7 +115,6 @@ int readDHT()
 		uSec = getSignalLevel( 56, 0 );
 		if( uSec<0 )
 		{
-			ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 3\n");
 			return DHT_TIMEOUT_ERROR;
 		}
 		// -- check to see if after >70us rx data is a 0 or a 1
@@ -125,7 +122,6 @@ int readDHT()
 		uSec = getSignalLevel( 75, 1 );
 		if( uSec<0 ) 
 		{
-			ESP_LOGE(TAG, "DHT_TIMEOUT_ERROR 4\n");
 			return DHT_TIMEOUT_ERROR;
 		}
 

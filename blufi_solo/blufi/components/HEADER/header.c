@@ -31,7 +31,7 @@ void ultimo_riego()
 
 }
 
-void bytesToHex(unsigned char* bytes, int size, char* hexString) 
+void bytesToHex(const unsigned char* bytes, int size, char* hexString) 
 {
     for (int i = 0; i < size; i++) {
         sprintf(hexString + (i * 2), "%02X", bytes[i]);
