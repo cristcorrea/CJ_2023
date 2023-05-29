@@ -146,7 +146,7 @@ void lux_sensor(void * params)
     }
 }
 
-//
+
 void ota_update(void * params)
 {
     if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
@@ -154,7 +154,7 @@ void ota_update(void * params)
         while(true)
         {   
             update_ota();
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            vTaskDelay(pdMS_TO_TICKS(36000000));
         }
     }
    
@@ -188,19 +188,19 @@ void app_main(void)
             ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         }else{
             int result = 0; 
-            if(nvs_get_i32(my_handle, "control_riego", &result) != ESP_OK)
+            if(nvs_get_i32(my_handle, "control_riego", (int32_t*)&result) != ESP_OK)
             {
                 configuration.control_riego = 0;
             }else{
                 configuration.control_riego = result; 
             }
-            if(nvs_get_i32(my_handle, "hum_sup", &result))
+            if(nvs_get_i32(my_handle, "hum_sup", (int32_t*)&result))
             {
                 configuration.hum_sup = 60;
             }else{
                 configuration.hum_sup = result; 
             }
-            if(nvs_get_i32(my_handle, "hum_inf", &result))
+            if(nvs_get_i32(my_handle, "hum_inf", (int32_t*)&result))
             {
                 configuration.hum_inf = 20; 
             }else{

@@ -1,4 +1,4 @@
-set(COMPONENT_REQUIRES freertos log esp_system esp_event app_update esp_http_client esp_https_ota lwip)
+set(COMPONENT_REQUIRES  esp_event esp_system app_update esp_http_client esp_https_ota lwip freertos log)
 idf_component_register(SRCS "ota.c"
                         INCLUDE_DIRS "include"
                         PRIV_REQUIRES CJSON
