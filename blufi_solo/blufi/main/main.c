@@ -171,7 +171,7 @@ void app_main(void)
 
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
     {
-        if(NVS_read("time_zone", configuration.time_zone) != ESP_OK)
+        if(true)//NVS_read("time_zone", configuration.time_zone) != ESP_OK
         {   
             configuration.time_zone = (char *) malloc(strlen("CET-1CEST,M3.5.0,M10.5.0/3") + 1);
             strcpy(configuration.time_zone, "CET-1CEST,M3.5.0,M10.5.0/3"); 

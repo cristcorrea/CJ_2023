@@ -12,7 +12,7 @@
 #include "esp_https_ota.h"
 #include "strings.h"
 
-#define FIRMWARE_VERSION	1.0
+#define FIRMWARE_VERSION	2.0
 #define UPDATE_JSON_URL		"http://check.cjindoors.com/firmware.json"
 
 const char *TAG = "HTTPS_OTA";
@@ -22,7 +22,7 @@ extern const uint8_t certificate_pem_start[] asm("_binary_certificate_pem_start"
 extern const uint8_t certificate_pem_end[] asm("_binary_certificate_pem_end");
 
 // receive buffer
-char rcv_buffer[73];
+char * rcv_buffer;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -60,6 +60,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 void update_ota()
 {
+		rcv_buffer = malloc(73);
         printf("Looking for a new firmware...\n");
 		// configure the esp_http_client
 		esp_http_client_config_t config = {
@@ -73,7 +74,7 @@ void update_ota()
 		int code = esp_http_client_get_status_code(client);
 
 		if(err == ESP_OK && code == 200) {
-
+			
 			cJSON *json = cJSON_Parse(rcv_buffer);
 			
 			if(json == NULL) printf("downloaded file is not a valid json, aborting...\n");
@@ -120,7 +121,7 @@ void update_ota()
 		}
 		// cleanup
 		esp_http_client_cleanup(client);
-		
+		free(rcv_buffer);
 		printf("\n");
 }
 

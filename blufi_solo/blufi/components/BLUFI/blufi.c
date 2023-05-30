@@ -339,9 +339,9 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
             ESP_LOGI(TAG, "Fallo al enviar\n");
         }
 
-        configuration.time_zone = strdup((const char*)param->custom_data.data);
+        //configuration.time_zone = strdup((const char*)param->custom_data.data);
 
-        NVS_write("time_zone", configuration.time_zone);
+        //NVS_write("time_zone", configuration.time_zone);
 
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
@@ -401,5 +401,4 @@ if (ret) {
     return;
 }
 
-BLUFI_INFO("BLUFI VERSION %04x\n", esp_blufi_get_version());
 }

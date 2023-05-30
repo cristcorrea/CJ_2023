@@ -46,7 +46,7 @@ void adjust_time(char * time_zone)
     }
     time(&now);
     localtime_r(&now, &timeinfo);
-
+    // revisar si puedo cortar esta parte 
     char strftime_buf[64];
     setenv("TZ", time_zone, 1); 
     tzset();
