@@ -80,10 +80,17 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
  
             char *message = (char *)malloc(140);
 
+
             if (message == NULL) {
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
             } else {
-  
+
+                mediciones.ultimo_riego = (char *)malloc(25);
+                if(NVS_read("ultimo_riego", mediciones.ultimo_riego) != ESP_OK)
+                {   
+                    char sinRiegos[] = "No se registran riegos..";
+                    strcpy(mediciones.ultimo_riego, sinRiegos);
+                }
                 snprintf(message, 140, "%iH%iT%.1fL%iU%s",
                         mediciones.humedad_suelo,
                         mediciones.humedad_amb, mediciones.temperatura_amb,
@@ -93,7 +100,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 enviar_mensaje_mqtt(configuration.MAC, message);
                 // Liberar la memoria del buffer dinámico
                 free(message);
-                message = NULL; 
+                free(mediciones.ultimo_riego);
+                message = NULL;
+                mediciones.ultimo_riego = NULL;  
             }
         }else{
 

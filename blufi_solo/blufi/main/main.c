@@ -177,7 +177,7 @@ void app_main(void)
             strcpy(configuration.time_zone, "CET-1CEST,M3.5.0,M10.5.0/3"); 
             
         }
-        NVS_read("ultimo_riego", mediciones.ultimo_riego);
+        //NVS_read("ultimo_riego", mediciones.ultimo_riego);
 
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);

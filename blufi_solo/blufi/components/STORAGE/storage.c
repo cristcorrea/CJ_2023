@@ -40,6 +40,7 @@ int NVS_read(char *data, char *Get_Data) // data es la referencia
             default :
                 ESP_LOGI(TAG,"Error (%s) reading!\n", esp_err_to_name(err));
         }
+        free(dato_leido);
     }
     nvs_close(my_handle);
     return err; 

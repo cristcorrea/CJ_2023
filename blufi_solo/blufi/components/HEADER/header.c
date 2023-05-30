@@ -27,7 +27,9 @@ void ultimo_riego()
     time(&now);
     localtime_r(&now, &timeinfo); 
     strftime(mediciones.ultimo_riego, sizeof(mediciones.ultimo_riego), "%c", &timeinfo);
+    mediciones.ultimo_riego = malloc(25); 
     NVS_write("ultimo_riego", mediciones.ultimo_riego);
+    free(mediciones.ultimo_riego);
 
 }
 
