@@ -17,12 +17,11 @@
 #define DHT_TIMEOUT_ERROR -2
 
 #define gpio_num 16
+#define INTENTOS_MAX 10
 
 static const char* TAG = "DHT_start";
 
 int intentos = 0;
-
-extern sensor_data mediciones; 
 
 
 int getSignalLevel( int usTimeOut, bool state )
@@ -64,9 +63,11 @@ void DHTerrorHandler(int response)
 }
 
 
-int readDHT()
+uint8_t* readDHT()
 {
 	int uSec = 0;
+
+	int fallo = 0; 
 
 	uint8_t dhtData[MAXdhtData];
 
@@ -95,7 +96,7 @@ int readDHT()
 
 	if( uSec<0 )
 	{
-		return DHT_TIMEOUT_ERROR;
+		return DHT_TIMEOUT_ERROR; // aca va fallo 
 	} 
 
 	// -- 80us up ------------------------
@@ -136,6 +137,24 @@ int readDHT()
 	}
 
 
+	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF) || fallo){
+		intentos = 0; 
+		return dhtData;
+	}else{
+		if(intentos < INTENTOS_MAX)
+		{
+			return readDHT();
+		}else{
+			return NULL; 
+		}
+		
+	}
+		 
+
+}
+
+/*
+
 	mediciones.humedad_amb = dhtData[0];			
 
 	mediciones.temperatura_amb = dhtData[2];
@@ -144,15 +163,6 @@ int readDHT()
 	mediciones.temperatura_amb /= 10; 
 
 	
-
 	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
 			mediciones.temperatura_amb *= -1;
-
-
-	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF))
-		return DHT_OK;
-
-	else
-		return DHT_CHECKSUM_ERROR;
-
-}
+*/

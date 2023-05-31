@@ -6,9 +6,6 @@
 #include "storage.h"
 
 
-extern sensor_data mediciones;
-
-
 void recibe_confg_hum(char str[], config_data *cfg)
 {
 
@@ -20,18 +17,6 @@ void recibe_confg_hum(char str[], config_data *cfg)
     cfg->hum_inf = strtol(hum_L, NULL, 10);
 }
 
-void ultimo_riego()
-{
-    time_t now = 0;
-    struct tm timeinfo = {0};
-    time(&now);
-    localtime_r(&now, &timeinfo); 
-    strftime(mediciones.ultimo_riego, sizeof(mediciones.ultimo_riego), "%c", &timeinfo);
-    mediciones.ultimo_riego = malloc(25); 
-    NVS_write("ultimo_riego", mediciones.ultimo_riego);
-    free(mediciones.ultimo_riego);
-
-}
 
 void bytesToHex(const unsigned char* bytes, int size, char* hexString) 
 {

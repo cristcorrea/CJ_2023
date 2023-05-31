@@ -93,17 +93,17 @@ void bh1750_init(void) {
 
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
-	ESP_LOGI(TAG, "sda_io_num %d", PIN_SDA);
+	//ESP_LOGI(TAG, "sda_io_num %d", PIN_SDA);
     conf.sda_io_num = PIN_SDA;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-	ESP_LOGI(TAG, "scl_io_num %d", PIN_SCL);
+	//ESP_LOGI(TAG, "scl_io_num %d", PIN_SCL);
     conf.scl_io_num = PIN_SCL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-	ESP_LOGI(TAG, "clk_speed %d", I2C_MASTER_FREQ_HZ);
+	//ESP_LOGI(TAG, "clk_speed %d", I2C_MASTER_FREQ_HZ);
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
-	ESP_LOGI(TAG, "i2c_param_config %d", conf.mode);
+	//ESP_LOGI(TAG, "i2c_param_config %d", conf.mode);
     ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
-	ESP_LOGI(TAG, "i2c_driver_install %d", I2C_MASTER_NUM);
+	//ESP_LOGI(TAG, "i2c_driver_install %d", I2C_MASTER_NUM);
     ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0));
 
 }

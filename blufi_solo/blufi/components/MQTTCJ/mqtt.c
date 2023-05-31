@@ -9,7 +9,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "freertos/queue.h"
 
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -25,6 +24,7 @@
 #include "storage.h"
 #include "time.h"
 #include "pomp.h"
+#include "soil.h"
 
 #define TAG "MQTT"
 
@@ -38,7 +38,6 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 extern SemaphoreHandle_t semaphoreRTC;
 
 extern config_data configuration;
-extern sensor_data mediciones; 
 extern TaskHandle_t xHandle;
 
 esp_mqtt_client_handle_t client; 
@@ -85,12 +84,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 ESP_LOGI(TAG, "Error para asignar memoria dinamica\n");
             } else {
 
-                mediciones.ultimo_riego = (char *)malloc(25);
-                if(NVS_read("ultimo_riego", mediciones.ultimo_riego) != ESP_OK)
-                {   
-                    char sinRiegos[] = "No se registran riegos..";
-                    strcpy(mediciones.ultimo_riego, sinRiegos);
-                }
+                
+                int * humedad_suelo = malloc(sizeof(int));
+                int * humedad_amb = malloc(sizeof(int));
+                float * temperatura_amb = malloc(sizeof(float));
+
+                *humedad_suelo = humidity();
+
                 snprintf(message, 140, "%iH%iT%.1fL%iU%s",
                         mediciones.humedad_suelo,
                         mediciones.humedad_amb, mediciones.temperatura_amb,

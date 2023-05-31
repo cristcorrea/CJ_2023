@@ -16,7 +16,6 @@
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
 
-extern sensor_data mediciones; 
 
 void soilConfig(void)
 {
@@ -39,10 +38,11 @@ void soilConfig(void)
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_6, &config));
 }
 
-void humidity(void)
+int  humidity(void)
 {
     int adc_reading = 0; 
     int result = 0; 
+ 
     for(int i = 0; i < 100; i++)
     {
         adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
@@ -51,15 +51,17 @@ void humidity(void)
     }
     result /= 100;
 
-    mediciones.humedad_suelo = -0.0526 * result + 184;
-    if(mediciones.humedad_suelo > 100)
+    result = -0.0526 * result + 184;
+    if(result > 100)
     {
-        mediciones.humedad_suelo = 100;
+        result = 100;
     }
-    if(mediciones.humedad_suelo < 0)
+    if(result < 0)
     {
-        mediciones.humedad_suelo = 0; 
+        result = 0; 
     }
+    
+    return result; 
 }
 
 

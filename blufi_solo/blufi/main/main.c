@@ -34,15 +34,13 @@
 static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;
-SemaphoreHandle_t semaphoreRTC = NULL;
-SemaphoreHandle_t semaphoreLux = NULL;
-SemaphoreHandle_t semaphoreOta = NULL; 
+//SemaphoreHandle_t semaphoreRTC = NULL;
+//SemaphoreHandle_t semaphoreLux = NULL;
+SemaphoreHandle_t semaphoreOta = NULL; // en ntp.c
 
 
 TaskHandle_t xHandle = NULL;
 TaskHandle_t xHandle2 = NULL;
-
-sensor_data mediciones; 
 
 config_data configuration;
 
@@ -58,25 +56,18 @@ void mqttServerConection(void *params)
     }
 }
 
+/*
 
 void sensorsMeasurement(void *params)
 {
     gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
     gpio_set_level(POWER_CTRL, 1);
     soilConfig();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-    if(xSemaphoreTake(semaphoreRTC, portMAX_DELAY))
-    {   
-        xSemaphoreGive(semaphoreLux);
-        while(true)
-        {
-            DHTerrorHandler(readDHT());
-            humidity();
-            vTaskDelay(pdMS_TO_TICKS(3000));
-        }
-    }
+    bh1750_init();
+
 }
 
+*/
 
 void erased_nvs(void *params)
 {
@@ -130,19 +121,6 @@ void riego_auto(void * params)
             vTaskResume(xHandle2);
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
-    }
-}
-
-void lux_sensor(void * params)
-{
-    if(xSemaphoreTake(semaphoreLux, portMAX_DELAY))
-    {
-        bh1750_init();
-        while(true)
-        {
-            bh1750_read();
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
     }
 }
 
@@ -219,13 +197,6 @@ void app_main(void)
                 NULL);
 
 
-    xTaskCreate(&sensorsMeasurement,
-                "Comenzando mediciones de sensores",
-                4096,
-                NULL,
-                1,
-                &xHandle2);
-
     xTaskCreate(&erased_nvs,
                 "Habilita borrado de NVS",
                 2048,
@@ -239,13 +210,6 @@ void app_main(void)
                 NULL,
                 1,
                 &xHandle);
-
-    xTaskCreate(&lux_sensor,
-                "Controla medicion de luz",
-                2048,
-                NULL,
-                1,
-                NULL);
 
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
