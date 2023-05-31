@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include "time.h"
 #include "storage.h"
+#include "mqtt.h"
+#include "ntp.h"
 
+extern config_data configuration; 
 
 void recibe_confg_hum(char str[], config_data *cfg)
 {
@@ -24,4 +27,16 @@ void bytesToHex(const unsigned char* bytes, int size, char* hexString)
         sprintf(hexString + (i * 2), "%02X", bytes[i]);
     }
     hexString[size * 2] = '\0';
+}
+
+void ultimoRiego(){
+
+    char * hora = queHoraEs();
+    size_t message_size = snprintf(NULL, 0, "%s", hora) + 1;
+    char *message = (char *)malloc(message_size);
+    if(message != NULL){              
+        snprintf(message, message_size, "%s", hora);           
+        enviar_mensaje_mqtt(configuration.MAC, message);
+        free(message);
+    }
 }

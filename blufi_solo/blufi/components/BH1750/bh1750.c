@@ -29,8 +29,6 @@ static const char *TAG = "bh1750";
 
 //I2C_MASTER_FREQ_HZ   10000     /*!< I2C master clock frequency */
 
-extern sensor_data mediciones; 
-
 //uint32_t i2c_clk_speed_hz = i2c_get_clk_speed(I2C_MASTER_NUM);
  
 
@@ -44,7 +42,7 @@ void bh1750_reset(void) {
 	vTaskDelay(10 / portTICK_PERIOD_MS); // sleep 10ms
 }
 
-void bh1750_read(void) {
+float bh1750_read(void) {
 	uint8_t buf[32];
 	uint8_t mode = BH1750_MODE;
 	uint8_t sleepms = 1;
@@ -86,7 +84,7 @@ void bh1750_read(void) {
 	uint16_t luxraw = (uint16_t)(((uint16_t)(buf[0]<<8))|((uint16_t)buf[1]));
 	luxval = (float)luxraw/1.2/resdiv;
 
-	mediciones.intensidad_luz = luxval;
+	return luxval;
 }
 
 void bh1750_init(void) {

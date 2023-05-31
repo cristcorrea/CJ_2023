@@ -56,18 +56,6 @@ void mqttServerConection(void *params)
     }
 }
 
-/*
-
-void sensorsMeasurement(void *params)
-{
-    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
-    gpio_set_level(POWER_CTRL, 1);
-    soilConfig();
-    bh1750_init();
-
-}
-
-*/
 
 void erased_nvs(void *params)
 {
@@ -105,7 +93,7 @@ void riego_auto(void * params)
     while(true)
     {
         ESP_LOGI("RIEGO AUTO", "Entra a tarea de riego automático\n");
-
+        /*
         if(mediciones.humedad_suelo < configuration.hum_inf)
         {
             int cant_riegos = 0;
@@ -120,6 +108,7 @@ void riego_auto(void * params)
             ultimo_riego();
             vTaskResume(xHandle2);
         }
+        */
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
@@ -141,10 +130,12 @@ void ota_update(void * params)
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
-    semaphoreRTC           = xSemaphoreCreateBinary();
-    semaphoreLux           = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
 
+    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
+    gpio_set_level(POWER_CTRL, 1);
+    soilConfig();
+    bh1750_init();
     blufi_start();
 
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
@@ -155,7 +146,6 @@ void app_main(void)
             strcpy(configuration.time_zone, "CET-1CEST,M3.5.0,M10.5.0/3"); 
             
         }
-        //NVS_read("ultimo_riego", mediciones.ultimo_riego);
 
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);

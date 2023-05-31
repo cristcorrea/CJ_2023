@@ -10,10 +10,11 @@
 #include "esp_netif.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "header.h"
 
 
 static const char *TAG = "RTC";
-
+extern config_data configuration; 
 extern SemaphoreHandle_t semaphoreOta;
 
 void adjust_time(char * time_zone)
@@ -46,7 +47,6 @@ void adjust_time(char * time_zone)
     }
     time(&now);
     localtime_r(&now, &timeinfo);
-    // revisar si puedo cortar esta parte 
     char strftime_buf[64];
     setenv("TZ", time_zone, 1); 
     tzset();
@@ -55,4 +55,16 @@ void adjust_time(char * time_zone)
     ESP_LOGI(TAG, "The current date/time in Roma is: %s", strftime_buf);
     xSemaphoreGive(semaphoreOta);
 
+}
+
+char * queHoraEs(){
+    time_t now = 0;
+    struct tm timeinfo = { 0 };
+    time(&now);
+    setenv("TZ", configuration.time_zone, 1); 
+    tzset();
+    localtime_r(&now, &timeinfo);
+    char strftime_buf[64];
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    return strftime_buf;
 }

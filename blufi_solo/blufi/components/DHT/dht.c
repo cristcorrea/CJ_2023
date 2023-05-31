@@ -66,91 +66,69 @@ void DHTerrorHandler(int response)
 uint8_t* readDHT()
 {
 	int uSec = 0;
-
-	int fallo = 0; 
-
 	uint8_t dhtData[MAXdhtData];
-
 	for (int k = 0; k < MAXdhtData; k++)
 	{
 		dhtData[k] = 0;
 	}
-	// == Send start signal to DHT sensor ===========
-
 	gpio_set_direction( gpio_num, GPIO_MODE_OUTPUT );
-
-	// 20 ms en cero para activar el dht11 (se necesitan 18 ms sengun datasheet)
 	gpio_set_level(gpio_num, 0);
 	esp_rom_delay_us( 20000 );
-
-	// pull up por 25 us a la espera de datos (20 a 40 us segun datasheet)
 	gpio_set_level( gpio_num, 1 );
 	esp_rom_delay_us( 25 );
-
 	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );		
-
-	// DHT pone a low la linea por 80 us y luego en high por 80 us 
-	// -- 80us low ------------------------
-
 	uSec = getSignalLevel( 85, 0 );
 
-	if( uSec<0 )
-	{
-		return DHT_TIMEOUT_ERROR; // aca va fallo 
+	if( uSec<0 ){
+		return NULL; 
 	} 
 
-	// -- 80us up ------------------------
-
 	uSec = getSignalLevel( 85, 1 );
-	if( uSec<0 ) 
-	{
-		return DHT_TIMEOUT_ERROR;
+	if( uSec<0 ) {
+		return NULL;
 	}
-	// == Si no hay errores lee los 40 data bits ================
 
 	for( int k = 0; k < 40; k++ ) 
 	{
 
-		// -- starts new data transmission with >50us low signal
-
 		uSec = getSignalLevel( 56, 0 );
-		if( uSec<0 )
-		{
-			return DHT_TIMEOUT_ERROR;
+		if( uSec<0 ){
+			return NULL;
 		}
-		// -- check to see if after >70us rx data is a 0 or a 1
 
 		uSec = getSignalLevel( 75, 1 );
-		if( uSec<0 ) 
-		{
-			return DHT_TIMEOUT_ERROR;
+		if( uSec<0 ){
+			return NULL;
 		}
 
-		// since all dhtData array where set to 0 at the start,
-		// only look for "1" (>28us us)
-
-		if (uSec > 30)
-		{
+		if (uSec > 30){
 			dhtData[k/8] |= (1 << (7-(k%8))); // 1 << 7, 1 << 6, 1 << 5, ..., 1 << 0
 		}
 
 	}
 
-
-	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF) || fallo){
+	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)){
 		intentos = 0; 
 		return dhtData;
 	}else{
-		if(intentos < INTENTOS_MAX)
-		{
+		if(intentos < INTENTOS_MAX){
 			return readDHT();
 		}else{
 			return NULL; 
 		}
-		
 	}
-		 
+}
 
+float getTemp(uint8_t* datos){
+	
+	float result = datos[2] * 10 + datos[3];
+	result /= 10;
+
+	if(datos[2] & 0x80){
+		result *= -1; 
+	}
+
+	return result; 
 }
 
 /*

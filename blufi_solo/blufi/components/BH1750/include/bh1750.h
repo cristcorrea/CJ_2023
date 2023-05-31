@@ -12,6 +12,6 @@
 
 
 void bh1750_init(void);
-void bh1750_read(void);
+float bh1750_read(void);
 void bh1750_deinit(void);
 

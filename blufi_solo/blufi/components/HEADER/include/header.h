@@ -12,3 +12,4 @@ typedef struct
 
 void recibe_confg_hum(char str[], config_data *cfg);
 void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
+void ultimoRiego(void);
