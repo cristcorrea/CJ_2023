@@ -66,7 +66,7 @@ void DHTerrorHandler(int response)
 uint8_t* readDHT()
 {
 	int uSec = 0;
-	uint8_t dhtData[MAXdhtData];
+	uint8_t * dhtData = malloc(5);
 	for (int k = 0; k < MAXdhtData; k++)
 	{
 		dhtData[k] = 0;
@@ -108,9 +108,11 @@ uint8_t* readDHT()
 	}
 
 	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)){
+		ESP_LOGI(TAG, "Envio dhtDatos exitoso. Intentos: %i\n", intentos);
 		intentos = 0; 
 		return dhtData;
 	}else{
+		intentos++;
 		if(intentos < INTENTOS_MAX){
 			return readDHT();
 		}else{
@@ -121,14 +123,19 @@ uint8_t* readDHT()
 
 float getTemp(uint8_t* datos){
 	
-	float result = datos[2] * 10 + datos[3];
-	result /= 10;
+    if (datos == NULL) {
+        // Manejo del puntero nulo
+        return 0.0;
+    }
 
-	if(datos[2] & 0x80){
-		result *= -1; 
-	}
-
-	return result; 
+    if (datos[2] > 127) {
+        // Temperatura negativa
+        int8_t temp = -(~datos[2] + 1);
+        return temp - (datos[3] / 10.0);
+    } else {
+        // Temperatura positiva
+        return datos[2] + (datos[3] / 10.0);
+    }
 }
 
 /*

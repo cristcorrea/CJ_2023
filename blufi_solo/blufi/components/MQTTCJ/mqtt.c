@@ -40,6 +40,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 
 extern config_data configuration;
 extern TaskHandle_t xHandle;
+extern SemaphoreHandle_t semaphoreSensorConfig;
 
 esp_mqtt_client_handle_t client; 
 
@@ -65,6 +66,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+        xSemaphoreGive(semaphoreSensorConfig);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -80,18 +82,21 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             float temperatura_amb; 
             float lux; 
             uint8_t* datos = readDHT();
-            temperatura_amb = getTemp(datos);
-            lux = bh1750_read();
+            if(datos != NULL){
 
-            size_t message_size = snprintf(NULL, 0, "%iH%iT%.1fL%.1f",
+                temperatura_amb = getTemp(datos);
+                lux = bh1750_read();
+                size_t message_size = snprintf(NULL, 0, "%iH%iT%.1fL%.1f",
                     humedad_suelo, datos[0], temperatura_amb, lux);
 
-            char *message = (char *)malloc(message_size);
-            if(message != NULL){              
-                snprintf(message, 15, "%iH%iT%.1fL%.1f",
-                        humedad_suelo, datos[0], temperatura_amb, lux);           
-                enviar_mensaje_mqtt(configuration.MAC, message);
-                free(message);
+                char *message = (char *)malloc(message_size);
+                if(message != NULL){              
+                    snprintf(message, 15, "%iH%iT%.1fL%.1f",
+                            humedad_suelo, datos[0], temperatura_amb, lux);           
+                    enviar_mensaje_mqtt(configuration.MAC, message);
+                    free(message);
+                }
+            
             }
 
         }else{
@@ -107,7 +112,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 case 'R':
                     // Enciende el riego manual
                     regar();
-                    //ultimo_riego();           
+                    ultimoRiego();           
                     break;
                 
                 case 'A':

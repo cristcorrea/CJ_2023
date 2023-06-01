@@ -33,19 +33,18 @@
 
 static const char* TAG = "Button press";
 
-SemaphoreHandle_t semaphoreWifiConection = NULL;
-//SemaphoreHandle_t semaphoreRTC = NULL;
+SemaphoreHandle_t semaphoreWifiConection = NULL; 
+SemaphoreHandle_t semaphoreSensorConfig = NULL;
 //SemaphoreHandle_t semaphoreLux = NULL;
 SemaphoreHandle_t semaphoreOta = NULL; // en ntp.c
 
 
 TaskHandle_t xHandle = NULL;
-TaskHandle_t xHandle2 = NULL;
 
 config_data configuration;
 
 void mqttServerConection(void *params)
-{
+{   
     while (true)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
@@ -93,22 +92,20 @@ void riego_auto(void * params)
     while(true)
     {
         ESP_LOGI("RIEGO AUTO", "Entra a tarea de riego automático\n");
-        /*
-        if(mediciones.humedad_suelo < configuration.hum_inf)
+        
+        if(humidity() < configuration.hum_inf)
         {
             int cant_riegos = 0;
-            vTaskSuspend(xHandle2); //suspende tarea de medicion de humedad de suelo y DHT11
-            while(mediciones.humedad_suelo < configuration.hum_sup && cant_riegos < 10)
+
+            while(humidity() < configuration.hum_sup && cant_riegos < 10)
             {
                 regar();
-                humidity();
-                vTaskDelay(pdMS_TO_TICKS(20));
+                vTaskDelay(pdMS_TO_TICKS(2000));
                 cant_riegos += 1;
             }
-            ultimo_riego();
-            vTaskResume(xHandle2);
+            ultimoRiego();
         }
-        */
+        
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
@@ -127,15 +124,24 @@ void ota_update(void * params)
    
 }
 
+void sensorCofig(void * params){
+
+    if(xSemaphoreTake(semaphoreSensorConfig, portMAX_DELAY)){
+
+        bh1750_init();
+        vTaskDelete(NULL);
+    }
+
+}
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
-
+    semaphoreSensorConfig  = xSemaphoreCreateBinary();
     gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
     gpio_set_level(POWER_CTRL, 1);
     soilConfig();
-    bh1750_init();
     blufi_start();
 
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
@@ -208,7 +214,13 @@ void app_main(void)
                 5,
                 NULL);
         
-                
+    xTaskCreate(&sensorCofig,
+                "Inicia configuracion de sensores",
+                2048,
+                NULL,
+                2,
+                NULL);
+    
     vTaskSuspend(xHandle);
 
 }

@@ -35,7 +35,7 @@ void ultimoRiego(){
     size_t message_size = snprintf(NULL, 0, "%s", hora) + 1;
     char *message = (char *)malloc(message_size);
     if(message != NULL){              
-        snprintf(message, message_size, "%s", hora);           
+        strcpy(message, hora);           
         enviar_mensaje_mqtt(configuration.MAC, message);
         free(message);
     }

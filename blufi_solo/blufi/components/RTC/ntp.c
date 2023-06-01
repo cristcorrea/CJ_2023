@@ -64,7 +64,7 @@ char * queHoraEs(){
     setenv("TZ", configuration.time_zone, 1); 
     tzset();
     localtime_r(&now, &timeinfo);
-    char strftime_buf[64];
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    char * strftime_buf = malloc(64);
+    strftime(strftime_buf, 64, "%c", &timeinfo);
     return strftime_buf;
 }
