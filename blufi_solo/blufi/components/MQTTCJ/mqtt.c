@@ -111,8 +111,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 {
                 case 'R':
                     // Enciende el riego manual
-                    regar();
-                    ultimoRiego();           
+                    regar(1);        
+                    ultimoRiego(); 
                     break;
                 
                 case 'A':

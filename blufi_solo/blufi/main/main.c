@@ -65,7 +65,7 @@ void erased_nvs(void *params)
     isr_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
     isr_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&isr_config);
-
+    timer_config();
     while(true)
     {
         int button_state = gpio_get_level(ERASED);
@@ -99,7 +99,7 @@ void riego_auto(void * params)
 
             while(humidity() < configuration.hum_sup && cant_riegos < 10)
             {
-                regar();
+                regar(0.3);
                 vTaskDelay(pdMS_TO_TICKS(2000));
                 cant_riegos += 1;
             }
