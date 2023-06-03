@@ -1,25 +1,58 @@
 #include <stdio.h>
+#include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "driver/gptimer.h"
+#include "esp_log.h"
 #include "pomp.h"
 #include "header.h"
 
 
-#define BOMBA           GPIO_NUM_18
-#define FLOW_SENSOR_PIN GPIO_NUM_2
-#define TIEMPO_MAX      10000000    
+#define BOMBA           GPIO_NUM_5
+#define ENABLE_BOM      GPIO_NUM_19
+#define FLOW_SENSOR_PIN GPIO_NUM_27   
+#define TAG             "RIEGO"
 
 volatile int flow_frequency = 0;
 
+const unsigned long TIEMPO_MAX  = 15000000;
+
 gptimer_handle_t gptimer = NULL; 
 
+
+ 
 void flow_sensor_isr(void* arg)
 {
     flow_frequency++;  // Incrementar la frecuencia cuando se produce una interrupción
 }
 
+
+esp_err_t init_irs(void){
+
+    esp_err_t err = ESP_OK; 
+    gpio_config_t flow_sensor_config;
+    flow_sensor_config.intr_type = GPIO_INTR_NEGEDGE;
+    flow_sensor_config.mode = GPIO_MODE_INPUT;
+    flow_sensor_config.pin_bit_mask = (1ULL << FLOW_SENSOR_PIN);
+    flow_sensor_config.pull_up_en = GPIO_PULLUP_ENABLE;
+    flow_sensor_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+
+    err = gpio_config(&flow_sensor_config);
+    if(err != ESP_OK){
+        return err; 
+    }
+    err = gpio_install_isr_service(0);
+    if(err != ESP_OK){
+        return err; 
+    }
+    err = gpio_isr_handler_add(FLOW_SENSOR_PIN, flow_sensor_isr, NULL);
+    if(err != ESP_OK){
+        return err; 
+    }
+    esp_log_level_set("gpio", ESP_LOG_INFO);
+    return err;
+}
 
 void riego_config()
 {
@@ -31,27 +64,28 @@ void riego_config()
     riego_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&riego_config);
 
-    gpio_config_t flow_sensor_config = {
-        .intr_type = GPIO_INTR_POSEDGE,
-        .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ULL << FLOW_SENSOR_PIN),
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_ENABLE
-    };
-    gpio_config(&flow_sensor_config);
-    gpio_install_isr_service(ESP_INTR_FLAG_LOWMED);
-    gpio_isr_handler_add(FLOW_SENSOR_PIN, flow_sensor_isr, NULL);
+    gpio_config_t enable_config;
+    enable_config.pin_bit_mask = (1ULL << ENABLE_BOM);
+    enable_config.mode = GPIO_MODE_OUTPUT;
+    enable_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    enable_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    enable_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&enable_config);
 
 }
 
 void encender_bomba()
 {
+    gpio_set_direction(ENABLE_BOM, GPIO_MODE_OUTPUT);
+    gpio_set_direction(BOMBA, GPIO_MODE_OUTPUT);
+    gpio_set_level(ENABLE_BOM, 1);
     gpio_set_level(BOMBA, 1); 
 }
 
 void apagar_bomba()
 {
-    gpio_set_level(BOMBA, 0);  
+    gpio_set_level(BOMBA, 0);
+    gpio_set_level(ENABLE_BOM, 0);  
 }
 
 
@@ -68,21 +102,30 @@ void timer_config(){
 
 void regar(float lts_final){
 
+
     float lts_actual = 0.0;
+
     gptimer_enable(gptimer);
     gptimer_start(gptimer);
-    uint64_t count = 0;
+    uint64_t tiempo_inicial = 0;
+    uint64_t tiempo_final = 0; 
+
     encender_bomba();
+    gptimer_get_raw_count(gptimer, &tiempo_inicial);
+    gptimer_get_raw_count(gptimer, &tiempo_final);
 
-    while(lts_actual < lts_final && count < TIEMPO_MAX){
+    while((lts_actual <= lts_final) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
 
-        float flow_rate = flow_frequency / 98.0;
-        float error = 0.02 * flow_rate;
-        float flow_rate_with_error = flow_rate + error; 
-        lts_actual += flow_rate_with_error /60.0;
-        gptimer_get_raw_count(gptimer, &count);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_LOGI(TAG, "Cantidad regada: %.1f ml. Flow frequency: %i\n", lts_actual, flow_frequency);
+        float freq = flow_frequency / 0.1f; 
+        float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
+        float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
+        lts_actual += flow_rate_with_err * 0.1;
+        flow_frequency = 0; 
+        gptimer_get_raw_count(gptimer, &tiempo_final);
+        vTaskDelay(pdMS_TO_TICKS(200));
     }
+    ESP_LOGI(TAG, "Total riego: %.3f", lts_actual);
     gptimer_stop(gptimer);
     gptimer_disable(gptimer);
     apagar_bomba();

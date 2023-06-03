@@ -142,6 +142,9 @@ void app_main(void)
     gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
     gpio_set_level(POWER_CTRL, 1);
     soilConfig();
+    if(init_irs()!=ESP_OK){
+        ESP_LOGE("GPIO", "Falla configuración de irs\n");
+    }
     blufi_start();
 
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
