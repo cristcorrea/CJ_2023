@@ -33,10 +33,10 @@
 
 static const char* TAG = "Button press";
 
-SemaphoreHandle_t semaphoreWifiConection = NULL; 
-SemaphoreHandle_t semaphoreSensorConfig = NULL;
+SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
+SemaphoreHandle_t semaphoreSensorConfig = NULL;     // en mqttcj.c
 //SemaphoreHandle_t semaphoreLux = NULL;
-SemaphoreHandle_t semaphoreOta = NULL; // en ntp.c
+SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 
 
 TaskHandle_t xHandle = NULL;
@@ -139,8 +139,8 @@ void app_main(void)
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
-    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT );
-    gpio_set_level(POWER_CTRL, 1);
+    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT ); // esto se quita ya no hay mas encendido de sensores
+    gpio_set_level(POWER_CTRL, 1);                      // tambien se quita 
     soilConfig();
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
