@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "pomp.h"
 #include "header.h"
+#include "mqtt.h"
 
 
 #define BOMBA           GPIO_NUM_5
@@ -20,7 +21,7 @@ const unsigned long TIEMPO_MAX  = 15000000;
 
 gptimer_handle_t gptimer = NULL; 
 
-
+extern config_data configuration; 
  
 void flow_sensor_isr(void* arg)
 {
@@ -117,12 +118,16 @@ void regar(float lts_final){
     while((lts_actual <= lts_final) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
 
         ESP_LOGI(TAG, "Cantidad regada: %.1f ml. Flow frequency: %i\n", lts_actual, flow_frequency);
-        float freq = flow_frequency / 0.1f; 
+        float freq = flow_frequency / 0.1f;
+        if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
+            //envia un alerta de no hay agua 
+        } 
         float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
         float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
         lts_actual += flow_rate_with_err * 0.1;
         flow_frequency = 0; 
         gptimer_get_raw_count(gptimer, &tiempo_final);
+
         vTaskDelay(pdMS_TO_TICKS(200));
     }
     ESP_LOGI(TAG, "Total riego: %.3f", lts_actual);
