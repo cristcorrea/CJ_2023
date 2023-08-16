@@ -141,6 +141,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
                         ESP_LOGI(TAG, "Datos de riego almacenados\n");
                     }
+                    // letra = "A" o cambiar conf. control riego a automatico
 
                     break; 
                 }
