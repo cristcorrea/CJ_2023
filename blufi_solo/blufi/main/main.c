@@ -47,7 +47,7 @@ void mqttServerConection(void *params)
 {   
     while (true)
     {
-        if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // establecida la conexión WiFi
+        if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // espera la conexión WiFi
         {
             adjust_time(configuration.time_zone);
             mqtt_start();
@@ -56,7 +56,8 @@ void mqttServerConection(void *params)
 }
 
 
-void erased_nvs(void *params)
+
+void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples usos 
 {
     gpio_config_t isr_config;
     isr_config.pin_bit_mask = (1ULL << ERASED);
@@ -111,7 +112,7 @@ void riego_auto(void * params)
 }
 
 
-void ota_update(void * params)
+void ota_update(void * params)  // espera a que se ponga en hora 
 {
     if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
     {
@@ -124,7 +125,7 @@ void ota_update(void * params)
    
 }
 
-void sensorCofig(void * params){
+void sensorCofig(void * params){  // espera a que se suscriba al topic 
 
     if(xSemaphoreTake(semaphoreSensorConfig, portMAX_DELAY)){
 
