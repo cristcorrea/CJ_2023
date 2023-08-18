@@ -10,9 +10,12 @@
 #include "mqtt.h"
 
 
-#define BOMBA           GPIO_NUM_5
-#define ENABLE_BOM      GPIO_NUM_19
-#define FLOW_SENSOR_PIN GPIO_NUM_27   
+#define BOMBA           GPIO_NUM_5      //ok
+#define ENABLE_BOM      GPIO_NUM_14     //ok
+#define VALVE1          GPIO_NUM_18     //ok
+#define VALVE2          GPIO_NUM_19     //ok
+#define FLOW_SENSOR_PIN GPIO_NUM_27     //ok
+
 #define TAG             "RIEGO"
 
 volatile int flow_frequency = 0;
@@ -73,12 +76,27 @@ void riego_config()
     enable_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&enable_config);
 
+    
+    gpio_config_t valve1_config;
+    valve1_config.pin_bit_mask = (1ULL << VALVE1);
+    valve1_config.mode = GPIO_MODE_OUTPUT;
+    valve1_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    valve1_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    valve1_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&valve1_config);
+
+    gpio_config_t valve2_config;
+    valve2_config.pin_bit_mask = (1ULL << VALVE2);
+    valve2_config.mode = GPIO_MODE_OUTPUT;
+    valve2_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    valve2_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    valve2_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&valve2_config);
+
 }
 
 void encender_bomba()
 {
-    gpio_set_direction(ENABLE_BOM, GPIO_MODE_OUTPUT);
-    gpio_set_direction(BOMBA, GPIO_MODE_OUTPUT);
     gpio_set_level(ENABLE_BOM, 1);
     gpio_set_level(BOMBA, 1); 
 }
@@ -88,6 +106,18 @@ void apagar_bomba()
     gpio_set_level(BOMBA, 0);
     gpio_set_level(ENABLE_BOM, 0);  
 }
+
+void abrir_valvula(gpio_num_t valvula)
+{
+    gpio_set_level(valvula, 1);
+}
+
+void cerrar_valvula(gpio_num_t valvula)
+{
+    gpio_set_level(valvula, 0);
+}
+
+
 
 
 void timer_config(){
@@ -102,7 +132,6 @@ void timer_config(){
 
 
 void regar(float lts_final){
-
 
     float lts_actual = 0.0;
 
@@ -136,3 +165,46 @@ void regar(float lts_final){
     apagar_bomba();
 
 }
+
+/*
+
+Funcion regar con selección de válvula por parámetro
+
+void regar(float lts_final, gpio_num_t valve){
+
+    float lts_actual = 0.0;
+
+    gptimer_enable(gptimer);
+    gptimer_start(gptimer);
+    uint64_t tiempo_inicial = 0;
+    uint64_t tiempo_final = 0; 
+
+    encender_bomba();
+    abrir_valvula(valve)
+
+    gptimer_get_raw_count(gptimer, &tiempo_inicial);
+    gptimer_get_raw_count(gptimer, &tiempo_final);
+
+    while((lts_actual <= lts_final) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
+
+        ESP_LOGI(TAG, "Cantidad regada: %.1f ml. Flow frequency: %i\n", lts_actual, flow_frequency);
+        float freq = flow_frequency / 0.1f;
+        if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
+            //envia un alerta de no hay agua 
+        } 
+        float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
+        float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
+        lts_actual += flow_rate_with_err * 0.1;
+        flow_frequency = 0; 
+        gptimer_get_raw_count(gptimer, &tiempo_final);
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+    ESP_LOGI(TAG, "Total riego: %.3f", lts_actual);
+    gptimer_stop(gptimer);
+    gptimer_disable(gptimer);
+    apagar_bomba();
+    cerrar_valvula(valve);
+
+}
+*/
