@@ -5,4 +5,4 @@ idf_component_register(SRCS "mqtt.c"
                         REQUIRES ${COMPONENT_REQUIRES}
                         EMBED_TXTFILES hivemq_certificate.pem)
 
-#
+

@@ -10,12 +10,6 @@
 #include "mqtt.h"
 
 
-#define BOMBA           GPIO_NUM_5      //ok
-#define ENABLE_BOM      GPIO_NUM_14     //ok
-#define VALVE1          GPIO_NUM_18     //ok
-#define VALVE2          GPIO_NUM_19     //ok
-#define FLOW_SENSOR_PIN GPIO_NUM_27     //ok
-
 #define TAG             "RIEGO"
 
 volatile int flow_frequency = 0;
@@ -130,7 +124,7 @@ void timer_config(){
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
 }
 
-
+/*
 void regar(float lts_final){
 
     float lts_actual = 0.0;
@@ -166,9 +160,7 @@ void regar(float lts_final){
 
 }
 
-/*
-
-Funcion regar con selección de válvula por parámetro
+*/
 
 void regar(float lts_final, gpio_num_t valve){
 
@@ -180,7 +172,7 @@ void regar(float lts_final, gpio_num_t valve){
     uint64_t tiempo_final = 0; 
 
     encender_bomba();
-    abrir_valvula(valve)
+    abrir_valvula(valve);
 
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
     gptimer_get_raw_count(gptimer, &tiempo_final);
@@ -200,11 +192,14 @@ void regar(float lts_final, gpio_num_t valve){
 
         vTaskDelay(pdMS_TO_TICKS(200));
     }
+    
     ESP_LOGI(TAG, "Total riego: %.3f", lts_actual);
+
     gptimer_stop(gptimer);
     gptimer_disable(gptimer);
+
     apagar_bomba();
     cerrar_valvula(valve);
 
 }
-*/
+

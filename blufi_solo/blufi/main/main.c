@@ -28,7 +28,6 @@
 #include "header.h"
 #include "ota.h"
 
-#define POWER_CTRL 4
 #define ERASED     35 
 
 static const char* TAG = "Button press";
@@ -89,28 +88,45 @@ void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples
 
 void riego_auto(void * params)
 {
-    riego_config();
+    riego_config(); // actualizada
+
     while(true)
     {
-        ESP_LOGI("RIEGO AUTO", "Entra a tarea de riego automático\n");
-        
-        if(humidity() < configuration.hum_inf)
+        if(configuration.control_riego_1)
         {
-            int cant_riegos = 0;
-
-            while(humidity() < configuration.hum_sup && cant_riegos < 10)
+            if(humidity(SENSOR1) < configuration.hum_inf_1)
             {
-                regar(0.3);
-                vTaskDelay(pdMS_TO_TICKS(2000));
-                cant_riegos += 1;
+                int cant_riegos_1 = 0;
+
+                while(humidity(SENSOR1) < configuration.hum_sup_1 && cant_riegos_1 < 10)
+                {
+                    regar(0.3, VALVE1); // actualizada
+                    vTaskDelay(pdMS_TO_TICKS(2000));
+                    cant_riegos_1 += 1;
+                }
+                const char *prefijo_1 = "S1: ";
+                ultimoRiego(prefijo_1);  
             }
-            ultimoRiego();
         }
-        
+        if(configuration.control_riego_2)
+        {
+            if(humidity(SENSOR2) < configuration.hum_inf_2)
+            {
+                int cant_riegos_2 = 0;
+
+                while(humidity(SENSOR2) < configuration.hum_sup_2 && cant_riegos_2 < 10)
+                {
+                    regar(0.3, VALVE2);
+                    vTaskDelay(pdMS_TO_TICKS(2000));
+                    cant_riegos_2 += 1;
+                }
+                const char *prefijo_2 = "S2: ";
+                ultimoRiego(prefijo_2);  
+            }
+        }
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
-
 
 void ota_update(void * params)  // espera a que se ponga en hora 
 {
@@ -140,9 +156,9 @@ void app_main(void)
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
-    gpio_set_direction( POWER_CTRL, GPIO_MODE_OUTPUT ); // esto se quita ya no hay mas encendido de sensores
-    gpio_set_level(POWER_CTRL, 1);                      // tambien se quita 
+
     soilConfig();
+
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
     }
@@ -166,23 +182,43 @@ void app_main(void)
             ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         }else{
             int result = 0; 
-            if(nvs_get_i32(my_handle, "control_riego", (int32_t*)&result) != ESP_OK)
+            if(nvs_get_i32(my_handle, "control_riego_1", (int32_t*)&result) != ESP_OK)
             {
-                configuration.control_riego = 0;
+                configuration.control_riego_1 = 0;
             }else{
-                configuration.control_riego = result; 
+                configuration.control_riego_1 = result; 
             }
-            if(nvs_get_i32(my_handle, "hum_sup", (int32_t*)&result))
+            if(nvs_get_i32(my_handle, "control_riego_2", (int32_t*)&result) != ESP_OK)
             {
-                configuration.hum_sup = 60;
+                configuration.control_riego_2 = 0;
             }else{
-                configuration.hum_sup = result; 
+                configuration.control_riego_2 = result; 
             }
-            if(nvs_get_i32(my_handle, "hum_inf", (int32_t*)&result))
+
+            if(nvs_get_i32(my_handle, "hum_sup_1", (int32_t*)&result))
             {
-                configuration.hum_inf = 20; 
+                configuration.hum_sup_1 = 60;
             }else{
-                configuration.hum_inf = result;
+                configuration.hum_sup_1 = result; 
+            }
+            if(nvs_get_i32(my_handle, "hum_inf_1", (int32_t*)&result))
+            {
+                configuration.hum_inf_1 = 20; 
+            }else{
+                configuration.hum_inf_1 = result;
+            }
+
+            if(nvs_get_i32(my_handle, "hum_sup_2", (int32_t*)&result))
+            {
+                configuration.hum_sup_2 = 60;
+            }else{
+                configuration.hum_sup_2 = result; 
+            }
+            if(nvs_get_i32(my_handle, "hum_inf_2", (int32_t*)&result))
+            {
+                configuration.hum_inf_2 = 20; 
+            }else{
+                configuration.hum_inf_2 = result;
             }
             nvs_close(my_handle);
         }

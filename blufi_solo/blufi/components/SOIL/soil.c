@@ -7,10 +7,13 @@
 #include "esp_log.h"
 #include "esp_adc/adc_oneshot.h"
 
+
 #include "soil.h"
 #include "header.h"
 
 #define TAG "Soil"
+
+
 
 
 // Create an ADC Unit Handle 
@@ -34,18 +37,18 @@ void soilConfig(void)
         .atten = ADC_ATTEN_DB_11, 
     };
 
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_4, &config));
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_6, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR1, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR2, &config));
 }
 
-int  humidity(void)
+int  humidity(adc_channel_t sensor)
 {
     int adc_reading = 0; 
     int result = 0; 
  
     for(int i = 0; i < 100; i++)
     {
-        adc_oneshot_read(adc1_handle, ADC_CHANNEL_4, &adc_reading);
+        adc_oneshot_read(adc1_handle, sensor, &adc_reading);
         result += adc_reading; 
         vTaskDelay(pdMS_TO_TICKS(2));
     }

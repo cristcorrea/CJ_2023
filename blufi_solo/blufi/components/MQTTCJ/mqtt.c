@@ -78,7 +78,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         if(event->data[0] == 'C'){   
  
-            int humedad_suelo = humidity();
+            int humedad_suelo = humidity(SENSOR1);
             float temperatura_amb; 
             float lux; 
             uint8_t* datos = readDHT();
@@ -110,22 +110,51 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 switch (letra)
                 {
                 case 'R':
-                    // Enciende el riego manual
-                    regar(150);        
-                    ultimoRiego(); 
+                    // Enciende el riego manual. 
+                    char sensor = event->data[13];
+
+                    if(sensor == '1')
+                    {
+                        regar(150, VALVE1);
+                        const char *prefijo = "S1";
+                        ultimoRiego(prefijo);
+                    }
+                    else
+                    {
+                        regar(150, VALVE2);
+                        const char *prefijo = "S2";
+                        ultimoRiego(prefijo);
+                    }
                     break;
                 
                 case 'A':
-                    // Activa/ desactiva el control automatico de riego DEBO GUARDAR EN MEMORIA
+                    /*
+                    Activa/Desactiva el riego automático. Luego de la letra "A" debe venir un 1 o un 2, 
+                    depende del sensor que se quiera poner en automático. 
+                    */
                     if(event->data[13] == '1')
-                    {
-                        configuration.control_riego = 1;
-                        vTaskResume(xHandle);
+                    {   
+                        if(configuration.control_riego_1 == 1)
+                        {
+                            configuration.control_riego_1 = 0;
+                            vTaskSuspend(xHandle); 
+                        }else{
+                            configuration.control_riego_1 = 1;
+                            vTaskResume(xHandle); 
+                        }    
+                        err = NVS_write_i8("control_riego_1", configuration.control_riego_1);    
                     }else{
-                        configuration.control_riego = 0;
-                        vTaskSuspend(xHandle);
+                        if(configuration.control_riego_2 == 1)
+                        {
+                            configuration.control_riego_2 = 0;
+                            vTaskSuspend(xHandle); 
+                        }else{
+                            configuration.control_riego_2 = 1;
+                            vTaskResume(xHandle); 
+                        }
+                        err = NVS_write_i8("control_riego_2", configuration.control_riego_2);
                     }
-                    err = NVS_write_i8("control_riego", configuration.control_riego);
+                    
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
                         ESP_LOGI(TAG, "control_riego almacenado\n");
 
@@ -133,14 +162,26 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     break;
                 
                 case 'H':
-                    // Recibo configuraciones de humedad DEBO GUARDAR EN MEMORIA funciona ok!
-                    recibe_confg_hum(event->data, &configuration);
-                    err = NVS_write_i8("hum_sup", configuration.hum_sup);
-                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}
-                    err = NVS_write_i8("hum_inf", configuration.hum_inf);
-                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf\n");}else{
+                    const char num = event->data[13];
+                    if(num == '1')
+                    {
+                        recibe_confg_hum(event->data, &configuration, 1);
+                        err = NVS_write_i8("hum_sup_1", configuration.hum_sup_1);
+                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_1\n");}
+                        err = NVS_write_i8("hum_inf_1", configuration.hum_inf_1);
+                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_1\n");}else{
+                        ESP_LOGI(TAG, "Datos de riego almacenados\n");
+                        }
+                        recibe_confg_hum(event->data, &configuration, 2);
+                        err = NVS_write_i8("hum_sup_2", configuration.hum_sup_2);
+                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_2\n");}
+                        err = NVS_write_i8("hum_inf_2", configuration.hum_inf_2);
+                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_2\n");}else{
                         ESP_LOGI(TAG, "Datos de riego almacenados\n");
                     }
+                    }
+
+
                     // letra = "A" o cambiar conf. control riego a automatico
 
                     break; 

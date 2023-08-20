@@ -1,4 +1,4 @@
-set(COMPONENT_REQUIRES  soc  esp_adc freertos log)
+set(COMPONENT_REQUIRES  soc  esp_adc freertos log hal)
 idf_component_register(SRCS "soil.c"
                         INCLUDE_DIRS "include"
                         PRIV_REQUIRES HEADER
