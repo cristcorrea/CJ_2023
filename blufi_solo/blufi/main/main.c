@@ -16,6 +16,8 @@
 #include "esp_blufi.h"
 #include "time.h"
 #include "driver/gpio.h"
+#include "driver/touch_pad.h"
+
 /* Librerias componentes */
 #include "ntp.h"
 #include "mqtt.h"
@@ -42,6 +44,9 @@ TaskHandle_t xHandle = NULL;
 
 config_data configuration;
 
+void touchConfig(void);
+
+
 void mqttServerConection(void *params)
 {   
     while (true)
@@ -54,7 +59,20 @@ void mqttServerConection(void *params)
     }
 }
 
+void touchSensor(void *params)
+{
+    uint16_t touch_value;
 
+    while(true)
+    {
+        touch_pad_read(TOUCH_PAD_NUM5, touch_value);
+        printf("T%d:[%4"PRIu16"] ", TOUCH_PAD_NUM5, touch_value);
+        printf("\n");
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+
+}
 
 void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples usos 
 {
@@ -151,6 +169,16 @@ void sensorCofig(void * params){  // espera a que se suscriba al topic
 
 }
 
+void touchConfig(void)
+{
+    ESP_ERROR_CHECK(touch_pad_init());
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
+    touch_pad_config(5);
+
+
+}
+
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
@@ -158,6 +186,7 @@ void app_main(void)
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
 
     soilConfig();
+    //;
 
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
@@ -260,7 +289,14 @@ void app_main(void)
                 NULL,
                 2,
                 NULL);
-    
+
+    xTaskCreate(&touchSensor,
+                "Sensor touch",
+                2048,
+                NULL,
+                2,
+                NULL);
+
     vTaskSuspend(xHandle);
 
 }
