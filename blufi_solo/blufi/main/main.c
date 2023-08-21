@@ -61,14 +61,15 @@ void mqttServerConection(void *params)
 
 void touchSensor(void *params)
 {
+    touchConfig();
     uint16_t touch_value;
 
     while(true)
-    {
-        touch_pad_read(TOUCH_PAD_NUM5, touch_value);
+    {   /*
+        touch_pad_read(TOUCH_PAD_NUM5, &touch_value);
         printf("T%d:[%4"PRIu16"] ", TOUCH_PAD_NUM5, touch_value);
         printf("\n");
-
+        */
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 
@@ -173,7 +174,7 @@ void touchConfig(void)
 {
     ESP_ERROR_CHECK(touch_pad_init());
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
-    touch_pad_config(5);
+    touch_pad_config(5, 0);
 
 
 }
@@ -186,7 +187,6 @@ void app_main(void)
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
 
     soilConfig();
-    //;
 
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
