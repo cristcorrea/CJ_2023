@@ -30,7 +30,8 @@
 #include "header.h"
 #include "ota.h"
 
-#define ERASED     35 
+#define TOUCH   TOUCH_PAD_NUM5
+#define ERASED  35
 
 static const char* TAG = "Button press";
 
@@ -61,16 +62,15 @@ void mqttServerConection(void *params)
 
 void touchSensor(void *params)
 {
-    touchConfig();
     uint16_t touch_value;
 
     while(true)
-    {   /*
-        touch_pad_read(TOUCH_PAD_NUM5, &touch_value);
-        printf("T%d:[%4"PRIu16"] ", TOUCH_PAD_NUM5, touch_value);
-        printf("\n");
-        */
-        vTaskDelay(pdMS_TO_TICKS(200));
+    {   
+        touch_pad_read(TOUCH, &touch_value);
+        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        //printf("\n");
+        
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
 }
@@ -165,6 +165,7 @@ void sensorCofig(void * params){  // espera a que se suscriba al topic
     if(xSemaphoreTake(semaphoreSensorConfig, portMAX_DELAY)){
 
         bh1750_init();
+        ESP_LOGI("BH1750", "Realiza tarea");
         vTaskDelete(NULL);
     }
 
@@ -173,8 +174,8 @@ void sensorCofig(void * params){  // espera a que se suscriba al topic
 void touchConfig(void)
 {
     ESP_ERROR_CHECK(touch_pad_init());
-    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
-    touch_pad_config(5, 0);
+    touch_pad_set_voltage(TOUCH_HVOLT_2V4, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
+    touch_pad_config(TOUCH, (-1));
 
 
 }
@@ -186,13 +187,17 @@ void app_main(void)
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
 
+    
     soilConfig();
 
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
     }
-    blufi_start();
+    
 
+    touchConfig();
+    blufi_start();
+    
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
     {
         if(true)//NVS_read("time_zone", configuration.time_zone) != ESP_OK
@@ -251,7 +256,7 @@ void app_main(void)
             }
             nvs_close(my_handle);
         }
-
+        
     }
 
     xTaskCreate(&mqttServerConection,
@@ -261,7 +266,7 @@ void app_main(void)
                 1,
                 NULL);
 
-
+/*
     xTaskCreate(&erased_nvs,
                 "Habilita borrado de NVS",
                 2048,
@@ -275,29 +280,30 @@ void app_main(void)
                 NULL,
                 1,
                 &xHandle);
-
+    
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
                 8048,
                 NULL,
                 5,
                 NULL);
-        
+    
+    */
     xTaskCreate(&sensorCofig,
                 "Inicia configuracion de sensores",
                 2048,
                 NULL,
                 2,
                 NULL);
-
+    
     xTaskCreate(&touchSensor,
                 "Sensor touch",
                 2048,
                 NULL,
                 2,
                 NULL);
-
-    vTaskSuspend(xHandle);
+    
+    //vTaskSuspend(xHandle);
 
 }
 

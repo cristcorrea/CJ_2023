@@ -16,8 +16,8 @@ static const char *TAG = "bh1750";
 #define I2C_ADDR BH1750_ADDRESS1
 #define BH1750_MODE BH1750_CONTINUOUS_HIGH_RES_MODE
 
-#define PIN_SDA 25
-#define PIN_SCL 26
+#define PIN_SDA 21
+#define PIN_SCL 22
 #define I2C_MASTER_NUM I2C_NUM_1   /*!< I2C port number for master dev */
 #define I2C_MASTER_TX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
