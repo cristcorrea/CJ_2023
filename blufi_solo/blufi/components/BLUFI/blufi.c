@@ -157,6 +157,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         break;
     case WIFI_EVENT_STA_CONNECTED:
         gl_sta_connected = true;
+        wifi_status = true; 
         gl_sta_is_connecting = false;
         event = (wifi_event_sta_connected_t*) event_data;
         memcpy(gl_sta_bssid, event->bssid, 6);
@@ -169,17 +170,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
-            example_wifi_connect();
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
         gl_sta_connected = false;
         gl_sta_got_ip = false;
-        wifi_status = gl_sta_connected; 
         memset(gl_sta_ssid, 0, 32);
         memset(gl_sta_bssid, 0, 6);
         gl_sta_ssid_len = 0;
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+
         break;
     case WIFI_EVENT_AP_START:
 

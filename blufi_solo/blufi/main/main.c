@@ -47,7 +47,7 @@ TaskHandle_t wifi_task_handle = NULL;
 
 config_data configuration;
 
-bool wifi_status = true; 
+bool wifi_status = false; 
 
 void touchConfig(void);
 
@@ -187,7 +187,6 @@ void touchSensor(void *params)
 void wifiTask(void *params) {
 
     while (1) {
-        example_wifi_connect(); // Intenta conectar a la red WiFi
 
         while (!wifi_status) {
             ESP_LOGI("wifiTask", "Entra a la tarea de reconección\n");

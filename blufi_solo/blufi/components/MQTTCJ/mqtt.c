@@ -28,6 +28,7 @@
 #include "dht.h"
 #include "bh1750.h"
 
+
 #define TAG "MQTT"
 
 #define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
@@ -41,6 +42,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 extern config_data configuration;
 extern TaskHandle_t xHandle;
 extern SemaphoreHandle_t semaphoreSensorConfig;
+extern bool wifi_status; 
 
 esp_mqtt_client_handle_t client; 
 
@@ -62,7 +64,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-        
+
         break;
 
     case MQTT_EVENT_SUBSCRIBED:
