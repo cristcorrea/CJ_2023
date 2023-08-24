@@ -61,6 +61,8 @@ extern SemaphoreHandle_t semaphoreWifiConection;
 
 extern config_data configuration; 
 
+extern bool wifi_status; 
+
 static void example_record_wifi_conn_info(int rssi, uint8_t reason)
 {
     memset(&gl_sta_conn_info, 0, sizeof(esp_blufi_extra_info_t));
@@ -75,7 +77,7 @@ static void example_record_wifi_conn_info(int rssi, uint8_t reason)
     }
 }
 
-static void example_wifi_connect(void)
+void example_wifi_connect(void)
 {
     example_wifi_retry = 0;
     gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
@@ -167,12 +169,13 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
-
+            example_wifi_connect();
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
         gl_sta_connected = false;
         gl_sta_got_ip = false;
+        wifi_status = gl_sta_connected; 
         memset(gl_sta_ssid, 0, 32);
         memset(gl_sta_bssid, 0, 6);
         gl_sta_ssid_len = 0;

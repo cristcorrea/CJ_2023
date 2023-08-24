@@ -32,6 +32,7 @@
 
 #define TOUCH   TOUCH_PAD_NUM5
 #define ERASED  35
+#define WIFI_RETRY_INTERVAL_MS (10000)
 
 static const char* TAG = "Button press";
 
@@ -42,8 +43,11 @@ SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 
 
 TaskHandle_t xHandle = NULL;
+TaskHandle_t wifi_task_handle = NULL;
 
 config_data configuration;
+
+bool wifi_status = true; 
 
 void touchConfig(void);
 
@@ -60,20 +64,6 @@ void mqttServerConection(void *params)
     }
 }
 
-void touchSensor(void *params)
-{
-    uint16_t touch_value;
-
-    while(true)
-    {   
-        touch_pad_read(TOUCH, &touch_value);
-        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
-        //printf("\n");
-        
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-
-}
 
 void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples usos 
 {
@@ -165,7 +155,6 @@ void sensorCofig(void * params){  // espera a que se suscriba al topic
     if(xSemaphoreTake(semaphoreSensorConfig, portMAX_DELAY)){
 
         bh1750_init();
-        ESP_LOGI("BH1750", "Realiza tarea");
         vTaskDelete(NULL);
     }
 
@@ -174,12 +163,41 @@ void sensorCofig(void * params){  // espera a que se suscriba al topic
 void touchConfig(void)
 {
     ESP_ERROR_CHECK(touch_pad_init());
-    touch_pad_set_voltage(TOUCH_HVOLT_2V4, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
-    touch_pad_config(TOUCH, (-1));
-
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
+    touch_pad_config(TOUCH, -200);
 
 }
 
+void touchSensor(void *params)
+{
+    uint16_t touch_value;
+
+    while(true)
+    {   
+        touch_pad_read(TOUCH, &touch_value);
+        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        printf("\n");
+        
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+
+}
+
+
+void wifiTask(void *params) {
+
+    while (1) {
+        example_wifi_connect(); // Intenta conectar a la red WiFi
+
+        while (!wifi_status) {
+            ESP_LOGI("wifiTask", "Entra a la tarea de reconección\n");
+            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_INTERVAL_MS)); // Espera un intervalo antes de volver a intentar
+            example_wifi_connect(); // Intenta conectar a la red WiFi nuevamente
+        }
+
+        vTaskDelay(portMAX_DELAY); // Mantén la tarea en pausa mientras la conexión esté establecida
+    }
+}
 
 void app_main(void)
 {
@@ -303,6 +321,13 @@ void app_main(void)
                 2,
                 NULL);
     
+    xTaskCreate(&wifiTask,
+                "Wifi reconection",
+                4096,
+                NULL,
+                configMAX_PRIORITIES - 1,
+                &wifi_task_handle);
+
     //vTaskSuspend(xHandle);
 
 }

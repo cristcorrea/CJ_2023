@@ -55,6 +55,7 @@ int  humidity(adc_channel_t sensor)
     result /= 100;
 
     result = -0.0526 * result + 184;
+    
     if(result > 100)
     {
         result = 100;

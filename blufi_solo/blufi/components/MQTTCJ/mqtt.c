@@ -62,6 +62,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+        
         break;
 
     case MQTT_EVENT_SUBSCRIBED:
@@ -86,13 +87,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
                 temperatura_amb = getTemp(datos);
                 lux = bh1750_read();
-                size_t message_size = snprintf(NULL, 0, "%iH%iT%.1fL%.1f",
-                    humedad_suelo, datos[0], temperatura_amb, lux);
+                int lux_rounded = (int)(lux + 0.5);
+                size_t message_size = snprintf(NULL, 0, "%iH%iT%.1fL%i",
+                    humedad_suelo, datos[0], temperatura_amb, lux_rounded) + 1;
 
                 char *message = (char *)malloc(message_size);
                 if(message != NULL){              
-                    snprintf(message, 15, "%iH%iT%.1fL%.1f",
-                            humedad_suelo, datos[0], temperatura_amb, lux);           
+                    snprintf(message, message_size , "%iH%iT%.1fL%i",
+                            humedad_suelo, datos[0], temperatura_amb, lux_rounded);           
                     enviar_mensaje_mqtt(configuration.MAC, message);
                     free(message);
                 }
