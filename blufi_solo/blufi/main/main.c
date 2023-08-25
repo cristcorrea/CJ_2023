@@ -43,11 +43,8 @@ SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 
 
 TaskHandle_t xHandle = NULL;
-TaskHandle_t wifi_task_handle = NULL;
 
 config_data configuration;
-
-bool wifi_status = false; 
 
 void touchConfig(void);
 
@@ -175,8 +172,8 @@ void touchSensor(void *params)
     while(true)
     {   
         touch_pad_read(TOUCH, &touch_value);
-        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
-        printf("\n");
+        //printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        //printf("\n");
         
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
@@ -184,19 +181,6 @@ void touchSensor(void *params)
 }
 
 
-void wifiTask(void *params) {
-
-    while (1) {
-
-        while (!wifi_status) {
-            ESP_LOGI("wifiTask", "Entra a la tarea de reconección\n");
-            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_INTERVAL_MS)); // Espera un intervalo antes de volver a intentar
-            example_wifi_connect(); // Intenta conectar a la red WiFi nuevamente
-        }
-
-        vTaskDelay(portMAX_DELAY); // Mantén la tarea en pausa mientras la conexión esté establecida
-    }
-}
 
 void app_main(void)
 {
@@ -320,13 +304,6 @@ void app_main(void)
                 2,
                 NULL);
     
-    xTaskCreate(&wifiTask,
-                "Wifi reconection",
-                4096,
-                NULL,
-                configMAX_PRIORITIES - 1,
-                &wifi_task_handle);
-
     //vTaskSuspend(xHandle);
 
 }

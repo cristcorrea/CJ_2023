@@ -61,7 +61,7 @@ extern SemaphoreHandle_t semaphoreWifiConection;
 
 extern config_data configuration; 
 
-extern bool wifi_status; 
+static bool first_connection = false; 
 
 static void example_record_wifi_conn_info(int rssi, uint8_t reason)
 {
@@ -128,6 +128,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         info.sta_ssid = gl_sta_ssid;
         info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
+
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
             ESP_LOGE(TAG, "IP obtenida. Reiniciando...\n");
@@ -136,7 +137,11 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         } else {
             esp_blufi_deinit();
         }
-        xSemaphoreGive(semaphoreWifiConection);
+        if(!first_connection)
+        {
+            xSemaphoreGive(semaphoreWifiConection);
+        }
+        first_connection = true; 
         break;
     }
     default:
@@ -156,8 +161,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         example_wifi_connect();
         break;
     case WIFI_EVENT_STA_CONNECTED:
+        ESP_LOGE("WIFI_EVENT", "WIFI_EVENT_STA_CONNECTED\n");    
         gl_sta_connected = true;
-        wifi_status = true; 
         gl_sta_is_connecting = false;
         event = (wifi_event_sta_connected_t*) event_data;
         memcpy(gl_sta_bssid, event->bssid, 6);
@@ -165,21 +170,32 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         gl_sta_ssid_len = event->ssid_len;
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
+         ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
         /* Only handle reconnection during connecting */
         if (gl_sta_connected == false && example_wifi_reconnect() == false) {
+            ESP_LOGI("WIFI_EVENT_HANDLER", "ENTRA DELTRO DEL IF");
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
+
+       
         gl_sta_connected = false;
         gl_sta_got_ip = false;
         memset(gl_sta_ssid, 0, 32);
         memset(gl_sta_bssid, 0, 6);
         gl_sta_ssid_len = 0;
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-
+        if(first_connection)
+       {
+            esp_err_t connect_err = esp_wifi_connect();
+            if (connect_err != ESP_OK) {
+                ESP_LOGE("WIFI_EVENT_HANDLER", "Error reconnecting: %s", esp_err_to_name(connect_err));
+            }
+       }
+       
         break;
     case WIFI_EVENT_AP_START:
 
