@@ -71,7 +71,7 @@ void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples
     isr_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
     isr_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&isr_config);
-    timer_config();
+
     while(true)
     {
         int button_state = gpio_get_level(ERASED);
@@ -94,7 +94,6 @@ void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples
 
 void riego_auto(void * params)
 {
-    riego_config(); // actualizada
 
     while(true)
     {
@@ -197,6 +196,8 @@ void app_main(void)
     
 
     touchConfig();
+    timer_config();
+    riego_config();
     blufi_start();
     
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
