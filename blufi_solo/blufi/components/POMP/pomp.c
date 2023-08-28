@@ -30,11 +30,11 @@ esp_err_t init_irs(void){
 
     esp_err_t err = ESP_OK; 
     gpio_config_t flow_sensor_config;
-    flow_sensor_config.intr_type = GPIO_INTR_NEGEDGE;
+    flow_sensor_config.intr_type = GPIO_INTR_POSEDGE;
     flow_sensor_config.mode = GPIO_MODE_INPUT;
     flow_sensor_config.pin_bit_mask = (1ULL << FLOW_SENSOR_PIN);
-    flow_sensor_config.pull_up_en = GPIO_PULLUP_ENABLE;
-    flow_sensor_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    flow_sensor_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    flow_sensor_config.pull_down_en = GPIO_PULLDOWN_ENABLE;
 
     err = gpio_config(&flow_sensor_config);
     if(err != ESP_OK){
@@ -144,16 +144,16 @@ void regar(float lts_final, gpio_num_t valve){
 
         ESP_LOGI(TAG, "Cantidad regada: %.1f ml. Flow frequency: %i lts_final: %.1f tiempo_final:%" PRIu64 "\n", lts_actual,
             flow_frequency, lts_final, tiempo_final);
-        float freq = flow_frequency / 0.5f;
+        float freq = flow_frequency / 0.1f;
         if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
             ESP_LOGE("Watering", "No hay agua");
         } 
         float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
-        float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
-        lts_actual += flow_rate_with_err * 0.5f; 
+        //float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
+        lts_actual += flow_rate; 
         gptimer_get_raw_count(gptimer, &tiempo_final);
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
     
     ESP_LOGI(TAG, "Total riego: %.2f", lts_actual);
