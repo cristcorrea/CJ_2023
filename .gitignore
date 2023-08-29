@@ -1,0 +1,6 @@
+# Ignorar archivos generados automáticamente
+blufi_solo/blufi/build/
+blufi_solo/blufi/.vscode/c_cpp_properties.json
+blufi_solo/blufi/.vscode/settings.json
+
+
