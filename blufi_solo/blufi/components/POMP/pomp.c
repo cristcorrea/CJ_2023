@@ -33,8 +33,8 @@ esp_err_t init_irs(void){
     flow_sensor_config.intr_type = GPIO_INTR_POSEDGE;
     flow_sensor_config.mode = GPIO_MODE_INPUT;
     flow_sensor_config.pin_bit_mask = (1ULL << FLOW_SENSOR_PIN);
-    flow_sensor_config.pull_up_en = GPIO_PULLDOWN_DISABLE;
-    flow_sensor_config.pull_down_en = GPIO_PULLUP_ENABLE;
+    flow_sensor_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    flow_sensor_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
 
     err = gpio_config(&flow_sensor_config);
     if(err != ESP_OK){
@@ -136,7 +136,7 @@ void regar(float lts_final, gpio_num_t valve){
 
     encender_bomba();
     abrir_valvula(valve);
-
+    flow_frequency = 0;
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
     gptimer_get_raw_count(gptimer, &tiempo_final);
 
@@ -148,7 +148,7 @@ void regar(float lts_final, gpio_num_t valve){
         if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
             ESP_LOGE("Watering", "No hay agua");
         } 
-        float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
+        float flow_rate = (freq * 1000.0f) / (88.0f * 60.0f);
         float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
         lts_actual += flow_rate_with_err * 0.1f; 
         gptimer_get_raw_count(gptimer, &tiempo_final);

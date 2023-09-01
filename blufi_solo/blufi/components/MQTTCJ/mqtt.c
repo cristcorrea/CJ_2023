@@ -117,7 +117,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
                     if(sensor == '1')
                     {
-                        regar(2000, VALVE1);
+                        regar(200, VALVE1);
                         const char *prefijo = "S1";
                         ultimoRiego(prefijo);
                     }
