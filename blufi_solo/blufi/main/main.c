@@ -46,6 +46,9 @@ TaskHandle_t xHandle = NULL;
 
 config_data configuration;
 
+int sensor1_on = 0;
+int sensor2_on = 0; 
+
 void touchConfig(void);
 
 
@@ -105,12 +108,12 @@ void riego_auto(void * params)
 
                 while(humidity(SENSOR1) < configuration.hum_sup_1 && cant_riegos_1 < 10)
                 {
-                    regar(0.3, VALVE1); // actualizada
+                    regar(150, VALVE1); // actualizada
                     vTaskDelay(pdMS_TO_TICKS(2000));
                     cant_riegos_1 += 1;
                 }
                 const char *prefijo_1 = "S1: ";
-                ultimoRiego(prefijo_1);  
+                ultimoRiego(prefijo_1, 150);  
             }
         }
         if(configuration.control_riego_2)
@@ -121,12 +124,12 @@ void riego_auto(void * params)
 
                 while(humidity(SENSOR2) < configuration.hum_sup_2 && cant_riegos_2 < 10)
                 {
-                    regar(0.3, VALVE2);
+                    regar(150, VALVE2);
                     vTaskDelay(pdMS_TO_TICKS(2000));
                     cant_riegos_2 += 1;
                 }
                 const char *prefijo_2 = "S2: ";
-                ultimoRiego(prefijo_2);  
+                ultimoRiego(prefijo_2, 150);  
             }
         }
         vTaskDelay(pdMS_TO_TICKS(20000));

@@ -9,6 +9,13 @@
 
 extern config_data configuration; 
 
+/*
+@brief 
+Almacena las configuraciones de hum min y max
+@param str[] event->data
+@param *cfg  puntero a la variable donde se almacenará
+@param sensor sensor al que corresponden los datos
+*/
 void recibe_confg_hum(char str[], config_data *cfg, int sensor)
 {
     int posH = strcspn(str, "H");
@@ -36,30 +43,17 @@ void bytesToHex(const unsigned char* bytes, int size, char* hexString)
     hexString[size * 2] = '\0';
 }
 
-void ultimoRiego(const char *prefijo) {
+
+
+void ultimoRiego(const char *prefijo, int ml) {
 
     char *hora = queHoraEs();
-    size_t message_size = snprintf(NULL, 0, "%s%s", prefijo, hora) + 1;
+    size_t message_size = snprintf(NULL, 0, "%s%s, %d", prefijo, hora, ml) + 1;
     char *message = (char *)malloc(message_size);
     
     if (message != NULL) {
-        snprintf(message, message_size, "%s%s", prefijo, hora);
+        snprintf(message, message_size, "%s%s, %d", prefijo, hora, ml);
         enviar_mensaje_mqtt(configuration.MAC, message);
         free(message);
     }
 }
-
-
-/*
-void ultimoRiego(){
-
-    char * hora = queHoraEs();
-    size_t message_size = snprintf(NULL, 0, "%s", hora) + 1;
-    char *message = (char *)malloc(message_size);
-    if(message != NULL){              
-        strcpy(message, hora);           
-        enviar_mensaje_mqtt(configuration.MAC, message);
-        free(message);
-    }
-}
-*/

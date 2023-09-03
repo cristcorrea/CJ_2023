@@ -6,15 +6,14 @@
 #include "soc/soc_caps.h"
 #include "esp_log.h"
 #include "esp_adc/adc_oneshot.h"
-
+#include "driver/gpio.h"
 
 #include "soil.h"
 #include "header.h"
 
 #define TAG "Soil"
-
-
-
+#define S1_STATE GPIO_NUM_36
+#define S2_STATE GPIO_NUM_39 
 
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
@@ -39,9 +38,25 @@ void soilConfig(void)
 
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR1, &config));
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR2, &config));
+
+    gpio_config_t s1_state;
+    s1_state.pin_bit_mask = (1ULL << S1_STATE);
+    s1_state.mode = GPIO_MODE_INPUT;
+    s1_state.pull_up_en = GPIO_PULLUP_DISABLE;
+    s1_state.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    s1_state.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&s1_state);
+
+    gpio_config_t s2_state;
+    s2_state.pin_bit_mask = (1ULL << S2_STATE);
+    s2_state.mode = GPIO_MODE_INPUT;
+    s2_state.pull_up_en = GPIO_PULLUP_DISABLE;
+    s2_state.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    s2_state.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&s2_state);
 }
 
-int  humidity(adc_channel_t sensor)
+int read_humidity(adc_channel_t sensor)
 {
     int adc_reading = 0; 
     int result = 0; 
@@ -54,8 +69,8 @@ int  humidity(adc_channel_t sensor)
     }
     result /= 100;
 
-    result = -0.0526 * result + 184;
-    
+    //result = -0.0526 * result + 184;
+    /*
     if(result > 100)
     {
         result = 100;
@@ -64,9 +79,31 @@ int  humidity(adc_channel_t sensor)
     {
         result = 0; 
     }
-    
-    return result; 
+    */
+    return result;
 }
 
+int  humidity(adc_channel_t sensor)
+{
+    if(sensor == SENSOR1)
+    {
+        if(gpio_get_level(S1_STATE))
+        {
+            return read_humidity(SENSOR1);
+        }else{
+            ESP_LOGI("Soil Sensor", "Sensor 1 no conectado");
+            return 0; 
+        }
+    }else{
+        if(gpio_get_level(S2_STATE))
+        {
+            return read_humidity(SENSOR2);
+        }else{
+            ESP_LOGI("Soil Sensor", "Sensor 2 no conectado");
+            return 0; 
+        }
+    }
+}
+    
 
-
+     
