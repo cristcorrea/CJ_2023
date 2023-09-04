@@ -38,7 +38,7 @@ static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreSensorConfig = NULL;     // en mqttcj.c
-//SemaphoreHandle_t semaphoreLux = NULL;
+SemaphoreHandle_t semaphoreRiego = NULL;            // alterna tareas de riego auto
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 
 
@@ -60,6 +60,7 @@ void mqttServerConection(void *params)
         {
             adjust_time(configuration.time_zone);
             mqtt_start();
+
         }
     }
 }
@@ -149,13 +150,10 @@ void ota_update(void * params)  // espera a que se ponga en hora
    
 }
 
-void sensorCofig(void * params){  // espera a que se suscriba al topic 
+void sensorCofig(void * params){  
 
-    if(xSemaphoreTake(semaphoreSensorConfig, portMAX_DELAY)){
-
-        bh1750_init();
-        vTaskDelete(NULL);
-    }
+    bh1750_init();
+    vTaskDelete(NULL);
 
 }
 
@@ -182,25 +180,53 @@ void touchSensor(void *params)
 
 }
 
+void riegoAuto1(void *params)
+{
+    while(true)
+    {
+        if(xSemaphoreTake(semaphoreRiego, portMAX_DELAY))
+        {
+            ESP_LOGI("Riego auto 1", "Entra en riego automatico 1");
+            xSemaphoreGive(semaphoreRiego);
+        }
+        vTaskDelay(19000);
 
+    }
+}
+
+void riegoAuto2(void *params)
+{
+    while(true)
+    {
+        if(xSemaphoreTake(semaphoreRiego, portMAX_DELAY))
+        {
+            ESP_LOGI("Riego auto 2", "Entra en riego automatico 2");
+            xSemaphoreGive(semaphoreRiego);
+        }
+        vTaskDelay(20000);
+    }
+}
 
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreSensorConfig  = xSemaphoreCreateBinary();
-
+    semaphoreRiego         = xSemaphoreCreateBinary();
     
-    soilConfig();
-
+    if (semaphoreRiego != NULL) {
+        xSemaphoreGive(semaphoreRiego); 
+    }else{ESP_LOGE("Semaphore", "Falla al inicial el semaforo de riego");}
+    
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
     }
     
-
+    soilConfig();
     touchConfig();
     timer_config();
     riego_config();
+
     blufi_start();
     
     if(NVS_read("MAC", configuration.MAC) == ESP_OK)
@@ -264,6 +290,7 @@ void app_main(void)
         
     }
 
+
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
                 4096,
@@ -308,6 +335,20 @@ void app_main(void)
                 2,
                 NULL);
     
+    xTaskCreate(&riegoAuto1,
+            "Riego automatico 1",
+            2048,
+            NULL,
+            2,
+            NULL);
+
+    xTaskCreate(&riegoAuto2,
+            "Riego automatico 2",
+            2048,
+            NULL,
+            2,
+            NULL);
+
     //vTaskSuspend(xHandle);
 
 }
