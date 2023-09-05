@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_mac.h"
 #include "esp_wifi.h"
@@ -37,14 +38,13 @@
 static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
-SemaphoreHandle_t semaphoreSensorConfig = NULL;     // en mqttcj.c
-SemaphoreHandle_t semaphoreRiego = NULL;            // alterna tareas de riego auto
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
+SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del riego
 
-
-TaskHandle_t xHandle = NULL;
+QueueHandle_t riegoQueue; 
 
 config_data configuration;
+
 
 int sensor1_on = 0;
 int sensor2_on = 0; 
@@ -95,48 +95,6 @@ void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples
     }
 }
 
-
-void riego_auto(void * params)
-{
-
-    while(true)
-    {
-        if(configuration.control_riego_1)
-        {
-            if(humidity(SENSOR1) < configuration.hum_inf_1)
-            {
-                int cant_riegos_1 = 0;
-
-                while(humidity(SENSOR1) < configuration.hum_sup_1 && cant_riegos_1 < 10)
-                {
-                    regar(150, VALVE1); // actualizada
-                    vTaskDelay(pdMS_TO_TICKS(2000));
-                    cant_riegos_1 += 1;
-                }
-                const char *prefijo_1 = "S1: ";
-                ultimoRiego(prefijo_1, 150);  
-            }
-        }
-        if(configuration.control_riego_2)
-        {
-            if(humidity(SENSOR2) < configuration.hum_inf_2)
-            {
-                int cant_riegos_2 = 0;
-
-                while(humidity(SENSOR2) < configuration.hum_sup_2 && cant_riegos_2 < 10)
-                {
-                    regar(150, VALVE2);
-                    vTaskDelay(pdMS_TO_TICKS(2000));
-                    cant_riegos_2 += 1;
-                }
-                const char *prefijo_2 = "S2: ";
-                ultimoRiego(prefijo_2, 150);  
-            }
-        }
-        vTaskDelay(pdMS_TO_TICKS(20000));
-    }
-}
-
 void ota_update(void * params)  // espera a que se ponga en hora 
 {
     if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
@@ -182,28 +140,56 @@ void touchSensor(void *params)
 
 void riegoAuto1(void *params)
 {
+    mensajeRiego riego1;
+    riego1.cantidad = 100; 
+    riego1.valvula = VALVE1;  
     while(true)
     {
-        if(xSemaphoreTake(semaphoreRiego, portMAX_DELAY))
+         if(configuration.control_riego_1)
         {
-            ESP_LOGI("Riego auto 1", "Entra en riego automatico 1");
-            xSemaphoreGive(semaphoreRiego);
+            if(humidity(SENSOR1) < configuration.hum_inf_1 || humidity(SENSOR1) > configuration.hum_sup_1)
+            {
+                xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
+                ESP_LOGE("Queue", "Error al poner en cola");
+                //const char *prefijo_1 = "S1: ";
+                //ultimoRiego(prefijo_1, 150);  
+            }
         }
-        vTaskDelay(19000);
-
+        vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
 
-void riegoAuto2(void *params)
+void riegoAuto2(void *params) // colocar xhandle para pausar tarea en ambos riegos automaticos
+{   
+    mensajeRiego riego2;
+    riego2.cantidad = 100; 
+    riego2.valvula = VALVE2; 
+    while(true)
+    {
+        if(configuration.control_riego_2)
+        {
+            if(humidity(SENSOR2) < configuration.hum_inf_2 || humidity(SENSOR2) > configuration.hum_sup_2)
+            {
+                xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
+                //const char *prefijo_1 = "S1: ";
+                //ultimoRiego(prefijo_1, 150);  
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(20000));
+    }
+}
+
+void controlRiego(void *params)
 {
     while(true)
     {
-        if(xSemaphoreTake(semaphoreRiego, portMAX_DELAY))
+        mensajeRiego mensaje; 
+        if(xQueueReceive(riegoQueue, &mensaje, portMAX_DELAY))
         {
-            ESP_LOGI("Riego auto 2", "Entra en riego automatico 2");
-            xSemaphoreGive(semaphoreRiego);
+            xSemaphoreTake(semaphoreRiego, portMAX_DELAY);
+            regar(mensaje.cantidad, mensaje.valvula);
         }
-        vTaskDelay(20000);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -211,12 +197,9 @@ void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
-    semaphoreSensorConfig  = xSemaphoreCreateBinary();
-    semaphoreRiego         = xSemaphoreCreateBinary();
+    semaphoreRiego         = xSemaphoreCreateMutex();
+    riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     
-    if (semaphoreRiego != NULL) {
-        xSemaphoreGive(semaphoreRiego); 
-    }else{ESP_LOGE("Semaphore", "Falla al inicial el semaforo de riego");}
     
     if(init_irs()!=ESP_OK){
         ESP_LOGE("GPIO", "Falla configuración de irs\n");
@@ -306,13 +289,7 @@ void app_main(void)
                 1,
                 NULL);
 
-    xTaskCreate(&riego_auto,
-                "Inicia control de riego",
-                2048,
-                NULL,
-                1,
-                &xHandle);
-    
+
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
                 8048,
@@ -348,8 +325,13 @@ void app_main(void)
             NULL,
             2,
             NULL);
-
-    //vTaskSuspend(xHandle);
+            
+    xTaskCreate(&controlRiego,
+            "Maneja la cola de riego",
+            2048,
+            NULL,
+            2,
+            NULL);
 
 }
 

@@ -2,6 +2,8 @@
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "driver/gpio.h"
 #include "driver/gptimer.h"
 #include "esp_log.h"
@@ -19,6 +21,7 @@ const unsigned long TIEMPO_MAX  = 15000000;
 gptimer_handle_t gptimer = NULL; 
 
 extern config_data configuration; 
+extern SemaphoreHandle_t semaphoreRiego; 
  
 void flow_sensor_isr(void* arg)
 {
@@ -167,6 +170,7 @@ int regar(int lts_final, gpio_num_t valve){
 
     apagar_bomba();
     cerrar_valvula(valve);
+    xSemaphoreGive(semaphoreRiego);
     return lts_actual; 
 }
 

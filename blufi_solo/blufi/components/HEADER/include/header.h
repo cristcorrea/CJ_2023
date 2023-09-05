@@ -1,3 +1,5 @@
+#include "driver/gpio.h"
+
 /*Estructura para guardar configuración*/
 typedef struct
 {
@@ -12,6 +14,12 @@ typedef struct
     char * time_zone; 
 
 }config_data;
+
+typedef struct
+{
+    gpio_num_t valvula; 
+    int cantidad; 
+}mensajeRiego;
 
 void recibe_confg_hum(char str[], config_data *cfg, int sensor);
 void bytesToHex(const unsigned char* bytes, int size, char* hexString); 

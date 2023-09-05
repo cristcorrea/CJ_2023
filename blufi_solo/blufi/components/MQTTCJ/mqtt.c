@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -39,8 +40,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 
 
 extern config_data configuration;
-extern TaskHandle_t xHandle;
-extern SemaphoreHandle_t semaphoreSensorConfig; // sacar
+extern QueueHandle_t riegoQueue; 
 
 esp_mqtt_client_handle_t client; 
 
@@ -92,7 +92,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        //xSemaphoreGive(semaphoreSensorConfig);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -114,12 +113,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
             char *ptrMl = event->data + 2;
             int ml = strtol(ptrMl, NULL, 10);
-
+            mensajeRiego mensaje; 
             if(event->data[1] == '1')
             {
-                int riego = regar(ml, VALVE1);
-                const char *prefijo = "S1";
-                ultimoRiego(prefijo, riego);
+                mensaje.cantidad = ml;
+                mensaje.valvula = VALVE1; 
+                xQueueSend(riegoQueue, &mensaje, portTICK_MAX);
+                //int riego = regar(ml, VALVE1);
+                //const char *prefijo = "S1";
+                //ultimoRiego(prefijo, riego);
             }else{
                 int riego = regar(ml, VALVE2);
                 const char *prefijo = "S2";
