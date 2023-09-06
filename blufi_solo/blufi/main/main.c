@@ -34,6 +34,7 @@
 #define TOUCH   TOUCH_PAD_NUM5
 #define ERASED  35
 #define WIFI_RETRY_INTERVAL_MS (10000)
+#define TOUCH_VALUE_MIN 150
 
 static const char* TAG = "Button press";
 
@@ -65,40 +66,6 @@ void mqttServerConection(void *params)
     }
 }
 
-/*
-Creo una tarea que realice el ajuste de hora cada x cantidad de tiempo
-Esta tarea se habilita con un semaforo luego de que se haya efectuado la conexion mqtt
-Si el año se establece correctamente, la tarea se elimina, sino continua hasta ajustar la hora.
-*/
-
-void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples usos 
-{
-    gpio_config_t isr_config;
-    isr_config.pin_bit_mask = (1ULL << ERASED);
-    isr_config.mode = GPIO_MODE_INPUT;
-    isr_config.pull_up_en = GPIO_PULLUP_ENABLE;
-    isr_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    isr_config.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&isr_config);
-
-    while(true)
-    {
-        int button_state = gpio_get_level(ERASED);
-        if(button_state == 0)
-        {
-            vTaskDelay(pdMS_TO_TICKS(3000));
-            button_state = gpio_get_level(ERASED);
-            if(button_state == 0)
-            {
-                ESP_LOGE(TAG, "Borrando NVS...");
-                nvs_flash_erase();
-                esp_restart();
-
-            }
-        }
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
 
 void ota_update(void * params)  // espera a que se ponga en hora 
 {
@@ -138,7 +105,20 @@ void touchSensor(void *params)
         //printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
         //printf("\n");
         
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        if(touch_value < TOUCH_VALUE_MIN)
+        {
+            vTaskDelay(pdMS_TO_TICKS(3000));
+            touch_pad_read(TOUCH, &touch_value);
+            if(touch_value < TOUCH_VALUE_MIN)
+            {
+                ESP_LOGE(TAG, "Borrando NVS...");
+                nvs_flash_erase();
+                esp_restart();
+
+            }
+        }
+        
+        vTaskDelay(pdMS_TO_TICKS(200));
     }
 
 }
@@ -155,9 +135,6 @@ void riegoAuto1(void *params)
             if(humidity(SENSOR1) < configuration.hum_inf_1 || humidity(SENSOR1) > configuration.hum_sup_1)
             {
                 xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
-                ESP_LOGE("Queue", "Error al poner en cola");
-                //const char *prefijo_1 = "S1: ";
-                //ultimoRiego(prefijo_1, 150);  
             }
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
@@ -176,8 +153,6 @@ void riegoAuto2(void *params) // colocar xhandle para pausar tarea en ambos rieg
             if(humidity(SENSOR2) < configuration.hum_inf_2 || humidity(SENSOR2) > configuration.hum_sup_2)
             {
                 xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
-                //const char *prefijo_1 = "S1: ";
-                //ultimoRiego(prefijo_1, 150);  
             }
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
@@ -306,14 +281,6 @@ void app_main(void)
                 NULL);
 
 /*
-    xTaskCreate(&erased_nvs,
-                "Habilita borrado de NVS",
-                2048,
-                NULL,
-                1,
-                NULL);
-
-
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
                 8048,
@@ -322,6 +289,7 @@ void app_main(void)
                 NULL);
     
     */
+
     xTaskCreate(&sensorCofig,
                 "Inicia configuracion de sensores",
                 2048,
