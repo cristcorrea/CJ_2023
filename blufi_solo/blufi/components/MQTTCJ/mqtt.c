@@ -116,17 +116,18 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mensajeRiego mensaje; 
             if(event->data[1] == '1')
             {
-                mensaje.cantidad = ml;
                 mensaje.valvula = VALVE1; 
-                xQueueSend(riegoQueue, &mensaje, portTICK_MAX);
                 //int riego = regar(ml, VALVE1);
                 //const char *prefijo = "S1";
                 //ultimoRiego(prefijo, riego);
             }else{
-                int riego = regar(ml, VALVE2);
-                const char *prefijo = "S2";
-                ultimoRiego(prefijo, riego);
+                mensaje.valvula = VALVE2;
+                //int riego = regar(ml, VALVE2);
+                //const char *prefijo = "S2";
+                //ultimoRiego(prefijo, riego);
             }
+            mensaje.cantidad = ml;
+            xQueueSend(riegoQueue, &mensaje, portMAX_DELAY);
             break;
 
         case 'A':                      // Automatico 

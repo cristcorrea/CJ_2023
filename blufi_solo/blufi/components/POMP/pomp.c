@@ -128,7 +128,7 @@ void timer_config(){
 }
 
 
-int regar(int lts_final, gpio_num_t valve){
+void regar(int lts_final, gpio_num_t valve){
 
     int lts_actual = 0;
     
@@ -170,7 +170,14 @@ int regar(int lts_final, gpio_num_t valve){
 
     apagar_bomba();
     cerrar_valvula(valve);
+    const char *prefijo;
+    if(valve == VALVE1)
+    {
+        prefijo = "S1";
+    }else{
+        prefijo = "S2";
+    }
+    ultimoRiego(prefijo, lts_actual);
     xSemaphoreGive(semaphoreRiego);
-    return lts_actual; 
 }
 
