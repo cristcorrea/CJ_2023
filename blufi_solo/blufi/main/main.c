@@ -40,6 +40,7 @@ static const char* TAG = "Button press";
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del riego
+SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
 
 QueueHandle_t riegoQueue; 
 
@@ -58,13 +59,17 @@ void mqttServerConection(void *params)
     {
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // espera la conexión WiFi
         {
-            adjust_time(configuration.time_zone);
             mqtt_start();
 
         }
     }
 }
 
+/*
+Creo una tarea que realice el ajuste de hora cada x cantidad de tiempo
+Esta tarea se habilita con un semaforo luego de que se haya efectuado la conexion mqtt
+Si el año se establece correctamente, la tarea se elimina, sino continua hasta ajustar la hora.
+*/
 
 void erased_nvs(void *params)  // esta pasa a ser funcion del boton de multiples usos 
 {
@@ -193,10 +198,29 @@ void controlRiego(void *params)
     }
 }
 
+void ajusteFecha(void *params)
+{
+    while(true)
+    {
+        if(xSemaphoreTake(semaphoreFecha, portMAX_DELAY))
+        {
+            adjust_time(configuration.time_zone);
+            int anio = consultaAnio();
+            if(anio != 1970)
+            {
+                ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
+                vTaskDelete(NULL);
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(30000));
+    }
+}
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
+    semaphoreFecha         = xSemaphoreCreateBinary();
     semaphoreRiego         = xSemaphoreCreateMutex();
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     
@@ -333,5 +357,11 @@ void app_main(void)
             2,
             NULL);
 
+    xTaskCreate(&ajusteFecha,
+            "Ajusta la hora y la fecha",
+            2048,
+            NULL,
+            4,
+            NULL);
 }
 

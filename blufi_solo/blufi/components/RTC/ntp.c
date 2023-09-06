@@ -17,6 +17,16 @@ static const char *TAG = "RTC";
 extern config_data configuration; 
 extern SemaphoreHandle_t semaphoreOta;
 
+int consultaAnio(void)
+{
+    time_t now;
+    struct tm timeinfo = {0};
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    int year = timeinfo.tm_year + 1900;
+    return year; 
+}
+
 void adjust_time(char * time_zone)
 {
     ESP_LOGI(TAG, "Initializing and starting SNTP");

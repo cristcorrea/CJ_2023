@@ -41,6 +41,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 
 extern config_data configuration;
 extern QueueHandle_t riegoQueue; 
+extern SemaphoreHandle_t semaphoreFecha;
 
 esp_mqtt_client_handle_t client; 
 
@@ -83,6 +84,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
         free(topic_sus);
         topic_sus = NULL; 
+        xSemaphoreGive(semaphoreFecha);
         break;
 
     case MQTT_EVENT_DISCONNECTED:
@@ -156,7 +158,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_1\n");}
                     err = NVS_write_i8("hum_inf_1", configuration.hum_inf_1);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_1\n");}else{
-                    ESP_LOGI(TAG, "Datos de riego 1 almacenados\n");}
+                    ESP_LOGI(TAG, "Datos de riego 1 almacenados.L: %i - H: %i\n", configuration.hum_inf_1, configuration.hum_sup_1);}
                     //vTaskResume(xHandle_riego_auto_1); 
                 }else{
                     configuration.control_riego_2 = 1; 

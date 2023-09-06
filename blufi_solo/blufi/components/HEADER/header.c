@@ -31,7 +31,6 @@ void recibe_confg_hum(char str[], config_data *cfg, int sensor)
         cfg->hum_sup_2 = strtol(hum_H, NULL, 10);
         cfg->hum_inf_2 = strtol(hum_L, NULL, 10);
     }
-    
 }
 
 
