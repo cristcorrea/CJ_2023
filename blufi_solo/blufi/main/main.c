@@ -191,6 +191,15 @@ void ajusteFecha(void *params)
     }
 }
 
+void envioDatos(void *params)
+{
+    while(true)
+    {   
+        vTaskDelay(pdMS_TO_TICKS(3600000));
+        enviarDatos();
+    }
+}
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
@@ -280,7 +289,6 @@ void app_main(void)
                 1,
                 NULL);
 
-/*
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
                 8048,
@@ -288,7 +296,6 @@ void app_main(void)
                 5,
                 NULL);
     
-    */
 
     xTaskCreate(&sensorCofig,
                 "Inicia configuracion de sensores",
@@ -330,6 +337,13 @@ void app_main(void)
             2048,
             NULL,
             4,
+            NULL);
+
+    xTaskCreate(&envioDatos,
+            "Envia datos cada una hora",
+            2048,
+            NULL,
+            1,
             NULL);
 }
 
