@@ -76,5 +76,22 @@ char * queHoraEs(){
     localtime_r(&now, &timeinfo);
     char * strftime_buf = malloc(64);
     strftime(strftime_buf, 64, "%c", &timeinfo);
-    return strftime_buf;
+
+    size_t len = strlen(strftime_buf);
+    char * result = (char *)malloc(len + 1); 
+    for(size_t i = 0; i < len; i++)
+    {
+        if(strftime_buf[i] == ' ')
+        {
+            result[i] = ',';
+            if(i < len-1 & i+1 == ' ')
+            {
+                result[i+1] = '0';
+            }
+        }else{
+            result[i] = strftime_buf[i];
+        }
+    }
+    result[len] = '\0';
+    return result;
 }
