@@ -67,6 +67,34 @@ void adjust_time(char * time_zone)
 
 }
 
+
+char * queHoraEs() {
+    time_t now = 0;
+    struct tm timeinfo = { 0 };
+    time(&now);
+    setenv("TZ", configuration.time_zone, 1); 
+    tzset();
+    localtime_r(&now, &timeinfo);
+    char strftime_buf[64];
+    strftime(strftime_buf, sizeof(strftime_buf), "%a,%b,%d,%T,%Y", &timeinfo);
+
+    size_t len = strlen(strftime_buf);
+    char *result = (char *)malloc(len + 1); 
+    if (result != NULL) {
+        strcpy(result, strftime_buf);
+    }
+    
+    return result;
+}
+
+
+
+
+
+
+
+
+/*
 char * queHoraEs(){
     time_t now = 0;
     struct tm timeinfo = { 0 };
@@ -84,14 +112,15 @@ char * queHoraEs(){
         if(strftime_buf[i] == ' ')
         {
             result[i] = ',';
-            if(i < len-1 & i+1 == ' ')
-            {
-                result[i+1] = '0';
-            }
         }else{
             result[i] = strftime_buf[i];
         }
     }
+    if(result[8] == ',')
+    {
+        result[8] = '0';
+    }
     result[len] = '\0';
     return result;
 }
+*/

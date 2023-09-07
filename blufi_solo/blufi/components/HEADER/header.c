@@ -42,12 +42,10 @@ void bytesToHex(const unsigned char* bytes, int size, char* hexString)
     hexString[size * 2] = '\0';
 }
 
-
-
 void ultimoRiego(const char *prefijo, int ml) {
 
     char *hora = queHoraEs();
-    size_t message_size = snprintf(NULL, 0, "%s%s, %d", prefijo, hora, ml) + 1;
+    size_t message_size = snprintf(NULL, 0, "%s%s, %i", prefijo, hora, ml) + 1;
     char *message = (char *)malloc(message_size);
     
     if (message != NULL) {
