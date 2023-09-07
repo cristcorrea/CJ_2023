@@ -129,7 +129,8 @@ void riegoAuto1(void *params)
     riego1.cantidad = 100; 
     riego1.valvula = VALVE1;  
     while(true)
-    {
+    {    /*Agregar filtro para que no se ejecute si el valor de humidity es 0*/
+
          if(configuration.control_riego_1)
         {
             if(humidity(SENSOR1) < configuration.hum_inf_1 || humidity(SENSOR1) > configuration.hum_sup_1)
