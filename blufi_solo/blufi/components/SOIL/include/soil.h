@@ -6,4 +6,5 @@
 void soilConfig(void); 
 
 int humidity(adc_channel_t sensor);
+int sensorConectado(adc_channel_t sensor);
 int read_humidity(adc_channel_t sensor);

@@ -83,6 +83,12 @@ int read_humidity(adc_channel_t sensor)
     return result;
 }
 
+int sensorConectado(adc_channel_t sensor)
+{
+    return gpio_get_level(sensor);
+
+}
+
 int  humidity(adc_channel_t sensor)
 {
     if(sensor == SENSOR1)
@@ -106,4 +112,3 @@ int  humidity(adc_channel_t sensor)
 }
     
 
-     

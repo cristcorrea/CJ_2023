@@ -32,11 +32,8 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define ERASED  35
 #define WIFI_RETRY_INTERVAL_MS (10000)
 #define TOUCH_VALUE_MIN 150
-
-static const char* TAG = "Button press";
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
@@ -47,9 +44,6 @@ QueueHandle_t riegoQueue;
 
 config_data configuration;
 
-
-int sensor1_on = 0;
-int sensor2_on = 0; 
 
 void touchConfig(void);
 
@@ -111,7 +105,6 @@ void touchSensor(void *params)
             touch_pad_read(TOUCH, &touch_value);
             if(touch_value < TOUCH_VALUE_MIN)
             {
-                ESP_LOGE(TAG, "Borrando NVS...");
                 nvs_flash_erase();
                 esp_restart();
 
@@ -129,9 +122,8 @@ void riegoAuto1(void *params)
     riego1.cantidad = 100; 
     riego1.valvula = VALVE1;  
     while(true)
-    {    /*Agregar filtro para que no se ejecute si el valor de humidity es 0*/
-
-         if(configuration.control_riego_1)
+    {    
+         if(configuration.control_riego_1 && sensorConectado(SENSOR1))
         {
             if(humidity(SENSOR1) < configuration.hum_inf_1 || humidity(SENSOR1) > configuration.hum_sup_1)
             {
@@ -142,14 +134,14 @@ void riegoAuto1(void *params)
     }
 }
 
-void riegoAuto2(void *params) // colocar xhandle para pausar tarea en ambos riegos automaticos
+void riegoAuto2(void *params) 
 {   
     mensajeRiego riego2;
     riego2.cantidad = 100; 
     riego2.valvula = VALVE2; 
     while(true)
     {
-        if(configuration.control_riego_2)
+        if(configuration.control_riego_2 && sensorConectado(SENSOR2))
         {
             if(humidity(SENSOR2) < configuration.hum_inf_2 || humidity(SENSOR2) > configuration.hum_sup_2)
             {
@@ -236,7 +228,7 @@ void app_main(void)
 
         if(err != ESP_OK)
         {
-            ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+            ESP_LOGI("nvs","Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         }else{
             int result = 0; 
             if(nvs_get_i32(my_handle, "control_riego_1", (int32_t*)&result) != ESP_OK)
