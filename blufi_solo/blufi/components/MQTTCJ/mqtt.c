@@ -31,8 +31,8 @@
 
 #define TAG "MQTT"
 
-#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
-#define MOSQUITTO_ID "esp32_client"
+//#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
+//#define MOSQUITTO_ID "esp32_client"
 
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
 
