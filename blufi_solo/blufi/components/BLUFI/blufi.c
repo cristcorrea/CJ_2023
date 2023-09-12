@@ -346,6 +346,14 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
+        strncpy(configuration.MAC, param->custom_data.data, 8);
+        configuration.MAC[8] = '\0';
+        NVS_write("MAC", configuration.MAC); 
+        configuration.time_zone = strdup((const char*)param->custom_data.data, 8);
+        NVS_write("time_zone", configuration.time_zone);
+
+        /*
+
         bytesToHex(esp_bt_dev_get_address(), 6, configuration.MAC);
 
         NVS_write("MAC", configuration.MAC);
@@ -361,6 +369,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         //configuration.time_zone = strdup((const char*)param->custom_data.data);
 
         //NVS_write("time_zone", configuration.time_zone);
+        */
 
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
