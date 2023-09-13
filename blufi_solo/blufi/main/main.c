@@ -177,6 +177,7 @@ void ajusteFecha(void *params)
             if(anio != 1970)
             {
                 ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
+                free(configuration.time_zone);
                 vTaskDelete(NULL);
             }
         }

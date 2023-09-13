@@ -31,8 +31,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
 #define WIFI_LIST_NUM   10
 
-static const char* TAG = "BLUFI.C";
-
 static wifi_config_t sta_config;
 
 
@@ -131,7 +129,8 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
 
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
-            ESP_LOGE(TAG, "IP obtenida. Reiniciando...\n");
+            const char * respuesta = "ok";
+            esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta));
             esp_restart();
 
         } else {
@@ -346,11 +345,18 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-        strncpy(configuration.MAC, param->custom_data.data, 8);
-        configuration.MAC[8] = '\0';
-        NVS_write("MAC", configuration.MAC); 
-        configuration.time_zone = strdup((const char*)param->custom_data.data, 8);
-        NVS_write("time_zone", configuration.time_zone);
+        configuration.MAC = strndup((const char*)param->custom_data.data, 8);
+        if(configuration.MAC != NULL)
+        {
+            NVS_write("MAC", configuration.MAC); 
+        }
+
+        configuration.time_zone = strdup((const char*)param->custom_data.data + 9);
+        if(configuration.time_zone != NULL)
+        {
+            NVS_write("time_zone", configuration.time_zone);
+        }
+            
 
         /*
 

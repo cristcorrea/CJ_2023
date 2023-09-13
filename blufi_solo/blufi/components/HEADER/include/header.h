@@ -4,13 +4,13 @@
 typedef struct
 {
 
-    char MAC[13];              // almacena la mac del esp
     int hum_sup_1;             // limite superior de humedad
     int hum_inf_1;
     int hum_sup_2;                               
     int hum_inf_2;
     int control_riego_1;       // Controla el riego automatico del sensor 1
     int control_riego_2;       // Controla el riego automatico del sensor 2
+    char * MAC;              // almacena la mac del esp
     char * time_zone; 
 
 }config_data;

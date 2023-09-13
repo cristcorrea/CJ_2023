@@ -76,9 +76,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
 
-        char * topic_sus = (char *)malloc(13); 
-        memset(topic_sus, 0, 13);
-        memcpy(topic_sus, configuration.MAC, sizeof(char) * 12);
+        char * topic_sus = (char *)malloc(9); 
+        memset(topic_sus, 0, 9);
+        memcpy(topic_sus, configuration.MAC, sizeof(char) * 8);
         strcat(topic_sus, "R");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
@@ -119,14 +119,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             if(event->data[1] == '1')
             {
                 mensaje.valvula = VALVE1; 
-                //int riego = regar(ml, VALVE1);
-                //const char *prefijo = "S1";
-                //ultimoRiego(prefijo, riego);
             }else{
                 mensaje.valvula = VALVE2;
-                //int riego = regar(ml, VALVE2);
-                //const char *prefijo = "S2";
-                //ultimoRiego(prefijo, riego);
             }
             mensaje.cantidad = ml;
             xQueueSend(riegoQueue, &mensaje, portMAX_DELAY);
