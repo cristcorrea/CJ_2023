@@ -130,8 +130,10 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
             const char * respuesta = "ok";
-            esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta));
-            esp_restart();
+            if(esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta)))
+            {
+                esp_restart();
+            }
 
         } else {
             esp_blufi_deinit();
