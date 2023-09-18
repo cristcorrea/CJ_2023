@@ -360,25 +360,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         }
             
 
-        /*
-
-        bytesToHex(esp_bt_dev_get_address(), 6, configuration.MAC);
-
-        NVS_write("MAC", configuration.MAC);
-        esp_err_t ret = esp_blufi_send_custom_data((uint8_t*)&configuration.MAC, 12);
-
-        if(ret == ESP_OK)
-        {
-            ESP_LOGI(TAG, "Mac enviada: %s\n", configuration.MAC);
-        }else{
-            ESP_LOGI(TAG, "Fallo al enviar\n");
-        }
-
-        //configuration.time_zone = strdup((const char*)param->custom_data.data);
-
-        //NVS_write("time_zone", configuration.time_zone);
-        */
-
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */

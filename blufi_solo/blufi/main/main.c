@@ -28,7 +28,6 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define WIFI_RETRY_INTERVAL_MS (10000)
 #define TOUCH_VALUE_MIN 150
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
@@ -37,12 +36,9 @@ SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del
 SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
 
 QueueHandle_t riegoQueue; 
-
 config_data configuration;
 
-
 void touchConfig(void);
-
 
 void mqttServerConection(void *params)
 {   
@@ -51,7 +47,6 @@ void mqttServerConection(void *params)
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // espera la conexión WiFi
         {
             mqtt_start();
-
         }
     }
 }
@@ -67,7 +62,6 @@ void ota_update(void * params)  // espera a que se ponga en hora
             vTaskDelay(pdMS_TO_TICKS(36000000));
         }
     }
-   
 }
 
 void sensorCofig(void * params){  
@@ -82,7 +76,6 @@ void touchConfig(void)
     ESP_ERROR_CHECK(touch_pad_init());
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
     touch_pad_config(TOUCH, -200);
-
 }
 
 void touchSensor(void *params)
@@ -103,13 +96,10 @@ void touchSensor(void *params)
             {
                 nvs_flash_erase();
                 esp_restart();
-
             }
         }
-        
         vTaskDelay(pdMS_TO_TICKS(200));
     }
-
 }
 
 void riegoAuto1(void *params)
@@ -173,7 +163,7 @@ void ajusteFecha(void *params)
             if(anio != 1970)
             {
                 ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
-                free(configuration.time_zone);
+                //free(configuration.time_zone);
                 vTaskDelete(NULL);
             }
         }
@@ -198,25 +188,21 @@ void app_main(void)
     semaphoreRiego         = xSemaphoreCreateMutex();
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     
-    
-    if(init_irs()!=ESP_OK){
-        ESP_LOGE("GPIO", "Falla configuración de irs\n");
-    }
-    
+    init_irs(); 
     soilConfig();
     touchConfig();
     timer_config();
     riego_config();
-
     blufi_start();
     
-    if(NVS_read("MAC", configuration.MAC) == ESP_OK)
+    if(NVS_read("MAC", &configuration.MAC) == ESP_OK)
     {
-        if(NVS_read("time_zone", configuration.time_zone) != ESP_OK)
+        /*
+        if(NVS_read("time_zone", &configuration.time_zone) != ESP_OK)
         {   
             configuration.time_zone = "CET-1CEST,M3.5.0,M10.5.0/3";
         }
-
+        */
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);
 
