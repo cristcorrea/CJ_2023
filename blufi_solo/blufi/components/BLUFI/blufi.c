@@ -129,12 +129,14 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
 
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+            esp_restart();
+            /*
             const char * respuesta = "ok";
             if(esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta)))
             {
                 esp_restart();
             }
-
+            */
         } else {
             esp_blufi_deinit();
         }
@@ -352,13 +354,12 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         {
             NVS_write("MAC", configuration.MAC); 
         }
-
-        configuration.time_zone = strdup((const char*)param->custom_data.data + 9);
-        if(configuration.time_zone != NULL)
-        {
-            NVS_write("time_zone", configuration.time_zone);
-        }
-            
+        
+        char * ptr = (char*)param->custom_data.data + 9;
+        configuration.time_zone = strtol(ptr, NULL, 10);
+        //configuration.time_zone = strdup((const char*)param->custom_data.data + 9);
+           esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
+           if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
 
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:

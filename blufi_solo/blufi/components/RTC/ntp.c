@@ -32,7 +32,7 @@ int consultaAnio(void)
 #include <string.h>
 #include <time.h>
 
-void adjust_time(char *time_zone) {
+void adjust_time(int time_zone) {
     // Configura la zona horaria en GMT/UTC
     setenv("TZ", "GMT0", 1);
     tzset();
@@ -67,23 +67,18 @@ void adjust_time(char *time_zone) {
     time(&now);
     localtime_r(&now, &timeinfo);
 
-    // Usa strtol para convertir el valor de time_zone a un número entero
-    char *endptr;
-    long time_zone_offset = strtol(time_zone + 1, &endptr, 10);
+    int first_digit = time_zone / 100;
+    
+    int offset_hours = time_zone % 100;
 
-    // Verifica si hubo errores en la conversión
-    if (*endptr != '\0' && *endptr != '\n') {
-        ESP_LOGE(TAG, "Error converting time_zone to integer");
-        return; // Manejar el error apropiadamente
+    if (first_digit == 1) {
+        timeinfo.tm_hour += offset_hours;
+        ESP_LOGI("Ajuste de hora", "Ajuste de hora positivo: %i", offset_hours);
+    } else {
+        timeinfo.tm_hour -= offset_hours;
+        ESP_LOGI("Ajuste de hora", "Ajuste de hora negativo: %i", offset_hours);
     }
-
-    // Ajusta la hora según la zona horaria
-    if(time_zone[1] == '1')
-    {
-        timeinfo.tm_hour += (int)time_zone_offset;
-    }else{
-        timeinfo.tm_hour -= (int)time_zone_offset;
-    }
+    
     mktime(&timeinfo); // Asegura que la hora esté en un rango válido
 
     // Convierte y muestra la hora ajustada
@@ -136,6 +131,22 @@ void adjust_time(char * time_zone)
 }
 */
 
+char * queHoraEs()
+{
+    time_t rawtime;
+    struct tm *timeinfo;
+
+    time(&rawtime); // Obtener la hora actual en segundos desde la época Unix
+    timeinfo = localtime(&rawtime); // Convertir a estructura tm con hora local
+
+    // Crear una cadena de caracteres formateada para la hora actual
+    char *current_time_str = (char *)malloc(9 * sizeof(char)); // HH:MM:SS\0
+    snprintf(current_time_str, 9, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+    return current_time_str;
+}
+
+/*
 char * queHoraEs() {
     time_t now = 0;
     struct tm timeinfo = { 0 };
@@ -154,7 +165,7 @@ char * queHoraEs() {
     
     return result;
 }
-
+*/
 
 
 

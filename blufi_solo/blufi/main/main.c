@@ -197,12 +197,6 @@ void app_main(void)
     
     if(NVS_read("MAC", &configuration.MAC) == ESP_OK)
     {
-        /*
-        if(NVS_read("time_zone", &configuration.time_zone) != ESP_OK)
-        {   
-            configuration.time_zone = "CET-1CEST,M3.5.0,M10.5.0/3";
-        }
-        */
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);
 
@@ -210,7 +204,14 @@ void app_main(void)
         {
             ESP_LOGI("nvs","Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         }else{
-            int result = 0; 
+            int result = 0;
+            if(nvs_get_i32(my_handle, "time_zone", (int32_t*)&result) != ESP_OK)
+            {
+                configuration.time_zone = 100;
+            }else{
+                configuration.time_zone = result;
+            }
+            ESP_LOGI("NVS", "time_zone: %i", configuration.time_zone);
             if(nvs_get_i32(my_handle, "control_riego_1", (int32_t*)&result) != ESP_OK)
             {
                 configuration.control_riego_1 = 0;
@@ -250,7 +251,6 @@ void app_main(void)
                 configuration.hum_inf_2 = result;
             }
             nvs_close(my_handle);
-        }
         
     }
 
@@ -318,5 +318,7 @@ void app_main(void)
             NULL,
             1,
             NULL);
+    }
 }
+
 
