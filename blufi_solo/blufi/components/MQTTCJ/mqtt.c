@@ -79,7 +79,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         char * topic_sus = (char *)malloc(9); 
         memset(topic_sus, 0, 9);
         memcpy(topic_sus, configuration.MAC, sizeof(char) * 8);
-        strcat(topic_sus, "R");
+        strcat(topic_sus, "B");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
         free(topic_sus);
