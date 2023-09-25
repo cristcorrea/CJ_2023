@@ -2,6 +2,8 @@
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "driver/gpio.h"
 #include "driver/gptimer.h"
 #include "esp_log.h"
@@ -19,6 +21,7 @@ const unsigned long TIEMPO_MAX  = 15000000;
 gptimer_handle_t gptimer = NULL; 
 
 extern config_data configuration; 
+extern SemaphoreHandle_t semaphoreRiego; 
  
 void flow_sensor_isr(void* arg)
 {
@@ -125,10 +128,10 @@ void timer_config(){
 }
 
 
-void regar(float lts_final, gpio_num_t valve){
+void regar(int lts_final, gpio_num_t valve){
 
-    float lts_actual = 0.0;
-    flow_frequency = 0;
+    int lts_actual = 0;
+    
     gptimer_enable(gptimer);
     gptimer_start(gptimer);
     uint64_t tiempo_inicial = 0;
@@ -136,27 +139,30 @@ void regar(float lts_final, gpio_num_t valve){
 
     encender_bomba();
     abrir_valvula(valve);
-
+    flow_frequency = 0;
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
     gptimer_get_raw_count(gptimer, &tiempo_final);
-
+    int total_frequency = 0; 
     while((lts_actual <= lts_final) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
 
-        ESP_LOGI(TAG, "Cantidad regada: %.1f ml. Flow frequency: %i lts_final: %.1f tiempo_final:%" PRIu64 "\n", lts_actual,
+        ESP_LOGI(TAG, "Cantidad regada: %i ml. Flow frequency: %i lts_final: %i tiempo_final:%" PRIu64 "\n", lts_actual,
             flow_frequency, lts_final, tiempo_final);
-        float freq = flow_frequency / 0.1f;
+        //float freq = flow_frequency / 0.1f;
         if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
             ESP_LOGE("Watering", "No hay agua");
         } 
-        float flow_rate = (freq * 1000.0f) / (98.0f * 60.0f);
-        //float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
-        lts_actual += flow_rate; 
-        gptimer_get_raw_count(gptimer, &tiempo_final);
 
+        //float flow_rate = (freq * 1000.0f) / (84.0f * 60.0f);
+        //float flow_rate_with_err = flow_rate * 0.02f + flow_rate;
+        //lts_actual += flow_rate_with_err * 0.1f; 
+        total_frequency += flow_frequency; 
+        lts_actual += flow_frequency * 0.54f; 
+        gptimer_get_raw_count(gptimer, &tiempo_final);
+        flow_frequency = 0;
         vTaskDelay(pdMS_TO_TICKS(100));
     }
     
-    ESP_LOGI(TAG, "Total riego: %.2f", lts_actual);
+    ESP_LOGI(TAG, "Total riego: %i - Total pulsos: %i", lts_actual, total_frequency);
 
     gptimer_set_raw_count(gptimer, 0);
     gptimer_stop(gptimer);
@@ -164,6 +170,14 @@ void regar(float lts_final, gpio_num_t valve){
 
     apagar_bomba();
     cerrar_valvula(valve);
-
+    const char *prefijo;
+    if(valve == VALVE1)
+    {
+        prefijo = "S1,";
+    }else{
+        prefijo = "S2,";
+    }
+    ultimoRiego(prefijo, lts_actual);
+    xSemaphoreGive(semaphoreRiego);
 }
 

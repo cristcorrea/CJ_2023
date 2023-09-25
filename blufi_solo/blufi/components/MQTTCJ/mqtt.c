@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -30,8 +31,8 @@
 
 #define TAG "MQTT"
 
-#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
-#define MOSQUITTO_ID "esp32_client"
+//#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
+//#define MOSQUITTO_ID "esp32_client"
 
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
 
@@ -39,10 +40,35 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 
 
 extern config_data configuration;
-extern TaskHandle_t xHandle;
-extern SemaphoreHandle_t semaphoreSensorConfig;
+extern QueueHandle_t riegoQueue; 
+extern SemaphoreHandle_t semaphoreFecha;
 
 esp_mqtt_client_handle_t client; 
+
+void enviarDatos()
+{
+    int hum_suelo_1 = humidity(SENSOR1);
+    int hum_suelo_2 = humidity(SENSOR2);
+    float temperatura_amb; 
+    float lux; 
+    uint8_t* datos = readDHT();
+    if(datos != NULL){
+
+        temperatura_amb = getTemp(datos);
+        lux = bh1750_read();
+        int lux_rounded = (int)(lux + 0.5);
+        size_t message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
+            hum_suelo_1, hum_suelo_2,  datos[0], temperatura_amb, lux_rounded) + 1;
+
+        char *message = (char *)malloc(message_size);
+        if(message != NULL){              
+            snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
+                    hum_suelo_1, hum_suelo_2, datos[0], temperatura_amb, lux_rounded);           
+            enviar_mensaje_mqtt(configuration.MAC, message);
+            free(message);
+        }
+    }
+}
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
@@ -50,14 +76,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
 
-        char * topic_sus = (char *)malloc(13); 
-        memset(topic_sus, 0, 13);
-        memcpy(topic_sus, configuration.MAC, sizeof(char) * 12);
-        strcat(topic_sus, "R");
+        char * topic_sus = (char *)malloc(9); 
+        memset(topic_sus, 0, 9);
+        memcpy(topic_sus, configuration.MAC, sizeof(char) * 8);
+        strcat(topic_sus, "B");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
         free(topic_sus);
         topic_sus = NULL; 
+        xSemaphoreGive(semaphoreFecha);
         break;
 
     case MQTT_EVENT_DISCONNECTED:
@@ -67,7 +94,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        xSemaphoreGive(semaphoreSensorConfig);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -77,118 +103,84 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
 
-        if(event->data[0] == 'C'){   
- 
-            int humedad_suelo = humidity(SENSOR1);
-            float temperatura_amb; 
-            float lux; 
-            uint8_t* datos = readDHT();
-            if(datos != NULL){
+        char clave1 = event->data[0]; 
 
-                temperatura_amb = getTemp(datos);
-                lux = bh1750_read();
-                int lux_rounded = (int)(lux + 0.5);
-                size_t message_size = snprintf(NULL, 0, "%iH%iT%.1fL%i",
-                    humedad_suelo, datos[0], temperatura_amb, lux_rounded) + 1;
+        switch (clave1)
+        {
+        case 'S':
+            enviarDatos();
+            break;
+        
+        case 'R':                       // Riego manual
 
-                char *message = (char *)malloc(message_size);
-                if(message != NULL){              
-                    snprintf(message, message_size , "%iH%iT%.1fL%i",
-                            humedad_suelo, datos[0], temperatura_amb, lux_rounded);           
-                    enviar_mensaje_mqtt(configuration.MAC, message);
-                    free(message);
-                }
-            
-            }
-
-        }else{
-
-            if(memcmp(configuration.MAC, event->data, sizeof(char)*12) == 0)  
+            char *ptrMl = event->data + 2;
+            int ml = strtol(ptrMl, NULL, 10);
+            mensajeRiego mensaje; 
+            if(event->data[1] == '1')
             {
+                mensaje.valvula = VALVE1; 
+            }else{
+                mensaje.valvula = VALVE2;
+            }
+            mensaje.cantidad = ml;
+            xQueueSend(riegoQueue, &mensaje, portMAX_DELAY);
+            break;
 
-                char letra = event->data[12];
-                int err; 
-                
-                switch (letra)
+        case 'A':                      // Automatico 
+            int err; 
+            if(event->data[2] == '0') //Apagado de automático
+            {   
+                if (event->data[1] == '1')
                 {
-                case 'R':
-                    // Enciende el riego manual. 
-                    char sensor = event->data[13];
-
-                    if(sensor == '1')
-                    {
-                        regar(2000, VALVE1);
-                        const char *prefijo = "S1";
-                        ultimoRiego(prefijo);
-                    }
-                    else
-                    {
-                        regar(150, VALVE2);
-                        const char *prefijo = "S2";
-                        ultimoRiego(prefijo);
-                    }
-                    break;
-                
-                case 'A':
-                    /*
-                    Activa/Desactiva el riego automático. Luego de la letra "A" debe venir un 1 o un 2, 
-                    depende del sensor que se quiera poner en automático. 
-                    */
-                    if(event->data[13] == '1')
-                    {   
-                        if(configuration.control_riego_1 == 1)
-                        {
-                            configuration.control_riego_1 = 0;
-                            vTaskSuspend(xHandle); 
-                        }else{
-                            configuration.control_riego_1 = 1;
-                            vTaskResume(xHandle); 
-                        }    
-                        err = NVS_write_i8("control_riego_1", configuration.control_riego_1);    
-                    }else{
-                        if(configuration.control_riego_2 == 1)
-                        {
-                            configuration.control_riego_2 = 0;
-                            vTaskSuspend(xHandle); 
-                        }else{
-                            configuration.control_riego_2 = 1;
-                            vTaskResume(xHandle); 
-                        }
-                        err = NVS_write_i8("control_riego_2", configuration.control_riego_2);
-                    }
-                    
-                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
-                        ESP_LOGI(TAG, "control_riego almacenado\n");
-
-                    }
-                    break;
-                
-                case 'H':
-                    const char num = event->data[13];
-                    if(num == '1')
-                    {
-                        recibe_confg_hum(event->data, &configuration, 1);
-                        err = NVS_write_i8("hum_sup_1", configuration.hum_sup_1);
-                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_1\n");}
-                        err = NVS_write_i8("hum_inf_1", configuration.hum_inf_1);
-                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_1\n");}else{
-                        ESP_LOGI(TAG, "Datos de riego almacenados\n");
-                        }
-                        recibe_confg_hum(event->data, &configuration, 2);
-                        err = NVS_write_i8("hum_sup_2", configuration.hum_sup_2);
-                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_2\n");}
-                        err = NVS_write_i8("hum_inf_2", configuration.hum_inf_2);
-                        if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_2\n");}else{
-                        ESP_LOGI(TAG, "Datos de riego almacenados\n");
-                    }
-                    }
-
-
-                    // letra = "A" o cambiar conf. control riego a automatico
-
-                    break; 
+                    configuration.control_riego_1 = 0;
+                    err = NVS_write_i8("control_riego_1", configuration.control_riego_1); 
+                    //vTaskSuspend(xHandle_riego_auto_1);
+                }else{
+                    configuration.control_riego_2 = 0; 
+                    err = NVS_write_i8("control_riego_2", configuration.control_riego_2);
+                    //vTaskSuspend(xHandle_riego_auto_2);
                 }
-            }  
+                if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
+                    ESP_LOGI(TAG, "control riego almacenado\n");}
+                
+            }else{                      // Encendido de automático
+                if(event->data[1] == '1')
+                {
+                    configuration.control_riego_1 = 1;
+                    recibe_confg_hum(event->data, &configuration, 1);
+                    err = NVS_write_i8("hum_sup_1", configuration.hum_sup_1);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_1\n");}
+                    err = NVS_write_i8("hum_inf_1", configuration.hum_inf_1);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_1\n");}else{
+                    ESP_LOGI(TAG, "Datos de riego 1 almacenados.L: %i - H: %i\n", configuration.hum_inf_1, configuration.hum_sup_1);}
+                    //vTaskResume(xHandle_riego_auto_1); 
+                }else{
+                    configuration.control_riego_2 = 1; 
+                    recibe_confg_hum(event->data, &configuration, 2);
+                    err = NVS_write_i8("hum_sup_2", configuration.hum_sup_2);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup_2\n");}
+                    err = NVS_write_i8("hum_inf_2", configuration.hum_inf_2);
+                    if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_2\n");}else{
+                    ESP_LOGI(TAG, "Datos de riego 2 almacenados\n");}
+                    //vTaskResume(xHandle_riego_auto_2);
+                }
+                if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
+                    ESP_LOGI(TAG, "control_riego almacenado\n");}
+            }
+            break; 
+
+        case 'P':                       // Purga
+            if(event->data[1] == '1')
+            {
+                regar(200, 1);
+            }else{
+                regar(200, 2);
+            }
+            break;
+
+
+        default:
+            break;
         }
         break;
     case MQTT_EVENT_ERROR:

@@ -12,14 +12,13 @@
 
 static const char* TAG = "STORAGE";
 
-int NVS_read(char *data, char *Get_Data) // data es la referencia
+int NVS_read(char *data, char **Get_Data) // data es la referencia
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
     if (err != ESP_OK)
     {
         ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return err; 
     } 
     else 
     {   
@@ -32,7 +31,8 @@ int NVS_read(char *data, char *Get_Data) // data es la referencia
             case ESP_OK:
                 ESP_LOGI(TAG,"Done\n");
                 ESP_LOGI(TAG,"Read data: %s\n", dato_leido);
-                strcpy(Get_Data, dato_leido);
+                *Get_Data = strdup((const char*)dato_leido);
+                //strcpy(Get_Data, dato_leido);
                 break;
             case ESP_ERR_NVS_NOT_FOUND:
                 ESP_LOGI(TAG,"The value is not initialized yet!\n");

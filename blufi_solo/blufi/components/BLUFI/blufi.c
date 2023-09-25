@@ -31,8 +31,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
 #define WIFI_LIST_NUM   10
 
-static const char* TAG = "BLUFI.C";
-
 static wifi_config_t sta_config;
 
 
@@ -131,9 +129,14 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
 
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
-            ESP_LOGE(TAG, "IP obtenida. Reiniciando...\n");
             esp_restart();
-
+            /*
+            const char * respuesta = "ok";
+            if(esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta)))
+            {
+                esp_restart();
+            }
+            */
         } else {
             esp_blufi_deinit();
         }
@@ -346,21 +349,17 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-        bytesToHex(esp_bt_dev_get_address(), 6, configuration.MAC);
-
-        NVS_write("MAC", configuration.MAC);
-        esp_err_t ret = esp_blufi_send_custom_data((uint8_t*)&configuration.MAC, 12);
-
-        if(ret == ESP_OK)
+        configuration.MAC = strndup((const char*)param->custom_data.data, 8);
+        if(configuration.MAC != NULL)
         {
-            ESP_LOGI(TAG, "Mac enviada: %s\n", configuration.MAC);
-        }else{
-            ESP_LOGI(TAG, "Fallo al enviar\n");
+            NVS_write("MAC", configuration.MAC); 
         }
-
-        //configuration.time_zone = strdup((const char*)param->custom_data.data);
-
-        //NVS_write("time_zone", configuration.time_zone);
+        
+        char * ptr = (char*)param->custom_data.data + 9;
+        configuration.time_zone = strtol(ptr, NULL, 10);
+        //configuration.time_zone = strdup((const char*)param->custom_data.data + 9);
+           esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
+           if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
 
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
