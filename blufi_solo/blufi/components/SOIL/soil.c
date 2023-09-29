@@ -69,8 +69,8 @@ int read_humidity(adc_channel_t sensor)
     }
     result /= 100;
 
-    //result = -0.0526 * result + 184;
-    /*
+    result = -0.0976 * result + 245.31; //-0.0526 * result + 184;
+    
     if(result > 100)
     {
         result = 100;
@@ -79,7 +79,7 @@ int read_humidity(adc_channel_t sensor)
     {
         result = 0; 
     }
-    */
+    
     return result;
 }
 
