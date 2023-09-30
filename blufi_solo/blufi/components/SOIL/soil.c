@@ -56,20 +56,29 @@ void soilConfig(void)
     gpio_config(&s2_state);
 }
 
-int read_humidity(adc_channel_t sensor)
+int adc_read(adc_channel_t channel)
 {
     int adc_reading = 0; 
     int result = 0; 
  
     for(int i = 0; i < 100; i++)
     {
-        adc_oneshot_read(adc1_handle, sensor, &adc_reading);
+        adc_oneshot_read(adc1_handle, channel, &adc_reading);
         result += adc_reading; 
         vTaskDelay(pdMS_TO_TICKS(2));
     }
     result /= 100;
 
-    result = -0.0976 * result + 245.31; //-0.0526 * result + 184;
+    return result;
+}
+
+
+int read_humidity(adc_channel_t sensor)
+{
+    //int adc_reading = 0; 
+    int result = adc_read(sensor); 
+ 
+    result = -0.0976 * result + 245.31;
     
     if(result > 100)
     {
