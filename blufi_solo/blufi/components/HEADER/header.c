@@ -51,6 +51,7 @@ void ultimoRiego(const char *prefijo, int ml) {
     if (message != NULL) {
         snprintf(message, message_size, "%s%s, %d", prefijo, hora, ml);
         enviar_mensaje_mqtt(configuration.MAC, message);
+        free(hora);
         free(message);
     }
 }
