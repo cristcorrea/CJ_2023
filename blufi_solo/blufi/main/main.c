@@ -176,7 +176,7 @@ void envioDatos(void *params)
     while(true)
     {   
         vTaskDelay(pdMS_TO_TICKS(3600000));
-        enviarDatos();
+        enviarDatos(configuration.cardIdC);
     }
 }
 
@@ -195,7 +195,7 @@ void app_main(void)
     riego_config();
     blufi_start();
     
-    if(NVS_read("MAC", &configuration.MAC) == ESP_OK)
+    if(NVS_read("cardId", &configuration.cardId) == ESP_OK)
     {
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage2", NVS_READWRITE, &my_handle);

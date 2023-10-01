@@ -349,10 +349,10 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-        configuration.MAC = strndup((const char*)param->custom_data.data, 8);
-        if(configuration.MAC != NULL)
+        configuration.cardId = strndup((const char*)param->custom_data.data, 8);
+        if(configuration.cardId != NULL)
         {
-            NVS_write("MAC", configuration.MAC); 
+            NVS_write("cardId", configuration.cardId); 
         }
         
         char * ptr = (char*)param->custom_data.data + 9;

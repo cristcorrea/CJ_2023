@@ -31,9 +31,6 @@
 
 #define TAG "MQTT"
 
-//#define MOSQUITTO_URI "mqtt://207.46.13.212:1883"
-//#define MOSQUITTO_ID "esp32_client"
-
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
 
 extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certificate_pem_end");
@@ -45,7 +42,7 @@ extern SemaphoreHandle_t semaphoreFecha;
 
 esp_mqtt_client_handle_t client; 
 
-void enviarDatos()
+void enviarDatos(char * topic)
 {
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
@@ -64,8 +61,9 @@ void enviarDatos()
         if(message != NULL){              
             snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
                     hum_suelo_1, hum_suelo_2, datos[0], temperatura_amb, lux_rounded);           
-            enviar_mensaje_mqtt(configuration.MAC, message);
+            enviar_mensaje_mqtt(topic, message);
             free(message);
+            message = NULL;
         }
     }
 }
@@ -78,10 +76,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         char * topic_sus = (char *)malloc(9); 
         memset(topic_sus, 0, 9);
-        memcpy(topic_sus, configuration.MAC, sizeof(char) * 8);
+        memcpy(topic_sus, configuration.cardId, sizeof(char) * 8);
         strcat(topic_sus, "B");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
+        topic_sus[8] = 'C';
+        configuration.cardIdC = topic_sus;
         free(topic_sus);
         topic_sus = NULL; 
         xSemaphoreGive(semaphoreFecha);
@@ -108,7 +108,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         switch (clave1)
         {
         case 'S':
-            enviarDatos();
+            enviarDatos(configuration.cardId);
             break;
         
         case 'R':                       // Riego manual

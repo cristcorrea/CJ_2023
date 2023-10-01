@@ -47,10 +47,9 @@ void ultimoRiego(const char *prefijo, int ml) {
     char *hora = queHoraEs();
     size_t message_size = snprintf(NULL, 0, "%s%s, %i", prefijo, hora, ml) + 1;
     char *message = (char *)malloc(message_size);
-    
     if (message != NULL) {
         snprintf(message, message_size, "%s%s, %d", prefijo, hora, ml);
-        enviar_mensaje_mqtt(configuration.MAC, message);
+        enviar_mensaje_mqtt(configuration.cardIdC, message);
         free(hora);
         free(message);
     }

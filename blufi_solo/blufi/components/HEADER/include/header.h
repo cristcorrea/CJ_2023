@@ -10,7 +10,8 @@ typedef struct
     int hum_inf_2;
     int control_riego_1;       // Controla el riego automatico del sensor 1
     int control_riego_2;       // Controla el riego automatico del sensor 2
-    char * MAC;              // almacena la mac del esp
+    char * cardId;              // topic tiempo real
+    char * cardIdC;             // topic para enviar a la nube
     int time_zone; 
 
 }config_data;
