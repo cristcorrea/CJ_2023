@@ -74,14 +74,18 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
 
-        char * topic_sus = (char *)malloc(9); 
-        memset(topic_sus, 0, 9);
+        char * topic_sus = (char *)malloc(10); 
+        memset(topic_sus, 0, 10);
         memcpy(topic_sus, configuration.cardId, sizeof(char) * 8);
         strcat(topic_sus, "B");
         suscribirse(topic_sus);
         ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
+
         topic_sus[8] = 'C';
-        configuration.cardIdC = topic_sus;
+        ESP_LOGI("DEBUG", "Topic sus: %s", topic_sus);
+
+        memcpy(configuration.cardIdC, topic_sus, sizeof(char) * 9);
+
         free(topic_sus);
         topic_sus = NULL; 
         xSemaphoreGive(semaphoreFecha);

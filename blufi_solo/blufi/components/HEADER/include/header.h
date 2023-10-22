@@ -11,7 +11,7 @@ typedef struct
     int control_riego_1;       // Controla el riego automatico del sensor 1
     int control_riego_2;       // Controla el riego automatico del sensor 2
     char * cardId;              // topic tiempo real
-    char * cardIdC;             // topic para enviar a la nube
+    char cardIdC[10];             // topic para enviar a la nube
     int time_zone; 
 
 }config_data;

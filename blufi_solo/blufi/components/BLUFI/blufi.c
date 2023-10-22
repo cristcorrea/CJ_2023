@@ -131,7 +131,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
             esp_restart();
             /*
-            const char * respuesta = "ok";
+            const char * respuesta = "R2";
             if(esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta)))
             {
                 esp_restart();
@@ -177,9 +177,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         /* Only handle reconnection during connecting */
         if (gl_sta_connected == false && example_wifi_reconnect() == false) {
             ESP_LOGI("WIFI_EVENT_HANDLER", "ENTRA DELTRO DEL IF");
+            nvs_flash_erase();
+            esp_restart();
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
+            // ESTO LUEGO TENGO QUE CORREGIRLO 
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
@@ -320,7 +323,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         strncpy((char *)sta_config.sta.ssid, (char *)param->sta_ssid.ssid, param->sta_ssid.ssid_len);
         sta_config.sta.ssid[param->sta_ssid.ssid_len] = '\0';
         esp_wifi_set_config(WIFI_IF_STA, &sta_config);
-        BLUFI_INFO("Recv STA SSID %s\n", sta_config.sta.ssid);
+        BLUFI_INFO("Recv STA SSID %s len: %i\n", sta_config.sta.ssid, param->sta_ssid.ssid_len);
         break;
     case ESP_BLUFI_EVENT_RECV_STA_PASSWD:
         strncpy((char *)sta_config.sta.password, (char *)param->sta_passwd.passwd, param->sta_passwd.passwd_len);
