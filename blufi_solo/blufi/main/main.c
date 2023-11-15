@@ -300,7 +300,7 @@ void app_main(void)
             
     xTaskCreate(&controlRiego,
             "Maneja la cola de riego",
-            2048,
+            4096,
             NULL,
             2,
             NULL);

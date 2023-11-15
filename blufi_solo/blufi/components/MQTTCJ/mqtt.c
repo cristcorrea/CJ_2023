@@ -117,8 +117,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         
         case 'R':                       // Riego manual
 
+            ESP_LOGI("Datos riego", "event->data: %s | event->data_len: %i", event->data, event->data_len);
+            int ml = 0; 
             char *ptrMl = event->data + 2;
-            int ml = strtol(ptrMl, NULL, 10);
+            ml = strtol(ptrMl, NULL, 10);
             mensajeRiego mensaje; 
             if(event->data[1] == '1')
             {
@@ -127,6 +129,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 mensaje.valvula = VALVE2;
             }
             mensaje.cantidad = ml;
+            event->data = NULL; 
             xQueueSend(riegoQueue, &mensaje, portMAX_DELAY);
             break;
 
