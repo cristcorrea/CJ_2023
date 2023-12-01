@@ -58,7 +58,7 @@ void ota_update(void * params)  // espera a que se ponga en hora
     {
         while(true)
         {   
-            update_ota();
+            //update_ota();
             vTaskDelay(pdMS_TO_TICKS(36000000));
         }
     }

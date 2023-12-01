@@ -70,8 +70,11 @@ void enviarDatos(char * topic)
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    esp_mqtt_event_handle_t event = event_data;
+    esp_mqtt_event_handle_t event = NULL;
+    event = event_data;
+
     switch ((esp_mqtt_event_id_t)event_id) {
+
     case MQTT_EVENT_CONNECTED:
 
         char * topic_sus = (char *)malloc(10); 
@@ -107,6 +110,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
 
+        ESP_LOGI("DEBUG MQTT EVENT DATA", "Datos recibidos: %s", event->data);
         char clave1 = event->data[0]; 
 
         switch (clave1)
@@ -116,11 +120,17 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             break;
         
         case 'R':                       // Riego manual
+            
+            int data_len = event->data_len;
 
-            ESP_LOGI("Datos riego", "event->data: %s | event->data_len: %i", event->data, event->data_len);
+            char* mililitros = (char*)malloc(data_len - 1);
+            strncpy(mililitros, event->data + 2, data_len);
+            mililitros[data_len - 2] = '\0';
+
             int ml = 0; 
-            char *ptrMl = event->data + 2;
-            ml = strtol(ptrMl, NULL, 10);
+            //char *ptrMl = event->data + 2;
+            ml = strtol(mililitros, NULL, 10);
+            ESP_LOGI("DEBUG MQTT", "mililitros: %s | ml: %i | data_len: %i", mililitros, ml, data_len);
             mensajeRiego mensaje; 
             if(event->data[1] == '1')
             {
