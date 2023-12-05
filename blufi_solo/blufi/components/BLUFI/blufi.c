@@ -165,7 +165,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     case WIFI_EVENT_STA_CONNECTED:
         ESP_LOGE("WIFI_EVENT", "WIFI_EVENT_STA_CONNECTED\n");  
         ///////////////////////////////
-        /*
+        
         const char  respuesta[] = "SG1";
         
         if(esp_blufi_send_custom_data((uint8_t*)respuesta, strlen(respuesta)) == ESP_OK) 
@@ -174,7 +174,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         }else{
             ESP_LOGI("DEBUG BLUFI", "MENSAJE NO ENVIADO");
         } 
-        */ 
+         
         /////////////////////////////////
         gl_sta_connected = true;
         gl_sta_is_connecting = false;
