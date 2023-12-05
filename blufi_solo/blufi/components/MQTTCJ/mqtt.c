@@ -128,7 +128,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mililitros[data_len - 2] = '\0';
 
             int ml = 0; 
-            //char *ptrMl = event->data + 2;
             ml = strtol(mililitros, NULL, 10);
             ESP_LOGI("DEBUG MQTT", "mililitros: %s | ml: %i | data_len: %i", mililitros, ml, data_len);
             mensajeRiego mensaje; 

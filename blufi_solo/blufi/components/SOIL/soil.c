@@ -61,13 +61,13 @@ int adc_read(adc_channel_t channel)
     int adc_reading = 0; 
     int result = 0; 
  
-    for(int i = 0; i < 100; i++)
+    for(int i = 0; i < 500; i++)
     {
         adc_oneshot_read(adc1_handle, channel, &adc_reading);
         result += adc_reading; 
         vTaskDelay(pdMS_TO_TICKS(2));
     }
-    result /= 100;
+    result /= 500;
 
     return result;
 }

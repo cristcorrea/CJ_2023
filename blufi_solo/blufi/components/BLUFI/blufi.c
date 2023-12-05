@@ -127,16 +127,15 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
 
-        if (ble_is_connected == true) {
-            esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
-            esp_restart();
-            /*
-            const char * respuesta = "R2";
-            if(esp_blufi_send_custom_data((uint8_t*)&respuesta, strlen(respuesta)))
+        if (ble_is_connected) { 
+
+            if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == 0)
             {
-                esp_restart();
+                ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
             }
-            */
+
+            esp_restart();
+
         } else {
             esp_blufi_deinit();
         }
@@ -164,7 +163,19 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         example_wifi_connect();
         break;
     case WIFI_EVENT_STA_CONNECTED:
-        ESP_LOGE("WIFI_EVENT", "WIFI_EVENT_STA_CONNECTED\n");    
+        ESP_LOGE("WIFI_EVENT", "WIFI_EVENT_STA_CONNECTED\n");  
+        ///////////////////////////////
+        /*
+        const char  respuesta[] = "SG1";
+        
+        if(esp_blufi_send_custom_data((uint8_t*)respuesta, strlen(respuesta)) == ESP_OK) 
+        {
+            ESP_LOGI("DEBUG BLUFI", "MENSAJE ENVIADO");
+        }else{
+            ESP_LOGI("DEBUG BLUFI", "MENSAJE NO ENVIADO");
+        } 
+        */ 
+        /////////////////////////////////
         gl_sta_connected = true;
         gl_sta_is_connecting = false;
         event = (wifi_event_sta_connected_t*) event_data;
@@ -176,13 +187,33 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
          ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
         /* Only handle reconnection during connecting */
         if (gl_sta_connected == false && example_wifi_reconnect() == false) {
-            ESP_LOGI("WIFI_EVENT_HANDLER", "ENTRA DELTRO DEL IF");
-            nvs_flash_erase();
-            esp_restart();
+            
+            wifi_mode_t mode;
+            esp_wifi_get_mode(&mode);
+            esp_blufi_extra_info_t info;
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+            esp_wifi_get_mode(&mode);
+            memset(&info, 0, sizeof(esp_blufi_extra_info_t));
+            memcpy(info.sta_bssid, gl_sta_bssid, 6);
+            info.sta_bssid_set = true;
+            info.sta_ssid = gl_sta_ssid;
+            info.sta_ssid_len = gl_sta_ssid_len;
+            
+            //nvs_flash_erase();
+            //esp_restart();
+            if(ble_is_connected)
+            {
+                if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &info) == 0)
+                {
+                    ESP_LOGI("DEBUG BLUFI", "CONNECTION FAIL");
+                }
+            }else{
+                vTaskDelay(pdMS_TO_TICKS(10000));
+                example_wifi_connect();
+            }
             gl_sta_is_connecting = false;
             disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
             example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
-            // ESTO LUEGO TENGO QUE CORREGIRLO 
         }
         /* This is a workaround as ESP32 WiFi libs don't currently
         auto-reassociate. */
@@ -194,6 +225,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         memset(gl_sta_bssid, 0, 6);
         gl_sta_ssid_len = 0;
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+
         if(first_connection)
        {
             esp_err_t connect_err = esp_wifi_connect();
@@ -357,13 +389,12 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         {
             NVS_write("cardId", configuration.cardId); 
         }
-        
+
         char * ptr = (char*)param->custom_data.data + 9;
         configuration.time_zone = strtol(ptr, NULL, 10);
-        //configuration.time_zone = strdup((const char*)param->custom_data.data + 9);
-           esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
-           if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
-
+        esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
+        if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
+            
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */
