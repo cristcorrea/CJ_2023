@@ -16,7 +16,7 @@
 
 volatile int flow_frequency = 0;
 
-const unsigned long TIEMPO_MAX  = 20000000;
+const unsigned long TIEMPO_MAX  = 60000000;
 
 gptimer_handle_t gptimer = NULL; 
 
@@ -133,10 +133,8 @@ void regar(int lts_final, gpio_num_t valve){
     int lts_actual = 0;
     int contador = 0; 
 
-    int pulsos_total = lts_final * 4.825580 + 4.988814;
-
-    //int pulsos_total = lts_final / 0.2108f; //0.2288
-
+    //int pulsos_total = lts_final * 4.825580 + 4.988814; // sensor anterior
+    int pulsos_total = (2.0636f * lts_final) - 3.8293f; // sensor actual
     gptimer_enable(gptimer);
     gptimer_start(gptimer);
     uint64_t tiempo_inicial = 0;
@@ -150,7 +148,6 @@ void regar(int lts_final, gpio_num_t valve){
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
     gptimer_get_raw_count(gptimer, &tiempo_final);
 
-    int variable_a_borrar = 0;
 
     while((contador < pulsos_total) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
 
@@ -162,16 +159,11 @@ void regar(int lts_final, gpio_num_t valve){
         contador += flow_frequency;
         gptimer_get_raw_count(gptimer, &tiempo_final);
 
-        if(variable_a_borrar == 20)
-        {
-            ESP_LOGI(TAG, " Contador: %i |Pulsos total: %i |Frecuencia: %i|Tiempo final:%" PRIu64 "\n",
+        ESP_LOGI(TAG, " Contador: %i |Pulsos total: %i |Frecuencia: %i|Tiempo final:%" PRIu64 "\n",
          contador, pulsos_total, flow_frequency, tiempo_final);
-         variable_a_borrar = 0; 
-        }
-        
+            
 
         flow_frequency = 0;
-        variable_a_borrar++;
         vTaskDelay(pdMS_TO_TICKS(100));
     }
     
@@ -189,7 +181,8 @@ void regar(int lts_final, gpio_num_t valve){
         prefijo = "S2,";
     }
 
-    lts_actual = contador * 0.17f; 
+    //lts_actual = contador * 0.17f; 
+    lts_actual = contador/2.0636f;
 
     ultimoRiego(prefijo, lts_actual);
     xSemaphoreGive(semaphoreRiego);
