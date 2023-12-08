@@ -46,26 +46,35 @@ void enviarDatos(char * topic)
 {
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
+    int humedad = -1; 
     float temperatura_amb; 
     float lux; 
     uint8_t* datos = readDHT();
-    if(datos != NULL){
-
+    if(datos == NULL){
+        temperatura_amb = -1; 
+    }else{
         temperatura_amb = getTemp(datos);
-        lux = bh1750_read();
-        int lux_rounded = (int)(lux + 0.5);
-        size_t message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
-            hum_suelo_1, hum_suelo_2,  datos[0], temperatura_amb, lux_rounded) + 1;
-
-        char *message = (char *)malloc(message_size);
-        if(message != NULL){              
-            snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
-                    hum_suelo_1, hum_suelo_2, datos[0], temperatura_amb, lux_rounded);           
-            enviar_mensaje_mqtt(topic, message);
-            free(message);
-            message = NULL;
-        }
     }
+        
+    lux = bh1750_read();
+    int lux_rounded = (int)(lux + 0.5);
+    if(datos != NULL)
+    {
+        humedad = datos[0];
+    }
+
+    size_t message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
+    hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded) + 1;
+
+    char *message = (char *)malloc(message_size);
+    if(message != NULL){              
+        snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
+                hum_suelo_1, hum_suelo_2, humedad, temperatura_amb, lux_rounded);           
+        enviar_mensaje_mqtt(topic, message);
+        free(message);
+        message = NULL;
+    }
+    
 }
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)

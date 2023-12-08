@@ -43,46 +43,31 @@ void bh1750_reset(void) {
 }
 
 float bh1750_read(void) {
+
 	uint8_t buf[32];
 	uint8_t mode = BH1750_MODE;
 	uint8_t sleepms = 1;
 	uint8_t resdiv = 1;
-	float luxval=0;
+	float luxval = 0;
 	int ret = -1;
-	/*
-	switch (mode) {
-	case BH1750_CONTINUOUS_HIGH_RES_MODE:
-	case BH1750_ONE_TIME_HIGH_RES_MODE:
-		sleepms=180;
-		break;
-	case BH1750_CONTINUOUS_HIGH_RES_MODE_2:
-	case BH1750_ONE_TIME_HIGH_RES_MODE_2:
-		sleepms=180;
-		resdiv=2;
-		break;
-	case BH1750_CONTINUOUS_LOW_RES_MODE:
-		sleepms=24;
-		break;
-	case BH1750_ONE_TIME_LOW_RES_MODE:
-		sleepms=50;
-		break;
-	}
-	*/
-	sleepms = 180; 
-	ret=bh1750_I2C_write(I2C_ADDR, mode, NULL, 0);
-    if (ret != ESP_OK) {
-    	bh1750_reset();
-    	//return -1;
-    }
+	sleepms = 180; //BH1750_ONE_TIME_HIGH_RES_MODE
 
-	vTaskDelay(sleepms / portTICK_PERIOD_MS); // sleep ms
-	ret=bh1750_I2C_read(I2C_ADDR, 0xFF, buf, 2);
+	ret = bh1750_I2C_write(I2C_ADDR, mode, NULL, 0);
+
     if (ret != ESP_OK) {
-    	bh1750_reset();
-    	//return 0;
-    }
-	uint16_t luxraw = (uint16_t)(((uint16_t)(buf[0]<<8))|((uint16_t)buf[1]));
-	luxval = (float)luxraw/1.2/resdiv;
+    	//bh1750_reset();
+    	luxval = -1;
+    }else{
+		vTaskDelay(sleepms / portTICK_PERIOD_MS); // sleep ms
+		ret=bh1750_I2C_read(I2C_ADDR, 0xFF, buf, 2);
+    	if (ret != ESP_OK) {
+    		//bh1750_reset();
+    		luxval = -1;
+		}else{
+			uint16_t luxraw = (uint16_t)(((uint16_t)(buf[0]<<8))|((uint16_t)buf[1]));
+			luxval = (float)luxraw/1.2/resdiv;
+		}
+	}
 
 	return luxval;
 }
@@ -122,7 +107,7 @@ void bh1750_deinit(void) {
 int bh1750_I2C_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt) {
 	int ret = 0;
 
-	ESP_LOGD(TAG, "bh1750_I2C_write I2CAddress 0x%02X len %d reg 0x%02X", dev_addr,cnt,reg_addr);
+	ESP_LOGD("BH1750 LOG 1", "bh1750_I2C_write I2CAddress 0x%02X len %d reg 0x%02X", dev_addr,cnt,reg_addr);
 	if (cnt>0 && reg_data != NULL && LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG) {
 		for (int pos = 0; pos < cnt; pos++) {
 			printf("0x%02X ",*(reg_data + pos));
@@ -140,7 +125,8 @@ int bh1750_I2C_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint
 	ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
     if (ret != ESP_OK) {
-    	ESP_LOGE(TAG, "bh1750_I2C_write write data fail I2CAddress 0x%02X len %d reg 0x%02X", dev_addr,cnt,reg_addr);
+		ret = -1; 
+    	//ESP_LOGE("BH1750 LOG2", "bh1750_I2C_write write data fail I2CAddress 0x%02X len %d reg 0x%02X", dev_addr,cnt,reg_addr);
     }
 
 	return ret;
@@ -169,7 +155,8 @@ int bh1750_I2C_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8
 		ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
 		i2c_cmd_link_delete(cmd);
 		if (ret != ESP_OK) {
-			ESP_LOGE(TAG, "bh1750_I2C_read write reg fail %d",ret);
+			//ESP_LOGE(TAG, "bh1750_I2C_read write reg fail %d",ret);
+			
 			return ret;
 		}
 	}

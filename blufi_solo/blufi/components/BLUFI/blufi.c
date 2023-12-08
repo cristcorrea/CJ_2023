@@ -31,6 +31,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
 #define WIFI_LIST_NUM   10
 
+#define WIFI_LED GPIO_NUM_2
+
 static wifi_config_t sta_config;
 
 
@@ -60,6 +62,20 @@ extern SemaphoreHandle_t semaphoreWifiConection;
 extern config_data configuration; 
 
 static bool first_connection = false; 
+
+void wifi_led_config()
+{
+    gpio_config_t wifi_led_config;
+    wifi_led_config.pin_bit_mask = (1ULL << WIFI_LED);
+    wifi_led_config.mode = GPIO_MODE_OUTPUT;
+    wifi_led_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    wifi_led_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    wifi_led_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&wifi_led_config);
+    gpio_set_level(WIFI_LED, 0);
+
+}
+
 
 static void example_record_wifi_conn_info(int rssi, uint8_t reason)
 {
@@ -126,6 +142,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         info.sta_ssid = gl_sta_ssid;
         info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
+        gpio_set_level(WIFI_LED, 1);
 
         if (ble_is_connected) { 
 
@@ -186,6 +203,9 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     case WIFI_EVENT_STA_DISCONNECTED:
          ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
         /* Only handle reconnection during connecting */
+
+        gpio_set_level(WIFI_LED, 0);
+
         if (gl_sta_connected == false && example_wifi_reconnect() == false) {
             
             wifi_mode_t mode;

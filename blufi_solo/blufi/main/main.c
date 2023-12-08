@@ -28,7 +28,8 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 150
+#define TOUCH_VALUE_MIN 392
+#define TOUCH_LED GPIO_NUM_4
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
@@ -72,7 +73,16 @@ void sensorCofig(void * params){
 }
 
 void touchConfig(void)
-{
+{   
+    gpio_config_t touch_config;
+    touch_config.pin_bit_mask = (1ULL << TOUCH_LED);
+    touch_config.mode = GPIO_MODE_OUTPUT;
+    touch_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    touch_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    touch_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&touch_config);
+    gpio_set_level(TOUCH_LED, 0);
+
     ESP_ERROR_CHECK(touch_pad_init());
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
     touch_pad_config(TOUCH, -200);
@@ -85,18 +95,25 @@ void touchSensor(void *params)
     while(true)
     {   
         touch_pad_read(TOUCH, &touch_value);
-        //printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
-        //printf("\n");
-        
+        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        printf("\n");
+        int contador = 0;
         if(touch_value < TOUCH_VALUE_MIN)
-        {
-            vTaskDelay(pdMS_TO_TICKS(3000));
-            touch_pad_read(TOUCH, &touch_value);
-            if(touch_value < TOUCH_VALUE_MIN)
+        {   
+            gpio_set_level(TOUCH_LED, 1);
+
+            while(touch_value < TOUCH_VALUE_MIN)
             {
-                nvs_flash_erase();
-                esp_restart();
+                vTaskDelay(pdMS_TO_TICKS(100));
+                touch_pad_read(TOUCH, &touch_value);
+                contador++; 
+                if(contador >= 30)
+                {
+                    nvs_flash_erase();
+                    esp_restart();
+                }
             }
+            gpio_set_level(TOUCH_LED, 0);
         }
         vTaskDelay(pdMS_TO_TICKS(200));
     }
@@ -191,9 +208,11 @@ void app_main(void)
     init_irs(); 
     soilConfig();
     touchConfig();
+    wifi_led_config();
     timer_config();
     riego_config();
     blufi_start();
+  
     
     if(NVS_read("cardId", &configuration.cardId) == ESP_OK)
     {
