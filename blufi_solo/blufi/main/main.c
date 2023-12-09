@@ -29,12 +29,14 @@
 
 #define TOUCH   TOUCH_PAD_NUM5
 #define TOUCH_VALUE_MIN 392
-#define TOUCH_LED GPIO_NUM_4
+
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del riego
 SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
+
+TaskHandle_t msjTaskHandle;
 
 QueueHandle_t riegoQueue; 
 config_data configuration;
@@ -74,15 +76,6 @@ void sensorCofig(void * params){
 
 void touchConfig(void)
 {   
-    gpio_config_t touch_config;
-    touch_config.pin_bit_mask = (1ULL << TOUCH_LED);
-    touch_config.mode = GPIO_MODE_OUTPUT;
-    touch_config.pull_up_en = GPIO_PULLUP_DISABLE;
-    touch_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    touch_config.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&touch_config);
-    gpio_set_level(TOUCH_LED, 0);
-
     ESP_ERROR_CHECK(touch_pad_init());
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
     touch_pad_config(TOUCH, -200);
@@ -95,12 +88,12 @@ void touchSensor(void *params)
     while(true)
     {   
         touch_pad_read(TOUCH, &touch_value);
-        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
-        printf("\n");
+        //printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        //printf("\n");
         int contador = 0;
         if(touch_value < TOUCH_VALUE_MIN)
         {   
-            gpio_set_level(TOUCH_LED, 1);
+            encenderLedTouch();//gpio_set_level(TOUCH_LED, 1);
 
             while(touch_value < TOUCH_VALUE_MIN)
             {
@@ -113,7 +106,7 @@ void touchSensor(void *params)
                     esp_restart();
                 }
             }
-            gpio_set_level(TOUCH_LED, 0);
+            apagarLedTouch();//gpio_set_level(TOUCH_LED, 0);
         }
         vTaskDelay(pdMS_TO_TICKS(200));
     }
@@ -181,6 +174,7 @@ void ajusteFecha(void *params)
             {
                 ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
                 //free(configuration.time_zone);
+                vTaskResume(msjTaskHandle);
                 vTaskDelete(NULL);
             }
         }
@@ -192,11 +186,11 @@ void envioDatos(void *params)
 {
     while(true)
     {   
-        vTaskDelay(pdMS_TO_TICKS(3600000));
         enviarDatos(configuration.cardIdC);
+        enviarDatos(configuration.cardId);
+        vTaskDelay(pdMS_TO_TICKS(3600000));
     }
 }
-
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();
@@ -206,9 +200,11 @@ void app_main(void)
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     
     init_irs(); 
+    init_nFault();
     soilConfig();
     touchConfig();
-    wifi_led_config();
+    touchLedConfig();
+    wifiLedConfig();
     timer_config();
     riego_config();
     blufi_start();
@@ -304,39 +300,42 @@ void app_main(void)
                 NULL);
     
     xTaskCreate(&riegoAuto1,
-            "Riego automatico 1",
-            2048,
-            NULL,
-            2,
-            NULL);
+                "Riego automatico 1",
+                2048,
+                NULL,
+                2,
+                NULL);
 
     xTaskCreate(&riegoAuto2,
-            "Riego automatico 2",
-            2048,
-            NULL,
-            2,
-            NULL);
+                "Riego automatico 2",
+                2048,
+                NULL,
+                2,
+                NULL);
             
     xTaskCreate(&controlRiego,
-            "Maneja la cola de riego",
-            4096,
-            NULL,
-            2,
-            NULL);
+                "Maneja la cola de riego",
+                4096,
+                NULL,
+                2,
+                NULL);
 
     xTaskCreate(&ajusteFecha,
-            "Ajusta la hora y la fecha",
-            2048,
-            NULL,
-            4,
-            NULL);
+                "Ajusta la hora y la fecha",
+                2048,
+                NULL,
+                4,
+                NULL);
 
     xTaskCreate(&envioDatos,
-            "Envia datos cada una hora",
-            2048,
-            NULL,
-            1,
-            NULL);
+                "Envia datos cada una hora",
+                2048,
+                NULL,
+                1,
+                &msjTaskHandle);
+
+    vTaskSuspend(msjTaskHandle);
+
     }
 }
 

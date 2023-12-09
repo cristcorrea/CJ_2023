@@ -25,3 +25,11 @@ typedef struct
 void recibe_confg_hum(char str[], config_data *cfg, int sensor);
 void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
 void ultimoRiego(const char *prefijo, int ml);
+
+void touchLedConfig(void);
+void apagarLedTouch(void);
+void encenderLedTouch(void);
+
+void wifiLedConfig(void);
+void apagarLedWifi(void);
+void encenderLedWifi(void);

@@ -7,6 +7,9 @@
 #include "mqtt.h"
 #include "ntp.h"
 
+#define TOUCH_LED GPIO_NUM_4
+#define WIFI_LED GPIO_NUM_2
+
 extern config_data configuration; 
 
 /*
@@ -53,4 +56,55 @@ void ultimoRiego(const char *prefijo, int ml) {
         free(hora);
         free(message);
     }
+}
+
+/*Funciones led touch*/
+
+void touchLedConfig()
+{
+    gpio_config_t touch_config;
+    touch_config.pin_bit_mask = (1ULL << TOUCH_LED);
+    touch_config.mode = GPIO_MODE_OUTPUT;
+    touch_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    touch_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    touch_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&touch_config);
+    gpio_set_level(TOUCH_LED, 0);
+}
+
+
+void encenderLedTouch()
+{
+    gpio_set_level(TOUCH_LED, 1);
+}
+
+void apagarLedTouch()
+{
+    gpio_set_level(TOUCH_LED, 0);
+}
+
+/*Funciones led wifi*/
+
+void wifiLedConfig()
+{
+    gpio_config_t wifi_led_config;
+    wifi_led_config.pin_bit_mask = (1ULL << WIFI_LED);
+    wifi_led_config.mode = GPIO_MODE_OUTPUT;
+    wifi_led_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    wifi_led_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    wifi_led_config.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&wifi_led_config);
+    gpio_set_level(WIFI_LED, 0);
+
+}
+
+void apagarLedWifi(void)
+{
+    gpio_set_level(WIFI_LED, 0);
+}
+
+void encenderLedWifi(void)
+{
+    gpio_set_level(WIFI_LED, 1);
+
 }

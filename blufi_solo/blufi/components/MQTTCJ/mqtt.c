@@ -101,11 +101,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         free(topic_sus);
         topic_sus = NULL; 
         xSemaphoreGive(semaphoreFecha);
+        encenderLedWifi();
         break;
 
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-
+        apagarLedWifi();
         break;
 
     case MQTT_EVENT_SUBSCRIBED:

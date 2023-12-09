@@ -13,6 +13,7 @@
 
 
 #define TAG   "RIEGO"
+#define nFAULT_PIN GPIO_NUM_26
 
 volatile int flow_frequency = 0;
 
@@ -54,6 +55,46 @@ esp_err_t init_irs(void){
     esp_log_level_set("gpio", ESP_LOG_INFO);
     return err;
 }
+
+void nFault_isr(void* arg)
+{
+    for(int i = 0; i < 2; i++)
+    {
+        encenderLedTouch();
+        vTaskDelay(pdMS_TO_TICKS(500));
+        apagarLedTouch();
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+    
+}
+
+esp_err_t init_nFault(void){
+
+    esp_err_t err = ESP_OK; 
+    gpio_config_t nFault_config;
+    nFault_config.intr_type = GPIO_INTR_NEGEDGE;
+    nFault_config.mode = GPIO_MODE_INPUT;
+    nFault_config.pin_bit_mask = (1ULL << nFAULT_PIN);
+    nFault_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    nFault_config.pull_down_en = GPIO_PULLDOWN_ENABLE;
+
+    err = gpio_config(&nFault_config);
+    if(err != ESP_OK){
+        return err; 
+    }
+    err = gpio_install_isr_service(0);
+    if(err != ESP_OK){
+        return err; 
+    }
+    err = gpio_isr_handler_add(nFAULT_PIN, nFault_isr, NULL);
+    if(err != ESP_OK){
+        return err; 
+    }
+    esp_log_level_set("gpio", ESP_LOG_INFO);
+    return err;
+}
+
+
 
 void riego_config()
 {
