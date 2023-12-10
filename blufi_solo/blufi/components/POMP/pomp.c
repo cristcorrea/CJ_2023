@@ -76,7 +76,7 @@ esp_err_t init_nFault(void){
     nFault_config.mode = GPIO_MODE_INPUT;
     nFault_config.pin_bit_mask = (1ULL << nFAULT_PIN);
     nFault_config.pull_up_en = GPIO_PULLUP_DISABLE;
-    nFault_config.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    nFault_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
 
     err = gpio_config(&nFault_config);
     if(err != ESP_OK){
@@ -136,12 +136,14 @@ void riego_config()
 void encender_bomba()
 {
     gpio_set_level(ENABLE_BOM, 1);
+    vTaskDelay(pdMS_TO_TICKS(100));
     gpio_set_level(BOMBA, 1); 
 }
 
 void apagar_bomba()
 {
     gpio_set_level(BOMBA, 0);
+    vTaskDelay(pdMS_TO_TICKS(100));
     gpio_set_level(ENABLE_BOM, 0);  
 }
 
@@ -181,8 +183,10 @@ void regar(int lts_final, gpio_num_t valve){
     uint64_t tiempo_inicial = 0;
     uint64_t tiempo_final = 0; 
 
-    encender_bomba();
+    vTaskDelay(pdMS_TO_TICKS(100));
     abrir_valvula(valve);
+    encender_bomba();
+    
 
     //flow_frequency = 0;
 
