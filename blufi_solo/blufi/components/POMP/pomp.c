@@ -13,7 +13,6 @@
 
 
 #define TAG   "RIEGO"
-#define nFAULT_PIN GPIO_NUM_26
 
 volatile int flow_frequency = 0;
 
@@ -107,7 +106,7 @@ void riego_config()
     gpio_config(&riego_config);
 
     gpio_config_t enable_config;
-    enable_config.pin_bit_mask = (1ULL << ENABLE_BOM);
+    enable_config.pin_bit_mask = (1ULL << ENABLE_DRV);
     enable_config.mode = GPIO_MODE_OUTPUT;
     enable_config.pull_up_en = GPIO_PULLUP_DISABLE;
     enable_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
@@ -133,18 +132,25 @@ void riego_config()
 
 }
 
+void getUpDriver()
+{
+    gpio_set_level(ENABLE_DRV, 1);
+}
+
+void sleepDriver()
+{
+    gpio_set_level(ENABLE_DRV, 0);
+}
+
+
 void encender_bomba()
 {
-    gpio_set_level(ENABLE_BOM, 1);
-    vTaskDelay(pdMS_TO_TICKS(100));
     gpio_set_level(BOMBA, 1); 
 }
 
 void apagar_bomba()
 {
     gpio_set_level(BOMBA, 0);
-    vTaskDelay(pdMS_TO_TICKS(100));
-    gpio_set_level(ENABLE_BOM, 0);  
 }
 
 void abrir_valvula(gpio_num_t valvula)
@@ -183,11 +189,12 @@ void regar(int lts_final, gpio_num_t valve){
     uint64_t tiempo_inicial = 0;
     uint64_t tiempo_final = 0; 
 
+    getUpDriver();
     vTaskDelay(pdMS_TO_TICKS(100));
     abrir_valvula(valve);
+    vTaskDelay(pdMS_TO_TICKS(100));
     encender_bomba();
     
-
     //flow_frequency = 0;
 
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
@@ -218,6 +225,8 @@ void regar(int lts_final, gpio_num_t valve){
 
     apagar_bomba();
     cerrar_valvula(valve);
+    sleepDriver();
+
     const char *prefijo;
     if(valve == VALVE1)
     {
