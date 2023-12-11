@@ -190,7 +190,7 @@ void regar(int lts_final, gpio_num_t valve){
     uint64_t tiempo_final = 0; 
 
     getUpDriver();
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(50));
     abrir_valvula(valve);
     vTaskDelay(pdMS_TO_TICKS(100));
     encender_bomba();

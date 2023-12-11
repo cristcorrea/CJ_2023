@@ -37,6 +37,8 @@ SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del
 SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
 
 TaskHandle_t msjTaskHandle;
+TaskHandle_t riegoAuto1Handle; 
+TaskHandle_t riegoAuto2Handle;
 
 QueueHandle_t riegoQueue; 
 config_data configuration;
@@ -114,16 +116,16 @@ void touchSensor(void *params)
 
 void riegoAuto1(void *params)
 {
-    mensajeRiego riego1;
-    riego1.cantidad = 100; 
-    riego1.valvula = VALVE1;  
+
     while(true)
     {    
          if(configuration.control_riego_1 && sensorConectado(SENSOR1))
         {
-            if(humidity(SENSOR1) < configuration.hum_inf_1 || humidity(SENSOR1) > configuration.hum_sup_1)
+            
+
+            if(humidity(SENSOR1) < configuration.hum_inf_1) 
             {
-                xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
+                vTaskResume(riegoAuto1Handle);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
@@ -132,21 +134,57 @@ void riegoAuto1(void *params)
 
 void riegoAuto2(void *params) 
 {   
-    mensajeRiego riego2;
-    riego2.cantidad = 100; 
-    riego2.valvula = VALVE2; 
+
     while(true)
     {
         if(configuration.control_riego_2 && sensorConectado(SENSOR2))
         {
-            if(humidity(SENSOR2) < configuration.hum_inf_2 || humidity(SENSOR2) > configuration.hum_sup_2)
+
+            if(humidity(SENSOR2) < configuration.hum_inf_2)
             {
-                xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
+                vTaskResume(riegoAuto2Handle);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
+
+void riegaHasta1()
+{
+    mensajeRiego riego1;
+    riego1.cantidad = 100; 
+    riego1.valvula = VALVE1;
+    
+    while(true)
+    {
+        if(humidity(SENSOR1) < configuration.hum_sup_1)
+        {
+            xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
+        }else{
+            vTaskSuspend(riegoAuto1Handle);
+        }
+    }
+    vTaskDelay(pdMS_TO_TICKS(10000));
+}
+
+void riegaHasta2()
+{
+    mensajeRiego riego2;
+    riego2.cantidad = 100; 
+    riego2.valvula = VALVE2;
+    
+    while(true)
+    {
+        if(humidity(SENSOR2) < configuration.hum_sup_2)
+        {
+            xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
+        }else{
+            vTaskSuspend(riegoAuto2Handle);
+        }
+    }
+    vTaskDelay(pdMS_TO_TICKS(10000));
+}
+
 
 void controlRiego(void *params)
 {
@@ -334,7 +372,23 @@ void app_main(void)
                 1,
                 &msjTaskHandle);
 
+    xTaskCreate(&riegaHasta1,
+                "Riego automatico 1",
+                2048,
+                NULL,
+                1,
+                &riegoAuto1Handle);
+
+    xTaskCreate(&riegaHasta2,
+                "Riego automatico 2",
+                2048,
+                NULL,
+                1,
+                &riegoAuto2Handle);
+
     vTaskSuspend(msjTaskHandle);
+    vTaskSuspend(riegoAuto1Handle);
+    vTaskSuspend(riegoAuto2Handle);
 
     }
 }

@@ -1,11 +1,11 @@
 #include "driver/gpio.h"
 
-#define BOMBA           GPIO_NUM_5      //ok
-#define ENABLE_DRV      GPIO_NUM_14     //ok
-#define VALVE1          GPIO_NUM_18     //ok
-#define VALVE2          GPIO_NUM_19     //ok
-#define FLOW_SENSOR_PIN GPIO_NUM_27     //ok
-#define nFAULT_PIN GPIO_NUM_26  
+#define BOMBA           GPIO_NUM_5      
+#define ENABLE_DRV      GPIO_NUM_14     
+#define VALVE1          GPIO_NUM_18     
+#define VALVE2          GPIO_NUM_19     
+#define FLOW_SENSOR_PIN GPIO_NUM_27     
+#define nFAULT_PIN      GPIO_NUM_26  
 
 
 void riego_config(void);
