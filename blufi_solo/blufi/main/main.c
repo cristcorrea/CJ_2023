@@ -43,7 +43,38 @@ TaskHandle_t riegoAuto2Handle;
 QueueHandle_t riegoQueue; 
 config_data configuration;
 
+/********** DECLARACIÓN DE FUNCIONES ***********/
+/*
+    @brief Realiza la conexion MQTT.
+*/
+void mqttServerConection(void *params);
+/*
+    @brief Configuración del sensor touch. 
+*/
 void touchConfig(void);
+/* 
+    @brief Recibe la Queue, manda a regar y se bloquea hasta que finalice el riego.
+*/
+void controlRiego(void* params);
+/*
+    @brief Busca actualizaciones disponibles. 
+*/
+void ota_update(void * params);
+/*
+    @brief Configuración del sensor de luz BH1750
+*/
+void sensorCofig(void * params);  
+/*
+    @brief Gestiona la función del sensor touch. 
+*/
+void touchSensor(void *params);
+/*
+    @brief Verifica si debe iniciarse el riego automatico para el sensor 1. 
+    Pone en marcha a riegoHasta1. 
+*/
+void riegoAuto1(void *params);
+
+
 
 void mqttServerConection(void *params)
 {   
@@ -113,7 +144,6 @@ void touchSensor(void *params)
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
-
 void riegoAuto1(void *params)
 {
 
@@ -132,6 +162,9 @@ void riegoAuto1(void *params)
     }
 }
 
+/* Verifica si debe iniciarse el riego automatico 2
+   (Si el nivel de humedad esta por debajo del limite inferior)
+*/
 void riegoAuto2(void *params) 
 {   
 
@@ -149,6 +182,9 @@ void riegoAuto2(void *params)
     }
 }
 
+/* Recive la habilitacion de riegoAuto1 
+   Continúa regando hasta que se supera el limite superior
+*/
 void riegaHasta1()
 {
     mensajeRiego riego1;
@@ -167,6 +203,7 @@ void riegaHasta1()
     vTaskDelay(pdMS_TO_TICKS(10000));
 }
 
+/* Idem riegoHasta1*/
 void riegaHasta2()
 {
     mensajeRiego riego2;
@@ -224,8 +261,8 @@ void envioDatos(void *params)
 {
     while(true)
     {   
-        enviarDatos(configuration.cardIdC);
-        enviarDatos(configuration.cardId);
+        enviarDatos(configuration.cardIdC, true); // aca tengo que enviar la fecha y hora 
+        enviarDatos(configuration.cardId, false);
         vTaskDelay(pdMS_TO_TICKS(3600000));
     }
 }

@@ -28,6 +28,7 @@
 #include "soil.h"
 #include "dht.h"
 #include "bh1750.h"
+#include "ntp.h"
 
 #define TAG "MQTT"
 
@@ -42,14 +43,20 @@ extern SemaphoreHandle_t semaphoreFecha;
 
 esp_mqtt_client_handle_t client; 
 
-void enviarDatos(char * topic)
+
+/*
+    La idea es que reciba un parametro para determinar si debe enviar la fecha o no. 
+*/
+void enviarDatos(char * topic, bool fecha)
 {
+
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
     int humedad = -1; 
     float temperatura_amb; 
     float lux; 
     uint8_t* datos = readDHT();
+
     if(datos == NULL){
         temperatura_amb = -1; 
     }else{
@@ -58,15 +65,27 @@ void enviarDatos(char * topic)
         
     lux = bh1750_read();
     int lux_rounded = (int)(lux + 0.5);
+
     if(datos != NULL)
     {
         humedad = datos[0];
     }
 
-    size_t message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
-    hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded) + 1;
+    size_t message_size; 
+    char *hora;
+
+    if(fecha)
+    {
+        hora = queHoraEs();
+        message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i,%s",
+            hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded, hora) + 1;
+    }else{
+        message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
+            hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded) + 1;
+    }
 
     char *message = (char *)malloc(message_size);
+
     if(message != NULL){              
         snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
                 hum_suelo_1, hum_suelo_2, humedad, temperatura_amb, lux_rounded);           
@@ -126,7 +145,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         switch (clave1)
         {
         case 'S':
-            enviarDatos(configuration.cardId);
+            enviarDatos(configuration.cardId, false);
             break;
         
         case 'R':                       // Riego manual
