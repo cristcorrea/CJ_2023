@@ -43,39 +43,10 @@ TaskHandle_t riegoAuto2Handle;
 QueueHandle_t riegoQueue; 
 config_data configuration;
 
-/********** DECLARACIÓN DE FUNCIONES ***********/
+
 /*
     @brief Realiza la conexion MQTT.
 */
-void mqttServerConection(void *params);
-/*
-    @brief Configuración del sensor touch. 
-*/
-void touchConfig(void);
-/* 
-    @brief Recibe la Queue, manda a regar y se bloquea hasta que finalice el riego.
-*/
-void controlRiego(void* params);
-/*
-    @brief Busca actualizaciones disponibles. 
-*/
-void ota_update(void * params);
-/*
-    @brief Configuración del sensor de luz BH1750
-*/
-void sensorCofig(void * params);  
-/*
-    @brief Gestiona la función del sensor touch. 
-*/
-void touchSensor(void *params);
-/*
-    @brief Verifica si debe iniciarse el riego automatico para el sensor 1. 
-    Pone en marcha a riegoHasta1. 
-*/
-void riegoAuto1(void *params);
-
-
-
 void mqttServerConection(void *params)
 {   
     while (true)
@@ -100,6 +71,10 @@ void ota_update(void * params)  // espera a que se ponga en hora
     }
 }
 
+
+/*
+    @brief Configuración del sensor de luz BH1750. 
+*/
 void sensorCofig(void * params){  
 
     bh1750_init();
@@ -107,6 +82,9 @@ void sensorCofig(void * params){
 
 }
 
+/*
+    @brief Configuración sensor touch. 
+*/
 void touchConfig(void)
 {   
     ESP_ERROR_CHECK(touch_pad_init());
@@ -114,6 +92,10 @@ void touchConfig(void)
     touch_pad_config(TOUCH, -200);
 }
 
+
+/*
+    @brief TASK: Sensor Touch
+*/
 void touchSensor(void *params)
 {
     uint16_t touch_value;
@@ -144,6 +126,11 @@ void touchSensor(void *params)
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
+
+/*
+    @brief TASK: Inicia riego automático del sensor 1. 
+    Pone en marcha a riegoHasta1. 
+*/
 void riegoAuto1(void *params)
 {
 
@@ -162,8 +149,9 @@ void riegoAuto1(void *params)
     }
 }
 
-/* Verifica si debe iniciarse el riego automatico 2
-   (Si el nivel de humedad esta por debajo del limite inferior)
+/*
+    @brief TASK: Inicia riego automático del sensor 2. 
+    Pone en marcha a riegoHasta2. 
 */
 void riegoAuto2(void *params) 
 {   
@@ -182,10 +170,10 @@ void riegoAuto2(void *params)
     }
 }
 
-/* Recive la habilitacion de riegoAuto1 
+/* @brief TASK: Recive la habilitacion de riegoAuto1.  
    Continúa regando hasta que se supera el limite superior
 */
-void riegaHasta1()
+void riegaHasta1(void * params)
 {
     mensajeRiego riego1;
     riego1.cantidad = 100; 
@@ -203,8 +191,10 @@ void riegaHasta1()
     vTaskDelay(pdMS_TO_TICKS(10000));
 }
 
-/* Idem riegoHasta1*/
-void riegaHasta2()
+/* @brief TASK: Recive la habilitacion de riegoAuto2.  
+   Continúa regando hasta que se supera el limite superior.
+*/
+void riegaHasta2(void * params)
 {
     mensajeRiego riego2;
     riego2.cantidad = 100; 
@@ -222,7 +212,9 @@ void riegaHasta2()
     vTaskDelay(pdMS_TO_TICKS(10000));
 }
 
-
+/* 
+    @brief TASK: Recibe la Queue, manda a regar y se bloquea hasta que finalice el riego.
+*/
 void controlRiego(void *params)
 {
     while(true)
@@ -237,6 +229,11 @@ void controlRiego(void *params)
     }
 }
 
+/*
+    @brief TASK: Pone en hora al iniciar el sistema. 
+    Ok  -> Borra Task
+
+*/
 void ajusteFecha(void *params)
 {
     while(true)
@@ -257,11 +254,15 @@ void ajusteFecha(void *params)
     }
 }
 
+
+/*
+    Envía datos al servidor y a la app cada 1 hora. 
+*/
 void envioDatos(void *params)
 {
     while(true)
     {   
-        enviarDatos(configuration.cardIdC, true); // aca tengo que enviar la fecha y hora 
+        enviarDatos(configuration.cardIdC, true);
         enviarDatos(configuration.cardId, false);
         vTaskDelay(pdMS_TO_TICKS(3600000));
     }
@@ -293,6 +294,8 @@ void app_main(void)
         if(err != ESP_OK)
         {
             ESP_LOGI("nvs","Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            esp_restart();
         }else{
             int result = 0;
             if(nvs_get_i32(my_handle, "time_zone", (int32_t*)&result) != ESP_OK)
@@ -341,7 +344,7 @@ void app_main(void)
                 configuration.hum_inf_2 = result;
             }
             nvs_close(my_handle);
-        
+        }
     }
 
 
@@ -406,7 +409,7 @@ void app_main(void)
                 "Envia datos cada una hora",
                 2048,
                 NULL,
-                1,
+                3,
                 &msjTaskHandle);
 
     xTaskCreate(&riegaHasta1,
@@ -427,7 +430,7 @@ void app_main(void)
     vTaskSuspend(riegoAuto1Handle);
     vTaskSuspend(riegoAuto2Handle);
 
-    }
 }
+
 
 
