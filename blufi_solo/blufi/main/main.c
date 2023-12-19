@@ -267,6 +267,7 @@ void envioDatos(void *params)
         vTaskDelay(pdMS_TO_TICKS(3600000));
     }
 }
+
 void app_main(void)
 {
     semaphoreWifiConection = xSemaphoreCreateBinary();

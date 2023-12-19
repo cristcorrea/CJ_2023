@@ -72,13 +72,13 @@ void enviarDatos(char * topic, bool fecha)
     }
 
     size_t message_size; 
-    char *hora;
+    char *hora = queHoraEs();
 
     if(fecha)
     {
-        hora = queHoraEs();
         message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i,%s",
             hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded, hora) + 1;
+            ESP_LOGI("ENVIO DATOS", "Entra a enviar con fecha");
     }else{
         message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
             hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded) + 1;
@@ -87,14 +87,14 @@ void enviarDatos(char * topic, bool fecha)
     char *message = (char *)malloc(message_size);
 
     if(message != NULL){              
-        snprintf(message, message_size , "%i,%i,%i,%.1f,%i",
-                hum_suelo_1, hum_suelo_2, humedad, temperatura_amb, lux_rounded);           
+        snprintf(message, message_size , "%i,%i,%i,%.1f,%i,%s",
+                hum_suelo_1, hum_suelo_2, humedad, temperatura_amb, lux_rounded, hora);           
         enviar_mensaje_mqtt(topic, message);
         free(message);
         message = NULL;
     }
-    
-}
+    free(hora);
+}   
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
