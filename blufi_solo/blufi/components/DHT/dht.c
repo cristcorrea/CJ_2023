@@ -121,6 +121,7 @@ uint8_t* readDHT()
 	}
 }
 
+/*
 float getTemp(uint8_t* datos){
 	
     if (datos == NULL) {
@@ -136,6 +137,35 @@ float getTemp(uint8_t* datos){
         // Temperatura positiva
         return datos[2] + (datos[3] / 10.0);
     }
+}
+*/
+
+float getTemp(uint8_t *dhtData)
+{
+    if (dhtData == NULL)
+    {
+        // Manejo del puntero nulo
+        return 0.0;
+    }
+
+    // Combina los bytes de temperatura
+    int16_t temperature = dhtData[2] & 0x7F; // Elimina el bit de signo
+
+    // Desplaza 8 bits hacia la izquierda y agrega los bits de temperatura
+    temperature *= 0x100; // equivalente a << 8 en términos de bits
+    temperature += dhtData[3];
+
+    // Divide para obtener la temperatura con decimales
+    temperature /= 10.0;
+
+    // Verifica el bit de signo para temperaturas negativas
+    if (dhtData[2] & 0x80)
+    {
+        // Temperatura negativa, multiplica por -1
+        temperature *= -1;
+    }
+
+    return temperature;
 }
 
 
