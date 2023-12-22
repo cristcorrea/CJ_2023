@@ -138,16 +138,18 @@ float getTemp(uint8_t* datos){
     }
 }
 
-/*
 
-	mediciones.humedad_amb = dhtData[0];			
+int getHumidity(uint8_t *datos)
+{
+    if (datos == NULL)
+    {
+        // Manejo del puntero nulo
+        return 0;
+    }
 
-	mediciones.temperatura_amb = dhtData[2];
-	mediciones.temperatura_amb *= 10;
-	mediciones.temperatura_amb += dhtData[3];
-	mediciones.temperatura_amb /= 10; 
+    // Combina los bytes de humedad
+    uint16_t combinedHumidity = datos[0] * 0x100 + datos[1];
 
-	
-	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
-			mediciones.temperatura_amb *= -1;
-*/
+    // Divide para obtener la humedad con decimales
+    return combinedHumidity / 10.0;
+}

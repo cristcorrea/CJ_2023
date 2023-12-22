@@ -68,7 +68,7 @@ void enviarDatos(char * topic, bool fecha)
 
     if(datos != NULL)
     {
-        humedad = datos[0];
+        humedad = getHumidity(datos);//datos[0];
     }
 
     size_t message_size; 
