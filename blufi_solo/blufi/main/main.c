@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 392
+#define TOUCH_VALUE_MIN 348
 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
@@ -353,14 +353,14 @@ void app_main(void)
                 "Conectando con HiveMQ Broker",
                 4096,
                 NULL,
-                1,
+                5,
                 NULL);
 
     xTaskCreate(&ota_update,
                 "Instala nueva versión de firmware",
                 8048,
                 NULL,
-                5,
+                2,
                 NULL);
     
 
@@ -412,6 +412,7 @@ void app_main(void)
                 NULL,
                 3,
                 &msjTaskHandle);
+    vTaskSuspend(msjTaskHandle);
 
     xTaskCreate(&riegaHasta1,
                 "Riego automatico 1",
@@ -419,6 +420,7 @@ void app_main(void)
                 NULL,
                 1,
                 &riegoAuto1Handle);
+    vTaskSuspend(riegoAuto1Handle);
 
     xTaskCreate(&riegaHasta2,
                 "Riego automatico 2",
@@ -426,9 +428,6 @@ void app_main(void)
                 NULL,
                 1,
                 &riegoAuto2Handle);
-
-    vTaskSuspend(msjTaskHandle);
-    vTaskSuspend(riegoAuto1Handle);
     vTaskSuspend(riegoAuto2Handle);
 
 }

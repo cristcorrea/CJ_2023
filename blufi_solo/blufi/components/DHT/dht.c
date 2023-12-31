@@ -6,6 +6,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "math.h"
 
 #include "dht.h"
 #include "header.h"
@@ -46,11 +47,24 @@ void DHTerrorHandler(int response)
 
 		case DHT_TIMEOUT_ERROR :
 			intentos++;
-			ESP_LOGE(TAG,"Sensor Timeout. Repitiendo medición %i.\n", intentos);
+			if(intentos < INTENTOS_MAX)
+			{
+				ESP_LOGI("DHT", "Intento: %i", intentos);
+				readDHT();
+			}else{
+				ESP_LOGI("DHT", "Error en el sensor de temperatura.");
+			}
 			break;
 
 		case DHT_CHECKSUM_ERROR:
-			ESP_LOGE(TAG,"Sensor CHECKSUM. Repitiendo medición %i.\n", intentos);
+			intentos++;
+			if(intentos < INTENTOS_MAX)
+			{
+				ESP_LOGI("DHT", "Intento: %i", intentos);
+				readDHT();
+			}else{
+				ESP_LOGE(TAG,"Sensor CHECKSUM. Repitiendo medición %i.\n", intentos);
+			}
 			break;
 
 		case DHT_OK:
@@ -76,15 +90,17 @@ uint8_t* readDHT()
 	esp_rom_delay_us( 20000 );
 	gpio_set_level( gpio_num, 1 );
 	esp_rom_delay_us( 25 );
-	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );		
-	uSec = getSignalLevel( 85, 0 );
+	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );
 
+	uSec = getSignalLevel( 85, 0 );
 	if( uSec<0 ){
+		ESP_LOGI("DHT", "Falla 1");
 		return NULL; 
 	} 
 
 	uSec = getSignalLevel( 85, 1 );
 	if( uSec<0 ) {
+		ESP_LOGI("DHT", "Falla 2");
 		return NULL;
 	}
 
@@ -93,12 +109,15 @@ uint8_t* readDHT()
 
 		uSec = getSignalLevel( 56, 0 );
 		if( uSec<0 ){
+			ESP_LOGI("DHT", "Falla 3");
 			return NULL;
 		}
 
 		uSec = getSignalLevel( 75, 1 );
 		if( uSec<0 ){
-			return NULL;
+			ESP_LOGI("DHT", "Falla 4");
+			DHTerrorHandler(DHT_TIMEOUT_ERROR);
+			//return NULL;
 		}
 
 		if (uSec > 30){
@@ -108,37 +127,21 @@ uint8_t* readDHT()
 	}
 
 	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)){
-		ESP_LOGI(TAG, "Envio dhtDatos exitoso. Intentos: %i\n", intentos);
-		intentos = 0; 
+		ESP_LOGI("DHT", "Envio dhtDatos exitoso. Intentos: %i\n", intentos);
+		DHTerrorHandler(DHT_OK); 
 		return dhtData;
 	}else{
 		intentos++;
 		if(intentos < INTENTOS_MAX){
+			ESP_LOGI("DHT", "Fallo envio de datos. Intentos: %i", intentos);
 			return readDHT();
 		}else{
+			ESP_LOGI("DHT", "Fallo envio de datos. Intentos limite: %i", intentos);
 			return NULL; 
 		}
 	}
 }
 
-/*
-float getTemp(uint8_t* datos){
-	
-    if (datos == NULL) {
-        // Manejo del puntero nulo
-        return 0.0;
-    }
-
-    if (datos[2] > 127) {
-        // Temperatura negativa
-        int8_t temp = -(~datos[2] + 1);
-        return temp - (datos[3] / 10.0);
-    } else {
-        // Temperatura positiva
-        return datos[2] + (datos[3] / 10.0);
-    }
-}
-*/
 
 float getTemp(uint8_t *dhtData)
 {
@@ -149,14 +152,10 @@ float getTemp(uint8_t *dhtData)
     }
 
     // Combina los bytes de temperatura
-    int16_t temperature = dhtData[2] & 0x7F; // Elimina el bit de signo
-
-    // Desplaza 8 bits hacia la izquierda y agrega los bits de temperatura
-    temperature *= 0x100; // equivalente a << 8 en términos de bits
-    temperature += dhtData[3];
+    int16_t rawTemperature = (dhtData[2] << 8) | dhtData[3];
 
     // Divide para obtener la temperatura con decimales
-    temperature /= 10.0;
+    float temperature = rawTemperature / 10.0;
 
     // Verifica el bit de signo para temperaturas negativas
     if (dhtData[2] & 0x80)
@@ -165,8 +164,12 @@ float getTemp(uint8_t *dhtData)
         temperature *= -1;
     }
 
+    // Redondea a un solo decimal
+    temperature = roundf(temperature * 10.0) / 10.0;
+
     return temperature;
 }
+
 
 
 int getHumidity(uint8_t *datos)
