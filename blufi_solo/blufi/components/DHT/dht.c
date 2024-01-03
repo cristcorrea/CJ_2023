@@ -95,13 +95,15 @@ uint8_t* readDHT()
 	uSec = getSignalLevel( 85, 0 );
 	if( uSec<0 ){
 		ESP_LOGI("DHT", "Falla 1");
-		return NULL; 
+		intentos++;
+		return readDHT(); 
 	} 
 
 	uSec = getSignalLevel( 85, 1 );
 	if( uSec<0 ) {
 		ESP_LOGI("DHT", "Falla 2");
-		return NULL;
+		intentos++;
+		return readDHT();
 	}
 
 	for( int k = 0; k < 40; k++ ) 
@@ -110,14 +112,15 @@ uint8_t* readDHT()
 		uSec = getSignalLevel( 56, 0 );
 		if( uSec<0 ){
 			ESP_LOGI("DHT", "Falla 3");
-			return NULL;
+			intentos++;
+			return readDHT();
 		}
 
 		uSec = getSignalLevel( 75, 1 );
 		if( uSec<0 ){
 			ESP_LOGI("DHT", "Falla 4");
-			DHTerrorHandler(DHT_TIMEOUT_ERROR);
-			//return NULL;
+			intentos++;
+			return readDHT();
 		}
 
 		if (uSec > 30){
@@ -134,6 +137,7 @@ uint8_t* readDHT()
 		intentos++;
 		if(intentos < INTENTOS_MAX){
 			ESP_LOGI("DHT", "Fallo envio de datos. Intentos: %i", intentos);
+			intentos++;
 			return readDHT();
 		}else{
 			ESP_LOGI("DHT", "Fallo envio de datos. Intentos limite: %i", intentos);

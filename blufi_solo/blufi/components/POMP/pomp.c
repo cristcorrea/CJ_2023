@@ -181,7 +181,7 @@ void regar(int lts_final, gpio_num_t valve){
 
     int lts_actual = 0;
     int contador = 0; 
-
+    bool stop = true;
     //int pulsos_total = lts_final * 4.825580 + 4.988814; // sensor anterior
     int pulsos_total = (2.0636f * lts_final) - 3.8293f; // sensor actual
     gptimer_enable(gptimer);
@@ -201,11 +201,12 @@ void regar(int lts_final, gpio_num_t valve){
     gptimer_get_raw_count(gptimer, &tiempo_final);
 
 
-    while((contador < pulsos_total) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX)){ 
+    while((contador < pulsos_total) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX) && stop){ 
 
 
         if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
-            //ESP_LOGE("Watering", "No hay agua");
+            ESP_LOGE("Watering", "No hay agua");
+            stop = false; 
         } 
 
         contador += flow_frequency;
