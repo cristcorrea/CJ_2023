@@ -15,7 +15,7 @@
 #define TAG   "RIEGO"
 
 volatile int flow_frequency = 0;
-
+bool stop = false; 
 const unsigned long TIEMPO_MAX  = 60000000;
 
 gptimer_handle_t gptimer = NULL; 
@@ -163,6 +163,10 @@ void cerrar_valvula(gpio_num_t valvula)
     gpio_set_level(valvula, 0);
 }
 
+void stopRiego()
+{
+    stop = false; 
+}
 
 
 
@@ -181,7 +185,7 @@ void regar(int lts_final, gpio_num_t valve){
 
     int lts_actual = 0;
     int contador = 0; 
-    bool stop = true;
+    stop = true;
     //int pulsos_total = lts_final * 4.825580 + 4.988814; // sensor anterior
     int pulsos_total = (2.0636f * lts_final) - 3.8293f; // sensor actual
     gptimer_enable(gptimer);
@@ -206,7 +210,7 @@ void regar(int lts_final, gpio_num_t valve){
 
         if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
             ESP_LOGE("Watering", "No hay agua");
-            stop = false; 
+            stopRiego(); 
         } 
 
         contador += flow_frequency;

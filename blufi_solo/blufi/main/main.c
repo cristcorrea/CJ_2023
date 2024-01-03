@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 348
+#define TOUCH_VALUE_MIN 340 //348 
 
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c

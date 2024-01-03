@@ -19,3 +19,4 @@ esp_err_t init_irs(void);
 esp_err_t init_nFault(void);
 void getUpDriver(void);
 void sleepDriver(void);
+void stopRiego(void);
