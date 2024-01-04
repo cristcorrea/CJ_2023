@@ -18,7 +18,7 @@
 #define DHT_TIMEOUT_ERROR -2
 
 #define gpio_num 16
-#define INTENTOS_MAX 10
+#define INTENTOS_MAX 20
 
 static const char* TAG = "DHT_start";
 
@@ -93,42 +93,46 @@ uint8_t* readDHT()
 	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );
 
 	uSec = getSignalLevel( 85, 0 );
-	if( uSec<0 ){
-		ESP_LOGI("DHT", "Falla 1");
-		intentos++;
-		return readDHT(); 
-	} 
 
-	uSec = getSignalLevel( 85, 1 );
-	if( uSec<0 ) {
-		ESP_LOGI("DHT", "Falla 2");
-		intentos++;
-		return readDHT();
-	}
-
-	for( int k = 0; k < 40; k++ ) 
+	if(intentos <= INTENTOS_MAX)
 	{
 
-		uSec = getSignalLevel( 56, 0 );
 		if( uSec<0 ){
-			ESP_LOGI("DHT", "Falla 3");
+			ESP_LOGI("DHT", "Falla 1");
+			intentos++;
+			return readDHT(); 
+		} 
+
+		uSec = getSignalLevel( 85, 1 );
+		if( uSec<0 ) {
+			ESP_LOGI("DHT", "Falla 2");
 			intentos++;
 			return readDHT();
 		}
 
-		uSec = getSignalLevel( 75, 1 );
-		if( uSec<0 ){
-			ESP_LOGI("DHT", "Falla 4");
-			intentos++;
-			return readDHT();
-		}
+		for( int k = 0; k < 40; k++ ) 
+		{
 
-		if (uSec > 30){
-			dhtData[k/8] |= (1 << (7-(k%8))); // 1 << 7, 1 << 6, 1 << 5, ..., 1 << 0
-		}
+			uSec = getSignalLevel( 56, 0 );
+			if( uSec<0 ){
+				ESP_LOGI("DHT", "Falla 3");
+				intentos++;
+				return readDHT();
+			}
 
+			uSec = getSignalLevel( 75, 1 );
+			if( uSec<0 ){
+				ESP_LOGI("DHT", "Falla 4");
+				intentos++;
+				return readDHT();
+			}
+
+			if (uSec > 30){
+				dhtData[k/8] |= (1 << (7-(k%8))); // 1 << 7, 1 << 6, 1 << 5, ..., 1 << 0
+			}
+
+		}
 	}
-
 	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)){
 		ESP_LOGI("DHT", "Envio dhtDatos exitoso. Intentos: %i\n", intentos);
 		DHTerrorHandler(DHT_OK); 

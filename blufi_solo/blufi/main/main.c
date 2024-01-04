@@ -133,13 +133,12 @@ void touchSensor(void *params)
 */
 void riegoAuto1(void *params)
 {
-
     while(true)
     {    
          if(configuration.control_riego_1 && sensorConectado(SENSOR1))
         {
             
-
+            ESP_LOGI("RIEGO AUTO 1", "ENTRA A RIEGO AUTO 1");
             if(humidity(SENSOR1) < configuration.hum_inf_1) 
             {
                 vTaskResume(riegoAuto1Handle);
@@ -161,6 +160,7 @@ void riegoAuto2(void *params)
         if(configuration.control_riego_2 && sensorConectado(SENSOR2))
         {
 
+            ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
             if(humidity(SENSOR2) < configuration.hum_inf_2)
             {
                 vTaskResume(riegoAuto2Handle);
@@ -178,7 +178,7 @@ void riegaHasta1(void * params)
     mensajeRiego riego1;
     riego1.cantidad = 100; 
     riego1.valvula = VALVE1;
-    
+    ESP_LOGI("RIEGO HASTA 1", "NO ESTA SUSPENDIENDO 1");
     while(true)
     {
         if(humidity(SENSOR1) < configuration.hum_sup_1)
@@ -199,7 +199,7 @@ void riegaHasta2(void * params)
     mensajeRiego riego2;
     riego2.cantidad = 100; 
     riego2.valvula = VALVE2;
-    
+    ESP_LOGI("RIEGO HASTA 2", "NO ESTA SUSPENDIENDO 2");
     while(true)
     {
         if(humidity(SENSOR2) < configuration.hum_sup_2)
@@ -391,7 +391,7 @@ void app_main(void)
                 NULL,
                 2,
                 NULL);
-            
+
     xTaskCreate(&controlRiego,
                 "Maneja la cola de riego",
                 4096,
@@ -421,6 +421,7 @@ void app_main(void)
                 1,
                 &riegoAuto1Handle);
     vTaskSuspend(riegoAuto1Handle);
+
 
     xTaskCreate(&riegaHasta2,
                 "Riego automatico 2",
