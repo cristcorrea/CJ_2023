@@ -30,7 +30,7 @@
 #include "bh1750.h"
 #include "ntp.h"
 
-#define TAG "MQTT"
+#define TAG "MQTT_HANDLER"
 
 extern const uint8_t hivemq_certificate_pem_start[]   asm("_binary_hivemq_certificate_pem_start");
 
@@ -49,7 +49,7 @@ esp_mqtt_client_handle_t client;
 */
 void enviarDatos(char * topic, bool fecha)
 {
-
+    ESP_LOGI("ENVIO DE DATOS", "Entra a enviarDatos");
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
     int humedad = -1; 
@@ -78,7 +78,6 @@ void enviarDatos(char * topic, bool fecha)
     {
         message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i,%s",
             hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded, hora) + 1;
-            ESP_LOGI("ENVIO DATOS", "Entra a enviar con fecha");
     }else{
         message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
             hum_suelo_1, hum_suelo_2,  humedad, temperatura_amb, lux_rounded) + 1;
@@ -110,10 +109,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         memcpy(topic_sus, configuration.cardId, sizeof(char) * 8);
         strcat(topic_sus, "B");
         suscribirse(topic_sus);
-        ESP_LOGI(TAG, "Suscrito al topic: %s\n", topic_sus);
+        ESP_LOGI(TAG, "SUSCRITO AL TOPIC: %s", topic_sus);
 
         topic_sus[8] = 'C';
-        ESP_LOGI("DEBUG", "Topic sus: %s", topic_sus);
 
         memcpy(configuration.cardIdC, topic_sus, sizeof(char) * 9);
 
@@ -179,11 +177,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 {
                     configuration.control_riego_1 = 0;
                     err = NVS_write_i8("control_riego_1", configuration.control_riego_1); 
-                    //vTaskSuspend(xHandle_riego_auto_1);
                 }else{
                     configuration.control_riego_2 = 0; 
                     err = NVS_write_i8("control_riego_2", configuration.control_riego_2);
-                    //vTaskSuspend(xHandle_riego_auto_2);
                 }
                 if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
                     ESP_LOGI(TAG, "control riego almacenado\n");}
@@ -198,7 +194,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     err = NVS_write_i8("hum_inf_1", configuration.hum_inf_1);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_1\n");}else{
                     ESP_LOGI(TAG, "Datos de riego 1 almacenados.L: %i - H: %i\n", configuration.hum_inf_1, configuration.hum_sup_1);}
-                    //vTaskResume(xHandle_riego_auto_1); 
                 }else{
                     configuration.control_riego_2 = 1; 
                     recibe_confg_hum(event->data, &configuration, 2);
@@ -207,7 +202,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     err = NVS_write_i8("hum_inf_2", configuration.hum_inf_2);
                     if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_inf_2\n");}else{
                     ESP_LOGI(TAG, "Datos de riego 2 almacenados\n");}
-                    //vTaskResume(xHandle_riego_auto_2);
                 }
                 if(err != 0){ESP_LOGI(TAG, "No pudo grabarse hum_sup\n");}else{
                     ESP_LOGI(TAG, "control_riego almacenado\n");}
@@ -267,7 +261,7 @@ void mqtt_start()
 void enviar_mensaje_mqtt(char * topic, char * mensaje)
 {
     int mensaje_id = esp_mqtt_client_publish(client, topic, mensaje, 0, 1, 0);
-    ESP_LOGI(TAG, "Mensaje enviado, ID: %d al topic: %s", mensaje_id, topic);
+    ESP_LOGI("ENVIO MSJ MQTT", "Mensaje enviado, ID: %d al topic: %s", mensaje_id, topic);
 }
 
 void suscribirse(char * topic)

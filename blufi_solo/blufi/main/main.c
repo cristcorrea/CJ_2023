@@ -45,7 +45,7 @@ config_data configuration;
 
 
 /*
-    @brief Realiza la conexion MQTT.
+    @brief TASK: Una vez conectado a internet realiza la conexion MQTT.
 */
 void mqttServerConection(void *params)
 {   
@@ -58,7 +58,9 @@ void mqttServerConection(void *params)
     }
 }
 
-
+/*
+    @brief TASK: actualización por OTA 
+*/
 void ota_update(void * params)  // espera a que se ponga en hora 
 {
     if(xSemaphoreTake(semaphoreOta, portMAX_DELAY))
@@ -73,7 +75,7 @@ void ota_update(void * params)  // espera a que se ponga en hora
 
 
 /*
-    @brief Configuración del sensor de luz BH1750. 
+    @brief TASK: Configuración del sensor de luz BH1750. Se ejecuta sólo al inicio.  
 */
 void sensorCofig(void * params){  
 
@@ -94,7 +96,7 @@ void touchConfig(void)
 
 
 /*
-    @brief TASK: Sensor Touch
+    @brief TASK: Control del sensor touch. 
 */
 void touchSensor(void *params)
 {
@@ -262,9 +264,11 @@ void envioDatos(void *params)
 {
     while(true)
     {   
+
         enviarDatos(configuration.cardIdC, true);
         enviarDatos(configuration.cardId, false);
         vTaskDelay(pdMS_TO_TICKS(3600000));
+    
     }
 }
 
@@ -408,7 +412,7 @@ void app_main(void)
 
     xTaskCreate(&envioDatos,
                 "Envia datos cada una hora",
-                2048,
+                4096,
                 NULL,
                 3,
                 &msjTaskHandle);
