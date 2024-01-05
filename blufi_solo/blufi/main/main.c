@@ -361,7 +361,6 @@ void app_main(void)
         }
     }
 
-
     xTaskCreate(&mqttServerConection,
                 "Conectando con HiveMQ Broker",
                 4096,
@@ -373,7 +372,7 @@ void app_main(void)
                 "Instala nueva versión de firmware",
                 8048,
                 NULL,
-                2,
+                1,
                 NULL);
     
 
@@ -381,42 +380,42 @@ void app_main(void)
                 "Inicia configuracion de sensores",
                 2048,
                 NULL,
-                2,
+                1,
                 NULL);
     
     xTaskCreate(&touchSensor,
                 "Sensor touch",
                 2048,
                 NULL,
-                2,
+                1,
                 NULL);
     
     xTaskCreate(&riegoAuto1,
                 "Riego automatico 1",
                 2048,
                 NULL,
-                2,
+                1,
                 NULL);
 
     xTaskCreate(&riegoAuto2,
                 "Riego automatico 2",
                 2048,
                 NULL,
-                2,
+                1,
                 NULL);
 
     xTaskCreate(&controlRiego,
                 "Maneja la cola de riego",
                 4096,
                 NULL,
-                2,
+                1,
                 NULL);
 
     xTaskCreate(&ajusteFecha,
                 "Ajusta la hora y la fecha",
                 2048,
                 NULL,
-                4,
+                1,
                 NULL);
 
     if(xTaskCreate(&envioDatos,
@@ -455,8 +454,6 @@ void app_main(void)
     }else{
         vTaskSuspend(riegoAuto2Handle);
     }
-
-    vTaskDelay(pdMS_TO_TICKS(20));
 
     if (eTaskGetState(msjTaskHandle) == eSuspended) {
         ESP_LOGI("ARRANQUE", "envioDatos SUSPENDIDA");
