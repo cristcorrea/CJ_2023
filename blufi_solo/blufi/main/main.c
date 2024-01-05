@@ -30,6 +30,7 @@
 #define TOUCH   TOUCH_PAD_NUM5
 #define TOUCH_VALUE_MIN 340 //348 
 
+#define TAG1 "CREACION"
 
 SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
@@ -43,6 +44,7 @@ TaskHandle_t riegoAuto2Handle;
 QueueHandle_t riegoQueue; 
 config_data configuration;
 
+bool primerEnvio = true; 
 
 /*
     @brief TASK: Una vez conectado a internet realiza la conexion MQTT.
@@ -258,15 +260,22 @@ void ajusteFecha(void *params)
 
 
 /*
-    Envía datos al servidor y a la app cada 1 hora. 
+    Envía datos al servidor (cardIdC) y a la app cada 1 hora. 
 */
 void envioDatos(void *params)
 {
     while(true)
     {   
-
-        enviarDatos(configuration.cardIdC, true);
+        // hacer un retardo de envios en la primer conexion SOLO AL SERVIDOR
         enviarDatos(configuration.cardId, false);
+        if(primerEnvio)
+        {
+            vTaskDelay(pdMS_TO_TICKS(30000));
+            enviarDatos(configuration.cardIdC, true);
+            primerEnvio = false; 
+        }else{
+            enviarDatos(configuration.cardIdC, true);
+        }
         vTaskDelay(pdMS_TO_TICKS(3600000));
     
     }
@@ -410,30 +419,62 @@ void app_main(void)
                 4,
                 NULL);
 
-    xTaskCreate(&envioDatos,
+    if(xTaskCreate(&envioDatos,
                 "Envia datos cada una hora",
                 4096,
                 NULL,
-                3,
-                &msjTaskHandle);
-    vTaskSuspend(msjTaskHandle);
+                1,
+                &msjTaskHandle) != pdPASS)
+    {
+        ESP_LOGE(TAG1, "FALLA AL CREAR envioDatos");
+    }else{
+        vTaskSuspend(msjTaskHandle);
+    }
 
-    xTaskCreate(&riegaHasta1,
+    if(xTaskCreate(&riegaHasta1,
                 "Riego automatico 1",
                 2048,
                 NULL,
                 1,
-                &riegoAuto1Handle);
-    vTaskSuspend(riegoAuto1Handle);
+                &riegoAuto1Handle) != pdPASS)
+    {
+        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta1");
+    }else{
+        vTaskSuspend(riegoAuto1Handle);
+    }
+    
 
-
-    xTaskCreate(&riegaHasta2,
+    if(xTaskCreate(&riegaHasta2,
                 "Riego automatico 2",
                 2048,
                 NULL,
                 1,
-                &riegoAuto2Handle);
-    vTaskSuspend(riegoAuto2Handle);
+                &riegoAuto2Handle) != pdPASS)
+    {
+        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta2");
+    }else{
+        vTaskSuspend(riegoAuto2Handle);
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(20));
+
+    if (eTaskGetState(msjTaskHandle) == eSuspended) {
+        ESP_LOGI("ARRANQUE", "envioDatos SUSPENDIDA");
+    } else {
+        ESP_LOGE("ARRANQUE", "envioDatos NO SE SUSPENDIÓ");
+    }
+
+    if (eTaskGetState(riegoAuto1Handle) == eSuspended) {
+        ESP_LOGI("ARRANQUE", "riegaHasta1 SUSPENDIDA");
+    } else {
+        ESP_LOGE("ARRANQUE", "riegaHasta1 NO SE SUSPENDIÓ");
+    }
+
+    if (eTaskGetState(riegoAuto2Handle) == eSuspended) {
+        ESP_LOGI("ARRANQUE", "riegaHasta2 SUSPENDIDA");
+    } else {
+        ESP_LOGE("ARRANQUE", "riegaHasta2 NO SE SUSPENDIÓ");
+    }
 
 }
 

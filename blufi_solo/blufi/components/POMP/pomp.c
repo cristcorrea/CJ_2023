@@ -11,6 +11,12 @@
 #include "header.h"
 #include "mqtt.h"
 
+/* Modificacion a PWM*/
+#include "driver/ledc.h"
+
+int duty_bomba = 0; 
+
+//////////////////////
 
 #define TAG   "RIEGO"
 
@@ -93,10 +99,9 @@ esp_err_t init_nFault(void){
     return err;
 }
 
-
-
 void riego_config()
 {
+    /*
     gpio_config_t riego_config;
     riego_config.pin_bit_mask = (1ULL << BOMBA);
     riego_config.mode = GPIO_MODE_OUTPUT;
@@ -104,6 +109,24 @@ void riego_config()
     riego_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
     riego_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&riego_config);
+    */
+
+    ledc_channel_config_t bomba_config = {0};
+    bomba_config.gpio_num = BOMBA; 
+    bomba_config.speed_mode = 1;
+    bomba_config.channel = LEDC_CHANNEL_0;  
+    bomba_config.intr_type = LEDC_INTR_DISABLE;
+    bomba_config.timer_sel = LEDC_TIMER_0; 
+    bomba_config.duty = 0; 
+    ledc_channel_config(&bomba_config);
+
+    ledc_timer_config_t bomba_timer_config = {0};
+    bomba_timer_config.speed_mode = 1;
+    bomba_timer_config.duty_resolution = LEDC_TIMER_10_BIT;
+    bomba_timer_config.timer_num = LEDC_TIMER_0; 
+    bomba_timer_config.freq_hz = 20000; 
+    ledc_timer_config(&bomba_timer_config);
+
 
     gpio_config_t enable_config;
     enable_config.pin_bit_mask = (1ULL << ENABLE_DRV);
@@ -132,6 +155,12 @@ void riego_config()
 
 }
 
+void set_pwm_duty(void)
+{
+    ledc_set_duty(1, LEDC_CHANNEL_0, duty_bomba);
+    ledc_update_duty(1,LEDC_CHANNEL_0);
+}
+
 void getUpDriver()
 {
     gpio_set_level(ENABLE_DRV, 1);
@@ -145,12 +174,21 @@ void sleepDriver()
 
 void encender_bomba()
 {
-    gpio_set_level(BOMBA, 1); 
+    for(int i = 0; i < 1020; i += 10)
+    {
+        duty_bomba += 10;
+        set_pwm_duty();
+        vTaskDelay(pdMS_TO_TICKS(20)); 
+    }
+    duty_bomba = 1023;  
+    set_pwm_duty();
+
 }
 
 void apagar_bomba()
 {
-    gpio_set_level(BOMBA, 0);
+    duty_bomba = 0; 
+    set_pwm_duty();
 }
 
 void abrir_valvula(gpio_num_t valvula)
@@ -194,36 +232,34 @@ void regar(int lts_final, gpio_num_t valve){
     uint64_t tiempo_final = 0; 
 
     getUpDriver();
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(20));
     abrir_valvula(valve);
-    vTaskDelay(pdMS_TO_TICKS(100));
     encender_bomba();
-    
-    //flow_frequency = 0;
 
     gptimer_get_raw_count(gptimer, &tiempo_inicial);
     gptimer_get_raw_count(gptimer, &tiempo_final);
 
+    if(duty_bomba >= 1000)
+    {
+        flow_frequency = 0; 
+        while((contador < pulsos_total) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX) && stop){ 
 
-    while((contador < pulsos_total) && ((tiempo_final - tiempo_inicial) < TIEMPO_MAX) && stop){ 
 
+            if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
+                ESP_LOGE("Watering", "No hay agua");
+                stopRiego(); 
+            } 
 
-        if((tiempo_final - tiempo_inicial) >= TIEMPO_MAX/3 && flow_frequency == 0){
-            ESP_LOGE("Watering", "No hay agua");
-            stopRiego(); 
-        } 
+            contador += flow_frequency;
+            gptimer_get_raw_count(gptimer, &tiempo_final);
 
-        contador += flow_frequency;
-        gptimer_get_raw_count(gptimer, &tiempo_final);
-
-        ESP_LOGI(TAG, " Contador: %i |Pulsos total: %i |Frecuencia: %i|Tiempo final:%" PRIu64 "\n",
-         contador, pulsos_total, flow_frequency, tiempo_final);
-            
-
-        flow_frequency = 0;
-        vTaskDelay(pdMS_TO_TICKS(100));
+            ESP_LOGI(TAG, "Duty_bomba: %i |Contador: %i |Pulsos total: %i |Frecuencia: %i|Tiempo final:%" PRIu64 "\n",
+            duty_bomba, contador, pulsos_total, flow_frequency, tiempo_final);
+                
+            flow_frequency = 0;
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
     }
-    
     gptimer_set_raw_count(gptimer, 0);
     gptimer_stop(gptimer);
     gptimer_disable(gptimer);

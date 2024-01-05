@@ -20,3 +20,4 @@ esp_err_t init_nFault(void);
 void getUpDriver(void);
 void sleepDriver(void);
 void stopRiego(void);
+void set_pwm_duty(void);
