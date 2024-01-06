@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 340 //348 
+#define TOUCH_VALUE_MIN 348 
 
 #define TAG1 "CREACION"
 
@@ -182,7 +182,6 @@ void riegaHasta1(void * params)
     mensajeRiego riego1;
     riego1.cantidad = 100; 
     riego1.valvula = VALVE1;
-    ESP_LOGI("RIEGO HASTA 1", "NO ESTA SUSPENDIENDO 1");
     while(true)
     {
         if(humidity(SENSOR1) < configuration.hum_sup_1)
@@ -203,7 +202,6 @@ void riegaHasta2(void * params)
     mensajeRiego riego2;
     riego2.cantidad = 100; 
     riego2.valvula = VALVE2;
-    ESP_LOGI("RIEGO HASTA 2", "NO ESTA SUSPENDIENDO 2");
     while(true)
     {
         if(humidity(SENSOR2) < configuration.hum_sup_2)

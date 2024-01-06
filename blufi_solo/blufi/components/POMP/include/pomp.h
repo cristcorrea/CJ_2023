@@ -20,3 +20,4 @@ void getUpDriver(void);
 void sleepDriver(void);
 void stopRiego(void);
 void set_pwm_duty(void);
+void enviarEstadoRiego(gpio_num_t valve, int total, int parcial);

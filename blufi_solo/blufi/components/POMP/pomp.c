@@ -195,12 +195,33 @@ void stopRiego()
 }
 
 
+void enviarEstadoRiego(gpio_num_t valve, int total, int parcial)
+{
+    int porcentaje = (parcial * 100) / total; 
+    ESP_LOGI("ESTADO RIEGO", "Regado: %i", porcentaje);
+    const char * prefijo; 
+    if(valve == VALVE1)
+    {
+        prefijo = "V1,";
+    }else{
+        prefijo = "V2,";
+    }
+    size_t message_size = snprintf(NULL, 0, "%s, %i", prefijo, porcentaje) + 1;
+    char *message = (char *)malloc(message_size);
+    if (message != NULL) {
+        snprintf(message, message_size, "%s, %d", prefijo, porcentaje);
+        enviar_mensaje_mqtt(configuration.cardId, message);
+        free(message);
+    }
+}
+
 void regar(int lts_final, gpio_num_t valve){
 
     int lts_actual = 0;
     int contador = 0; 
     int tiempo_sin_pulsos = 0; 
     stop = true;
+    int contador_envio = 0; 
     //int pulsos_total = lts_final * 4.825580 + 4.988814; // sensor anterior
     int pulsos_total = (2.0636f * lts_final) - 3.8293f; // sensor actual
 
@@ -222,11 +243,19 @@ void regar(int lts_final, gpio_num_t valve){
         }else{
                 tiempo_sin_pulsos = 0;
         }   
+        if(contador_envio < 10)
+        {
+            contador_envio++; 
+        }else{
+            enviarEstadoRiego(valve, pulsos_total, contador); 
+            contador_envio = 0;    
+        }
 
-        ESP_LOGI(TAG, "Duty_bomba: %i |Contador: %i |Pulsos total: %i |Frecuencia: %i",
-        duty_bomba, contador, pulsos_total, flow_frequency);
-            
         flow_frequency = 0;
+
+        /*
+            Agregar un envio de % de riego realizado cada 1 segundo al tiempo real (cardId)
+        */
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 

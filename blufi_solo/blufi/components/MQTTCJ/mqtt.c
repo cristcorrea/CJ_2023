@@ -49,7 +49,6 @@ esp_mqtt_client_handle_t client;
 */
 void enviarDatos(char * topic, bool fecha)
 {
-    ESP_LOGI("ENVIO DE DATOS", "Entra a enviarDatos");
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
     int humedad = -1; 

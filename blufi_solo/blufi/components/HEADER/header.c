@@ -53,6 +53,7 @@ void ultimoRiego(const char *prefijo, int ml) {
     if (message != NULL) {
         snprintf(message, message_size, "%s%s, %d", prefijo, hora, ml);
         enviar_mensaje_mqtt(configuration.cardIdC, message);
+        enviar_mensaje_mqtt(configuration.cardId, message);
         free(hora);
         free(message);
     }
