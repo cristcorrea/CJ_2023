@@ -295,7 +295,6 @@ void app_main(void)
     touchConfig();
     touchLedConfig();
     wifiLedConfig();
-    timer_config();
     riego_config();
     blufi_start();
   

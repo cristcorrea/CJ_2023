@@ -9,7 +9,6 @@
 
 
 void riego_config(void);
-void timer_config(void);
 void encender_bomba(void);
 void apagar_bomba(void);
 void abrir_valvula(gpio_num_t valvula);
