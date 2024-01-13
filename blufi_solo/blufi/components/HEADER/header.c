@@ -6,6 +6,8 @@
 #include "storage.h"
 #include "mqtt.h"
 #include "ntp.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #define TOUCH_LED GPIO_NUM_4
 #define WIFI_LED GPIO_NUM_2
@@ -53,7 +55,7 @@ void ultimoRiego(const char *prefijo, int ml) {
     if (message != NULL) {
         snprintf(message, message_size, "%s%s, %d", prefijo, hora, ml);
         enviar_mensaje_mqtt(configuration.cardIdC, message);
-        enviar_mensaje_mqtt(configuration.cardId, message);
+        //enviar_mensaje_mqtt(configuration.cardId, message); queda comentado hasta que se arregle el bug
         free(hora);
         free(message);
     }
@@ -108,4 +110,13 @@ void encenderLedWifi(void)
 {
     gpio_set_level(WIFI_LED, 1);
 
+}
+
+
+void parpadeo(void)
+{
+    encenderLedTouch();
+    vTaskDelay(pdMS_TO_TICKS(500));
+    apagarLedTouch();
+    vTaskDelay(pdMS_TO_TICKS(500));
 }

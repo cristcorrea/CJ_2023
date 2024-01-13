@@ -33,3 +33,5 @@ void encenderLedTouch(void);
 void wifiLedConfig(void);
 void apagarLedWifi(void);
 void encenderLedWifi(void);
+
+void parpadeo(void);

@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 348 
+#define TOUCH_VALUE_MIN 330//348 
 
 #define TAG1 "CREACION"
 
@@ -69,7 +69,7 @@ void ota_update(void * params)  // espera a que se ponga en hora
     {
         while(true)
         {   
-            //update_ota();
+            update_ota();
             vTaskDelay(pdMS_TO_TICKS(36000000));
         }
     }
@@ -248,7 +248,6 @@ void ajusteFecha(void *params)
             {
                 ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
                 //free(configuration.time_zone);
-                vTaskResume(msjTaskHandle);
                 vTaskDelete(NULL);
             }
         }

@@ -11,18 +11,24 @@
 #include "lwip/sockets.h"
 #include "esp_https_ota.h"
 #include "strings.h"
+#include "header.h"
 
-#define FIRMWARE_VERSION	2.0
+#define FIRMWARE_VERSION	1.0
 #define UPDATE_JSON_URL		"http://check.cjindoors.com/firmware.json"
+
+
 
 const char *TAG = "HTTPS_OTA";
 
 // server certificates
 extern const uint8_t certificate_pem_start[] asm("_binary_certificate_pem_start");
 extern const uint8_t certificate_pem_end[] asm("_binary_certificate_pem_end");
+extern TaskHandle_t msjTaskHandle; 
 
 // receive buffer
 char * rcv_buffer;
+
+
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -80,6 +86,8 @@ void update_ota()
 			if(json == NULL) printf("downloaded file is not a valid json, aborting...\n");
 			else {
 
+				parpadeo();
+				encenderLedTouch();
 				cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
 				cJSON *file = cJSON_GetObjectItemCaseSensitive(json, "file");
 				
@@ -104,6 +112,12 @@ void update_ota()
 							esp_err_t ret = esp_https_ota(&ota_config);
 							if (ret == ESP_OK) {
 								printf("OTA OK, restarting...\n");
+								
+								for(int i = 0; i < 10; i++)
+								{
+									parpadeo();
+								}
+								vTaskDelay(pdMS_TO_TICKS(1000));
 								esp_restart();
 							} else {
 								printf("OTA failed...\n");
@@ -112,6 +126,8 @@ void update_ota()
 						else printf("unable to read the new file name, aborting...\n");
 					}
 					else printf("current firmware version (%.1f) is greater or equal to the available one (%.1f), nothing to do...\n", FIRMWARE_VERSION, new_version);
+					apagarLedTouch();
+					vTaskResume(msjTaskHandle);
 				}
 			}
 		}
@@ -123,6 +139,7 @@ void update_ota()
 		esp_http_client_cleanup(client);
 		free(rcv_buffer);
 		printf("\n");
+		vTaskResume(msjTaskHandle);
 }
 
 
