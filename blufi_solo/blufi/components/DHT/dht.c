@@ -159,17 +159,24 @@ float getTemp(uint8_t *dhtData)
         return 0.0;
     }
 
+	
+	float temperature = dhtData[2] & 0x7F;
+    temperature *= 0x100; // >> 8
+    temperature += dhtData[3];
+    temperature /= 10;
+	
+
     // Combina los bytes de temperatura
-    int16_t rawTemperature = (dhtData[2] << 8) | dhtData[3];
+    //int16_t rawTemperature = (dhtData[2] << 8) | dhtData[3];
 
     // Divide para obtener la temperatura con decimales
-    float temperature = rawTemperature / 10.0;
+    //float temperature = rawTemperature / 10.0;
 
     // Verifica el bit de signo para temperaturas negativas
     if (dhtData[2] & 0x80)
     {
         // Temperatura negativa, multiplica por -1
-        temperature *= -1;
+        temperature *= -1.0;
     }
 
     // Redondea a un solo decimal

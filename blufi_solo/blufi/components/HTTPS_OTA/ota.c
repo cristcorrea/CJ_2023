@@ -13,7 +13,7 @@
 #include "strings.h"
 #include "header.h"
 
-#define FIRMWARE_VERSION	1.0
+#define FIRMWARE_VERSION	1.2
 #define UPDATE_JSON_URL		"http://check.cjindoors.com/firmware.json"
 
 
