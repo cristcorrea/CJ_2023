@@ -69,6 +69,9 @@ void ota_update(void * params)  // espera a que se ponga en hora
     {
         while(true)
         {   
+            /*
+                AGREGAR ENVIO DE LA VERSION DE FIRMWARE QUE TIENE EL EQUIPO 
+            */
             update_ota();
             vTaskDelay(pdMS_TO_TICKS(36000000));
         }
@@ -361,7 +364,7 @@ void app_main(void)
                 "Conectando con HiveMQ Broker",
                 4096,
                 NULL,
-                5,
+                1,
                 NULL);
 
     xTaskCreate(&ota_update,

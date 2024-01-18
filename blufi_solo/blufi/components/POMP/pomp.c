@@ -196,14 +196,15 @@ void stopRiego()
 
 
 void enviarEstadoRiego(gpio_num_t valve, int total, int parcial)
-{
-    int porcentaje = (parcial * 100) / total; 
+{ 
+    int porcentaje = 0;
+    porcentaje = ((parcial/2.0636f) * 100) / total; 
     const char * prefijo; 
     if(valve == VALVE1)
     {
-        prefijo = "V1,";
+        prefijo = "V1";
     }else{
-        prefijo = "V2,";
+        prefijo = "V2";
     }
     size_t message_size = snprintf(NULL, 0, "%s, %i", prefijo, porcentaje) + 1;
     char *message = (char *)malloc(message_size);
@@ -245,7 +246,7 @@ void regar(int lts_final, gpio_num_t valve){
         {
             contador_envio++; 
         }else{
-            //enviarEstadoRiego(valve, pulsos_total, contador); comentado hasta que se implemente en la app
+            enviarEstadoRiego(valve, pulsos_total, contador); //comentado hasta que se implemente en la app
             contador_envio = 0;    
         }
 
