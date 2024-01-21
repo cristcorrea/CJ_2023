@@ -222,8 +222,8 @@ void regar(int lts_final, gpio_num_t valve){
     int tiempo_sin_pulsos = 0; 
     stop = true;
     int contador_envio = 0; 
-    //int pulsos_total = lts_final * 4.825580 + 4.988814; // sensor anterior
-    int pulsos_total = (2.0636f * lts_final) - 3.8293f; // sensor actual
+    
+    int pulsos_total = (2.0636f * lts_final) - 3.8293f; // Calculo cantidad de pulsos a contar. 
 
     getUpDriver();
     vTaskDelay(pdMS_TO_TICKS(20));
@@ -246,7 +246,7 @@ void regar(int lts_final, gpio_num_t valve){
         {
             contador_envio++; 
         }else{
-            enviarEstadoRiego(valve, pulsos_total, contador); //comentado hasta que se implemente en la app
+            enviarEstadoRiego(valve, lts_final, contador);
             contador_envio = 0;    
         }
 
@@ -275,3 +275,8 @@ void regar(int lts_final, gpio_num_t valve){
 }
 
 
+/*
+Sensor anterior que contaba distinta cantidad de pulsos por vuelta: 
+int pulsos_total = lts_final * 4.825580 + 4.988814; 
+
+*/

@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN 330//348 
+#define TOUCH_VALUE_MIN 330 // 348 
 
 #define TAG1 "CREACION"
 
@@ -45,6 +45,7 @@ QueueHandle_t riegoQueue;
 config_data configuration;
 
 bool primerEnvio = true; 
+bool primerConexion = true; 
 
 /*
     @brief TASK: Una vez conectado a internet realiza la conexion MQTT.
@@ -69,9 +70,12 @@ void ota_update(void * params)  // espera a que se ponga en hora
     {
         while(true)
         {   
-            /*
-                AGREGAR ENVIO DE LA VERSION DE FIRMWARE QUE TIENE EL EQUIPO 
-            */
+            if(primerConexion)
+            {
+                enviarVersion();
+            }else{
+                primerConexion = false; 
+            }
             update_ota();
             vTaskDelay(pdMS_TO_TICKS(36000000));
         }

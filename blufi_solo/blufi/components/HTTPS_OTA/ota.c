@@ -12,8 +12,8 @@
 #include "esp_https_ota.h"
 #include "strings.h"
 #include "header.h"
+#include "ota.h"
 
-#define FIRMWARE_VERSION	1.4
 #define UPDATE_JSON_URL		"http://check.cjindoors.com/firmware.json"
 
 

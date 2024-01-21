@@ -8,19 +8,14 @@
 #include "ntp.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "ota.h"
 
 #define TOUCH_LED GPIO_NUM_4
 #define WIFI_LED GPIO_NUM_2
 
 extern config_data configuration; 
 
-/*
-@brief 
-Almacena las configuraciones de hum min y max
-@param str[] event->data
-@param *cfg  puntero a la variable donde se almacenará
-@param sensor sensor al que corresponden los datos
-*/
+
 void recibe_confg_hum(char str[], config_data *cfg, int sensor)
 {
     int posH = strcspn(str, "H");
@@ -119,4 +114,16 @@ void parpadeo(void)
     vTaskDelay(pdMS_TO_TICKS(500));
     apagarLedTouch();
     vTaskDelay(pdMS_TO_TICKS(500));
+}
+
+void enviarVersion()
+{
+    size_t message_size = snprintf(NULL, 0, "%.1f", FIRMWARE_VERSION) + 1;
+    char *message = (char *)malloc(message_size);
+    if (message != NULL) {
+        snprintf(message, message_size, "%.1f", FIRMWARE_VERSION);
+        //enviar_mensaje_mqtt(configuration.cardIdC, message);
+        enviar_mensaje_mqtt(configuration.cardId, message);
+        free(message);
+    }
 }
