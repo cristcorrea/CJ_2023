@@ -1,0 +1,1 @@
+COMPONENT_EMBED_TXTFILES := hivemq_certificate.pem

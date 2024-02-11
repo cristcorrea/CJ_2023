@@ -1,0 +1,25 @@
+{
+    "project_name":       "bootloader",
+    "project_path":       "/home/cris/esp3/esp-idf/components/bootloader/subproject",
+    "build_dir":          "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/smart_grow/build/bootloader",
+    "config_file":        "/home/cris/Documentos/CJ_ESP32/GIT_2023/CJ_2023/blufi_solo/smart_grow/sdkconfig",
+    "config_defaults":    "",
+    "bootloader_elf":     "",
+    "app_elf":            "bootloader.elf",
+    "app_bin":            "bootloader.bin",
+    "git_revision":       "v5.0.1-dirty",
+    "target":             "esp32",
+    "rev":                "0",
+    "min_rev":            "0",
+    "max_rev":            "399",
+    "phy_data_partition": "",
+    "monitor_baud" :      "115200",
+    "monitor_toolprefix": "xtensa-esp32-elf-",
+    "config_environment" : {
+        "COMPONENT_KCONFIGS" : "/home/cris/esp3/esp-idf/components/efuse/Kconfig;/home/cris/esp3/esp-idf/components/esp_common/Kconfig;/home/cris/esp3/esp-idf/components/esp_hw_support/Kconfig;/home/cris/esp3/esp-idf/components/esp_system/Kconfig;/home/cris/esp3/esp-idf/components/freertos/Kconfig;/home/cris/esp3/esp-idf/components/hal/Kconfig;/home/cris/esp3/esp-idf/components/log/Kconfig;/home/cris/esp3/esp-idf/components/newlib/Kconfig;/home/cris/esp3/esp-idf/components/spi_flash/Kconfig",
+        "COMPONENT_KCONFIGS_PROJBUILD" : "/home/cris/esp3/esp-idf/components/bootloader/Kconfig.projbuild;/home/cris/esp3/esp-idf/components/esp_app_format/Kconfig.projbuild;/home/cris/esp3/esp-idf/components/esp_rom/Kconfig.projbuild;/home/cris/esp3/esp-idf/components/esptool_py/Kconfig.projbuild;/home/cris/esp3/esp-idf/components/partition_table/Kconfig.projbuild"
+    },
+    "build_components" : [ "bootloader", "bootloader_support", "efuse", "esp_app_format", "esp_common", "esp_hw_support", "esp_rom", "esp_system", "esptool_py", "freertos", "hal", "log", "main", "micro-ecc", "newlib", "partition_table", "soc", "spi_flash", "xtensa", "" ],
+    "build_component_paths" : [ "/home/cris/esp3/esp-idf/components/bootloader", "/home/cris/esp3/esp-idf/components/bootloader_support", "/home/cris/esp3/esp-idf/components/efuse", "/home/cris/esp3/esp-idf/components/esp_app_format", "/home/cris/esp3/esp-idf/components/esp_common", "/home/cris/esp3/esp-idf/components/esp_hw_support", "/home/cris/esp3/esp-idf/components/esp_rom", "/home/cris/esp3/esp-idf/components/esp_system", "/home/cris/esp3/esp-idf/components/esptool_py", "/home/cris/esp3/esp-idf/components/freertos", "/home/cris/esp3/esp-idf/components/hal", "/home/cris/esp3/esp-idf/components/log", "/home/cris/esp3/esp-idf/components/bootloader/subproject/main", "/home/cris/esp3/esp-idf/components/bootloader/subproject/components/micro-ecc", "/home/cris/esp3/esp-idf/components/newlib", "/home/cris/esp3/esp-idf/components/partition_table", "/home/cris/esp3/esp-idf/components/soc", "/home/cris/esp3/esp-idf/components/spi_flash", "/home/cris/esp3/esp-idf/components/xtensa", "" ],
+    "debug_prefix_map_gdbinit": ""
+}
