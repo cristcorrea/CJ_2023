@@ -32,7 +32,7 @@ typedef struct
 void recibe_confg_hum(char str[], config_data *cfg, int sensor);
 
 // REVISAR BYTESTOHEX PORQUE CREO QUE NO SE UTILIZA 
-void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
+//void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
 
 /*
     @brief Envia datos del ultimo riego a servidor y app.
@@ -82,3 +82,4 @@ void parpadeo(void);
 
 */
 void enviarVersion(void);
+

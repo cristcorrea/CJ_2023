@@ -44,13 +44,13 @@ extern SemaphoreHandle_t semaphoreFecha;
 esp_mqtt_client_handle_t client; 
 
 
-/*
-    La idea es que reciba un parametro para determinar si debe enviar la fecha o no. 
-*/
+
 void enviarDatos(char * topic, bool fecha)
 {
+    habilitarSensorSuelo();
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
+    desHabilitarSensorSuelo(); 
     int humedad = -1; 
     float temperatura_amb; 
     float lux; 
@@ -213,9 +213,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case 'P':                       // Purga
             if(event->data[1] == '1')
             {
-                regar(200, 1);
+                regar(50, 1);
             }else{
-                regar(200, 2);
+                regar(50, 2);
             }
             break;
 

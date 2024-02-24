@@ -147,15 +147,19 @@ void riegoAuto1(void *params)
 {
     while(true)
     {    
-         if(configuration.control_riego_1 && sensorConectado(S1_STATE))
+         if(configuration.control_riego_1)
         {
-            
-            ESP_LOGI("RIEGO AUTO 1", "ENTRA A RIEGO AUTO 1");
-            if(humidity(SENSOR1) < configuration.hum_inf_1) 
+            habilitarSensorSuelo();
+            if(sensorConectado(S1_STATE))
             {
-                vTaskResume(riegoHasta1Handle);
-                vTaskSuspend(riegoAuto1Handle);
+                ESP_LOGI("RIEGO AUTO 1", "ENTRA A RIEGO AUTO 1");
+                if(humidity(SENSOR1) < configuration.hum_inf_1) 
+                {
+                    vTaskResume(riegoHasta1Handle);
+                    vTaskSuspend(riegoAuto1Handle);
+                }
             }
+            desHabilitarSensorSuelo();
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
@@ -170,15 +174,19 @@ void riegoAuto2(void *params)
 
     while(true)
     {
-        if(configuration.control_riego_2 && sensorConectado(S2_STATE))
+        if(configuration.control_riego_2)
         {
-
-            ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
-            if(humidity(SENSOR2) < configuration.hum_inf_2)
+            habilitarSensorSuelo();
+            if(sensorConectado(S2_STATE))
             {
-                vTaskResume(riegoHasta2Handle);
-                vTaskSuspend(riegoAuto2Handle);
+                ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
+                if(humidity(SENSOR2) < configuration.hum_inf_2)
+                {
+                    vTaskResume(riegoHasta2Handle);
+                    vTaskSuspend(riegoAuto2Handle);
+                }
             }
+            desHabilitarSensorSuelo();
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
@@ -194,6 +202,7 @@ void riegaHasta1(void * params)
     riego1.valvula = VALVE1;
     while(true)
     {
+        habilitarSensorSuelo();
         if(sensorConectado(S1_STATE) && configuration.control_riego_1 
             && (humidity(SENSOR1) < configuration.hum_sup_1))
         {
@@ -202,6 +211,7 @@ void riegaHasta1(void * params)
             vTaskResume(riegoAuto1Handle);
             vTaskSuspend(riegoHasta1Handle);
         }
+        desHabilitarSensorSuelo();
         vTaskDelay(pdMS_TO_TICKS(100000));
     }
     
@@ -217,6 +227,7 @@ void riegaHasta2(void * params)
     riego2.valvula = VALVE2;
     while(true)
     {
+        habilitarSensorSuelo();
         if(sensorConectado(S2_STATE) && configuration.control_riego_2 
             && (humidity(SENSOR2) < configuration.hum_sup_2))
         {
@@ -226,6 +237,7 @@ void riegaHasta2(void * params)
             vTaskResume(riegoAuto2Handle);
             vTaskSuspend(riegoHasta2Handle);
         }
+        desHabilitarSensorSuelo();
         vTaskDelay(pdMS_TO_TICKS(100000));
     }
     
@@ -274,14 +286,15 @@ void ajusteFecha(void *params)
 
 
 /*
-    Envía datos al servidor (cardIdC) y a la app cada 1 hora. 
+    @ brief Envía datos al servidor (cardIdC) y a la app cada 1 hora. 
 */
 void envioDatos(void *params)
 {
     while(true)
     {   
-        // hacer un retardo de envios en la primer conexion SOLO AL SERVIDOR
+
         enviarDatos(configuration.cardId, false);
+
         if(primerEnvio)
         {
             vTaskDelay(pdMS_TO_TICKS(4000));
@@ -290,8 +303,8 @@ void envioDatos(void *params)
         }else{
             enviarDatos(configuration.cardIdC, true);
         }
+        
         vTaskDelay(pdMS_TO_TICKS(3600000));
-    
     }
 }
 

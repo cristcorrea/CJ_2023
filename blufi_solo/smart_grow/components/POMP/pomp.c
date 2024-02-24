@@ -141,6 +141,14 @@ void riego_config()
     valve2_config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&valve2_config);
 
+    gpio_config_t sensorF_ena;
+    sensorF_ena.pin_bit_mask = (1ULL << SENSORF_ENABLE);
+    sensorF_ena.mode = GPIO_MODE_OUTPUT;
+    sensorF_ena.pull_up_en = GPIO_PULLUP_DISABLE;
+    sensorF_ena.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    sensorF_ena.intr_type = GPIO_INTR_DISABLE; 
+    gpio_config(&sensorF_ena);
+
 }
 
 void set_pwm_duty(void)
@@ -194,6 +202,17 @@ void stopRiego()
     stop = false; 
 }
 
+void habilitarSensorFlujo(void)
+{
+    gpio_set_level(SENSORF_ENABLE, 1);
+    vTaskDelay(pdMS_TO_TICKS(100));
+}
+
+void desHabilitarSensorFlujo(void)
+{
+    gpio_set_level(SENSORF_ENABLE, 0);
+}
+
 
 void enviarEstadoRiego(gpio_num_t valve, int total, int parcial)
 { 
@@ -224,7 +243,7 @@ void regar(int lts_final, gpio_num_t valve){
     int contador_envio = 0; 
     
     int pulsos_total = (2.0636f * lts_final) - 3.8293f; // Calculo cantidad de pulsos a contar. 
-
+    habilitarSensorFlujo();
     getUpDriver();
     vTaskDelay(pdMS_TO_TICKS(20));
     abrir_valvula(valve);
@@ -258,6 +277,7 @@ void regar(int lts_final, gpio_num_t valve){
     apagar_bomba();
     cerrar_valvula(valve);
     sleepDriver();
+    desHabilitarSensorFlujo();
 
     const char *prefijo;
     if(valve == VALVE1)
@@ -273,7 +293,6 @@ void regar(int lts_final, gpio_num_t valve){
     ultimoRiego(prefijo, lts_actual);
     xSemaphoreGive(semaphoreRiego);
 }
-
 
 /*
 Sensor anterior que contaba distinta cantidad de pulsos por vuelta: 

@@ -54,6 +54,14 @@ void soilConfig(void)
     s2_state.pull_down_en = GPIO_PULLDOWN_ENABLE;
     s2_state.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&s2_state);
+
+    gpio_config_t sensors_ena;
+    sensors_ena.pin_bit_mask = (1ULL << SENSORS_ENABLE);
+    sensors_ena.mode = GPIO_MODE_OUTPUT;
+    sensors_ena.pull_up_en = GPIO_PULLUP_DISABLE;
+    sensors_ena.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    sensors_ena.intr_type = GPIO_INTR_DISABLE; 
+    gpio_config(&sensors_ena);
 }
 
 int adc_read(adc_channel_t channel)
@@ -94,29 +102,35 @@ int read_humidity(adc_channel_t sensor)
 int sensorConectado(adc_channel_t sensor)
 {
     return gpio_get_level(sensor);
-
 }
 
 int  humidity(adc_channel_t sensor)
 {
+    int value = 0; 
+
     if(sensor == SENSOR1)
     {
-        if(gpio_get_level(S1_STATE))
+        if(sensorConectado(S1_STATE))
         {
-            return read_humidity(SENSOR1);
-        }else{
-            ESP_LOGI("Soil Sensor", "Sensor 1 no conectado");
-            return 0; 
+            value = read_humidity(SENSOR1);
         }
     }else{
-        if(gpio_get_level(S2_STATE))
+        if(sensorConectado(S2_STATE))
         {
-            return read_humidity(SENSOR2);
-        }else{
-            ESP_LOGI("Soil Sensor", "Sensor 2 no conectado");
-            return 0; 
+            value = read_humidity(SENSOR2);
         }
     }
+
+    return value; 
+}
+
+void habilitarSensorSuelo(void)
+{
+    gpio_set_level(SENSORS_ENABLE, 1);
+    vTaskDelay(pdMS_TO_TICKS(250));
 }
     
-
+void desHabilitarSensorSuelo(void)
+{
+    gpio_set_level(SENSORS_ENABLE, 0);
+}

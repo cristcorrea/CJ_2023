@@ -6,6 +6,7 @@
 #define VALVE2          GPIO_NUM_19     
 #define FLOW_SENSOR_PIN GPIO_NUM_27     
 #define nFAULT_PIN      GPIO_NUM_26  
+#define SENSORF_ENABLE  GPIO_NUM_13
 
 
 void riego_config(void);
@@ -21,3 +22,5 @@ void sleepDriver(void);
 void stopRiego(void);
 void set_pwm_duty(void);
 void enviarEstadoRiego(gpio_num_t valve, int total, int parcial);
+void habilitarSensorFlujo(void);
+void desHabilitarSensorFlujo(void);
