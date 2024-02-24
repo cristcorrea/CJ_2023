@@ -62,6 +62,8 @@ extern config_data configuration;
 
 static bool first_connection = false; 
 
+int tiempo_reconexion = 0; 
+
 static void example_record_wifi_conn_info(int rssi, uint8_t reason)
 {
     memset(&gl_sta_conn_info, 0, sizeof(esp_blufi_extra_info_t));
@@ -183,6 +185,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         memcpy(gl_sta_bssid, event->bssid, 6);
         memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
         gl_sta_ssid_len = event->ssid_len;
+        tiempo_reconexion = 0; 
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
          ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
@@ -211,7 +214,11 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                     ESP_LOGI("DEBUG BLUFI", "CONNECTION FAIL");
                 }
             }else{
-                vTaskDelay(pdMS_TO_TICKS(10000));
+                if(tiempo_reconexion < 900000)
+                {
+                    tiempo_reconexion += 30000;
+                }
+                vTaskDelay(pdMS_TO_TICKS(tiempo_reconexion));
                 example_wifi_connect();
             }
             gl_sta_is_connecting = false;
