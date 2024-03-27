@@ -197,12 +197,16 @@ void riegaHasta1(void * params)
         if(sensorConectado(S1_STATE) && configuration.control_riego_1 
             && (humidity(SENSOR1) < configuration.hum_sup_1))
         {
-            xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
+            if(xQueueSend(riegoQueue, &riego1, portMAX_DELAY) == pdTRUE)
+            {
+                ESP_LOGI("RiegoHasta1", "Petición de riego enviada");
+            }
         }else{
             vTaskResume(riegoAuto1Handle);
             vTaskSuspend(riegoHasta1Handle);
+            ESP_LOGE("RiegoHasta1", "Suspención de tarea");
         }
-        vTaskDelay(pdMS_TO_TICKS(100000));
+        vTaskDelay(pdMS_TO_TICKS(200000));
     }
     
 }
@@ -220,13 +224,16 @@ void riegaHasta2(void * params)
         if(sensorConectado(S2_STATE) && configuration.control_riego_2 
             && (humidity(SENSOR2) < configuration.hum_sup_2))
         {
-            ESP_LOGI("RIEGO HASTA 2", "ENVIA PETICION DE RIEGO");
-            xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
+            if(xQueueSend(riegoQueue, &riego2, portMAX_DELAY) == pdTRUE)
+            {
+                ESP_LOGI("RiegoHasta2", "Petición de riego enviada");
+            }
         }else{
             vTaskResume(riegoAuto2Handle);
             vTaskSuspend(riegoHasta2Handle);
+            ESP_LOGE("RiegoHasta1", "Suspención de tarea");
         }
-        vTaskDelay(pdMS_TO_TICKS(100000));
+        vTaskDelay(pdMS_TO_TICKS(200000));
     }
     
 }
