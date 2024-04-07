@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN   330//348
+#define TOUCH_VALUE_MIN   320//348
 
 #define TAG1 "CREACION"
 
@@ -115,8 +115,8 @@ void touchSensor(void *params)
     while(true)
     {   
         touch_pad_read(TOUCH, &touch_value);
-        //printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
-        //printf("\n");
+        printf("T%d:[%4"PRIu16"] ", TOUCH, touch_value);
+        printf("\n");
         int contador = 0;
         if(touch_value < TOUCH_VALUE_MIN)
         {   
