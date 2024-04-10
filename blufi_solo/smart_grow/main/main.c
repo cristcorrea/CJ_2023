@@ -149,7 +149,7 @@ void riegoAuto1(void *params)
     {    
          if(configuration.control_riego_1)
         {
-            habilitarSensorSuelo();
+            habilitarSensorSuelo(250);
             if(sensorConectado(S1_STATE))
             {
                 ESP_LOGI("RIEGO AUTO 1", "ENTRA A RIEGO AUTO 1");
@@ -176,7 +176,7 @@ void riegoAuto2(void *params)
     {
         if(configuration.control_riego_2)
         {
-            habilitarSensorSuelo();
+            habilitarSensorSuelo(250);
             if(sensorConectado(S2_STATE))
             {
                 ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
@@ -202,7 +202,7 @@ void riegaHasta1(void * params)
     riego1.valvula = VALVE1;
     while(true)
     {
-        habilitarSensorSuelo();
+        habilitarSensorSuelo(250);
         if(sensorConectado(S1_STATE) && configuration.control_riego_1 
             && (humidity(SENSOR1) < configuration.hum_sup_1))
         {
@@ -227,7 +227,7 @@ void riegaHasta2(void * params)
     riego2.valvula = VALVE2;
     while(true)
     {
-        habilitarSensorSuelo();
+        habilitarSensorSuelo(250);
         if(sensorConectado(S2_STATE) && configuration.control_riego_2 
             && (humidity(SENSOR2) < configuration.hum_sup_2))
         {

@@ -124,13 +124,13 @@ int  humidity(adc_channel_t sensor)
     return value; 
 }
 
-void habilitarSensorSuelo(void)
+void habilitarSensorSuelo(uint8_t time)
 {
-    gpio_set_level(SENSORS_ENABLE, 1);
-    vTaskDelay(pdMS_TO_TICKS(250));
+    gpio_set_level(SENSORS_ENABLE, 0);
+    vTaskDelay(pdMS_TO_TICKS(time));
 }
     
 void desHabilitarSensorSuelo(void)
 {
-    gpio_set_level(SENSORS_ENABLE, 0);
+    gpio_set_level(SENSORS_ENABLE, 1);
 }

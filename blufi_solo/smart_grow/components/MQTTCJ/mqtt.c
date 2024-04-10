@@ -47,7 +47,7 @@ esp_mqtt_client_handle_t client;
 
 void enviarDatos(char * topic, bool fecha)
 {
-    habilitarSensorSuelo();
+    habilitarSensorSuelo(250);
     int hum_suelo_1 = humidity(SENSOR1);
     int hum_suelo_2 = humidity(SENSOR2);
     desHabilitarSensorSuelo(); 
@@ -138,7 +138,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         ESP_LOGI("DEBUG MQTT EVENT DATA", "Datos recibidos: %s", event->data);
         char clave1 = event->data[0]; 
-
         switch (clave1)
         {
         case 'S':
@@ -213,9 +212,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case 'P':                       // Purga
             if(event->data[1] == '1')
             {
-                regar(50, 1);
+                regar(50, VALVE1);
             }else{
-                regar(50, 2);
+                regar(50, VALVE2);
             }
             break;
 

@@ -204,13 +204,13 @@ void stopRiego()
 
 void habilitarSensorFlujo(void)
 {
-    gpio_set_level(SENSORF_ENABLE, 1);
+    gpio_set_level(SENSORF_ENABLE, 0);
     vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 void desHabilitarSensorFlujo(void)
 {
-    gpio_set_level(SENSORF_ENABLE, 0);
+    gpio_set_level(SENSORF_ENABLE, 1);
 }
 
 

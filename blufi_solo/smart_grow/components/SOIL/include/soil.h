@@ -28,7 +28,7 @@ int adc_read(adc_channel_t channel);
 /*
     @brief Habilita la alimentación de los sensores de humedad de suelo y espera 250ms. 
 */
-void habilitarSensorSuelo(void);
+void habilitarSensorSuelo(uint8_t time);
 
 /*
     @brief Deshabilita la alimentación de los sensores de humedad de suelo.
