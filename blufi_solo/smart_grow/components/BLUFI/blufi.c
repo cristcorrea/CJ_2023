@@ -429,7 +429,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         {
             ESP_LOGE("Blufi", "No pudo grabarse time_zone");
         }
-
+        xSemaphoreGive(semaphoreWifiConection);
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */
