@@ -57,7 +57,7 @@ static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern SemaphoreHandle_t semaphoreWifiConection; 
-
+extern SemaphoreHandle_t semaphoreCustomData;  
 extern config_data configuration; 
 
 static bool first_connection = false; 
@@ -120,35 +120,37 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
     case IP_EVENT_STA_GOT_IP: {
         esp_blufi_extra_info_t info;
 
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        esp_wifi_get_mode(&mode);
 
-        memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-        memcpy(info.sta_bssid, gl_sta_bssid, 6);
-        info.sta_bssid_set = true;
-        info.sta_ssid = gl_sta_ssid;
-        info.sta_ssid_len = gl_sta_ssid_len;
-        gl_sta_got_ip = true;
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+            esp_wifi_get_mode(&mode);
 
-        if (ble_is_connected) { 
+            memset(&info, 0, sizeof(esp_blufi_extra_info_t));
+            memcpy(info.sta_bssid, gl_sta_bssid, 6);
+            info.sta_bssid_set = true;
+            info.sta_ssid = gl_sta_ssid;
+            info.sta_ssid_len = gl_sta_ssid_len;
+            gl_sta_got_ip = true;
 
-            if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == 0)
-            {
-                ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
+            if (ble_is_connected) { 
+
+                if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == 0)
+                {
+                    ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
+                }
+
+                esp_restart();
+
+            } else {
+                esp_blufi_deinit();
             }
-
-            esp_restart();
-
-        } else {
-            esp_blufi_deinit();
+            if(!first_connection)
+            {
+                xSemaphoreGive(semaphoreWifiConection);
+            }
+            first_connection = true;
         }
-        if(!first_connection)
-        {
-            xSemaphoreGive(semaphoreWifiConection);
-        }
-        first_connection = true; 
         break;
-    }
+
     default:
         break;
     }
@@ -178,14 +180,17 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             ESP_LOGI("DEBUG BLUFI", "MENSAJE NO ENVIADO");
         } 
          
-        /////////////////////////////////
-        gl_sta_connected = true;
-        gl_sta_is_connecting = false;
-        event = (wifi_event_sta_connected_t*) event_data;
-        memcpy(gl_sta_bssid, event->bssid, 6);
-        memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
-        gl_sta_ssid_len = event->ssid_len;
-        tiempo_reconexion = 0; 
+        if(xSemaphoreTake(semaphoreCustomData, pdMS_TO_TICKS(10000)))
+        {
+            gl_sta_connected = true;
+            gl_sta_is_connecting = false;
+            event = (wifi_event_sta_connected_t*) event_data;
+            memcpy(gl_sta_bssid, event->bssid, 6);
+            memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
+            gl_sta_ssid_len = event->ssid_len;
+            tiempo_reconexion = 0; 
+        }
+
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
          ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
@@ -392,6 +397,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
+        ESP_LOGI("CUSTOM DATA", "ENTRA AL CUSTOM"); 
         configuration.cardId = strndup((const char*)param->custom_data.data, 8);
         if(configuration.cardId != NULL)
         {
@@ -402,6 +408,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         configuration.time_zone = strtol(ptr, NULL, 10);
         esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
         if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
+        xSemaphoreGive(semaphoreCustomData); 
             
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
