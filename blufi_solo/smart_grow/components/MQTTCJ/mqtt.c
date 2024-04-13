@@ -103,6 +103,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_CONNECTED:
 
+        
         char * topic_sus = (char *)malloc(10); 
         memset(topic_sus, 0, 10);
         memcpy(topic_sus, configuration.cardId, sizeof(char) * 8);

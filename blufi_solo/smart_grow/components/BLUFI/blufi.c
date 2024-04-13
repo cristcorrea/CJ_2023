@@ -24,7 +24,8 @@
 #include "storage.h"
 #include "header.h"
 
-#define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 10
+#define WIFI_CONNECTION_MAXIMUM_RETRY 10
+#define WIFI_RECONNECTION_MAXIMUM_RETRY 100
 #define EXAMPLE_INVALID_REASON 255
 #define EXAMPLE_INVALID_RSSI -128
 #define TAMANIO_ARRAY 18
@@ -42,7 +43,7 @@ but we only care about one event - are we connected
 to the AP with an IP? */
 const int CONNECTED_BIT = BIT0;
 
-static uint8_t example_wifi_retry = 0;
+static uint8_t wifi_retry = 0;
 
 /* store the station info for send back to phone */
 static bool gl_sta_connected = false;
@@ -57,11 +58,17 @@ static esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern SemaphoreHandle_t semaphoreWifiConection;
 
+extern TaskHandle_t reconexionHandle; 
+
 extern config_data configuration;
 
-static bool first_connection = false;
+static bool first_connection = true;
 
 int tiempo_reconexion = 0;
+
+wifi_mode_t mode;
+esp_blufi_extra_info_t info;
+
 
 static void record_wifi_conn_info(int rssi, uint8_t reason)
 {
@@ -69,7 +76,7 @@ static void record_wifi_conn_info(int rssi, uint8_t reason)
     if (gl_sta_is_connecting)
     {
         gl_sta_conn_info.sta_max_conn_retry_set = true;
-        gl_sta_conn_info.sta_max_conn_retry = EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY;
+        gl_sta_conn_info.sta_max_conn_retry = WIFI_CONNECTION_MAXIMUM_RETRY;
     }
     else
     {
@@ -82,28 +89,8 @@ static void record_wifi_conn_info(int rssi, uint8_t reason)
 
 void wifi_connect(void)
 {
-    example_wifi_retry = 0;
     gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
     record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-}
-
-static bool wifi_reconnect(void)
-{
-    bool ret;
-
-    if (gl_sta_is_connecting && example_wifi_retry++ < EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY)
-    {
-        BLUFI_INFO("BLUFI WiFi starts reconnection\n");
-        gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
-        record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-        ret = true;
-    }
-    else
-    {
-        ret = false;
-    }
-
-    return ret;
 }
 
 static int softap_get_current_connection_number(void)
@@ -118,43 +105,58 @@ static int softap_get_current_connection_number(void)
     return 0;
 }
 
+void wifi_info(wifi_mode_t mode, esp_blufi_extra_info_t info){
+
+    esp_wifi_get_mode(&mode);
+    memset(&info, 0, sizeof(esp_blufi_extra_info_t));
+    memcpy(info.sta_bssid, gl_sta_bssid, 6);
+    info.sta_bssid_set = true;
+    info.sta_ssid = gl_sta_ssid;
+    info.sta_ssid_len = gl_sta_ssid_len;
+
+}
+
 static void ip_event_handler(void *arg, esp_event_base_t event_base,
                              int32_t event_id, void *event_data)
 {
-    wifi_mode_t mode;
+    
 
     switch (event_id)
     {
     case IP_EVENT_STA_GOT_IP:
     {
 
-        esp_blufi_extra_info_t info;
-
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        esp_wifi_get_mode(&mode);
+        wifi_info(mode, info);
+        //esp_wifi_get_mode(&mode);
 
-        memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-        memcpy(info.sta_bssid, gl_sta_bssid, 6);
-        info.sta_bssid_set = true;
-        info.sta_ssid = gl_sta_ssid;
-        info.sta_ssid_len = gl_sta_ssid_len;
+        //memset(&info, 0, sizeof(esp_blufi_extra_info_t));
+        //memcpy(info.sta_bssid, gl_sta_bssid, 6);
+       // info.sta_bssid_set = true;
+       // info.sta_ssid = gl_sta_ssid;
+       // info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
 
-        /* Si se encuentra activo el bluetooth envía CONN_SUCCESS al móvil y desactiva el bluetooth.
+        /* Si se encuentra activo el bluetooth envía CONN_SUCCESS al móvil, desactiva el bluetooth y pone en 
+        false first_connection. 
         Luego libera el semaforo que habilita la comunicación MQTT*/
 
         if (ble_is_connected)
         {
-
-            if (esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == 0)
+            ESP_LOGI("BLUFI", "Entra al ble connected");
+            if (esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == ESP_OK)
             {
                 ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
             }
 
             disable_bluetooth();
+            first_connection = false; 
+        }else{
+            vTaskSuspend(reconexionHandle); 
         }
 
-        xSemaphoreGive(semaphoreWifiConection);
+        wifi_retry = 0;
+        //xSemaphoreGive(semaphoreWifiConection);
         break;
     }
     default:
@@ -167,7 +169,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
     wifi_event_sta_connected_t *event;
-    wifi_event_sta_disconnected_t *disconnected_event;
+    //wifi_event_sta_disconnected_t *disconnected_event;
 
     switch (event_id)
     {
@@ -186,7 +188,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         memcpy(gl_sta_bssid, event->bssid, 6);
         memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
         gl_sta_ssid_len = event->ssid_len;
-        example_wifi_retry = 0; // cambiar a wifi_retry
+        wifi_retry = 0;
 
         break;
 
@@ -199,19 +201,30 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         memset(gl_sta_bssid, 0, sizeof(gl_sta_bssid));
         gl_sta_ssid_len = 0;
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        
+        
+        // ACA TENGO QUE ANALIZAR SI BLE ESTA CONECTADO O NO PARA TOMAR UNA DECISION
+        /*
+        Hay dos escenarios posibles: 
+        1) Primer configuración: se ha ingresado mal el usuario o contraseña y no es posible conectarse. 
+        2) Desconexión del router: por algún motivo se ha perdido la conexión Wi-Fi.      
+        */
 
-        // Intentar reconectar solo si no hemos alcanzado el número máximo de intentos
-        if (example_wifi_retry < EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY)
+        if(first_connection)
         {
-            wifi_connect(); // Intenta reconectar
-            example_wifi_retry++;
-        }
-        else
-        {   
-            // ACA TENGO QUE ANALIZAR SI BLE ESTA CONECTADO O NO PARA TOMAR UNA DECISION 
-            // Hemos alcanzado el máximo de intentos, tomar medidas adicionales como reiniciar o informar el error
-            ESP_LOGI("WIFI_EVENT_HANDLER", "Max retry attempts reached, taking additional actions.");
-            // Por ejemplo, puedes reiniciar el dispositivo, enviar una alerta, etc.
+            if (wifi_retry < WIFI_CONNECTION_MAXIMUM_RETRY)
+            {
+                wifi_connect(); // Intenta reconectar
+                wifi_retry++;
+            }
+            else
+            {   
+                wifi_info(mode, info);
+                esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+            }
+        }else{
+            ESP_LOGI("Reconexion WIFI", "Habilita Task de Reconexion");
+            vTaskResume(reconexionHandle);
         }
         break;
 
@@ -402,9 +415,11 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
         configuration.cardId = strndup((const char *)param->custom_data.data, 8);
+        ESP_LOGI("MQTT", "Entra en custom data de blufi %s", configuration.cardId);
         if (configuration.cardId != NULL)
         {
             NVS_write("cardId", configuration.cardId);
+            ESP_LOGI("MQTT", "Card ID: %s", configuration.cardId);
         }
 
         char *ptr = (char *)param->custom_data.data + 9;
