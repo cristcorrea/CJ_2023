@@ -57,7 +57,6 @@ static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern SemaphoreHandle_t semaphoreWifiConection; 
-extern SemaphoreHandle_t semaphoreCustomData;  
 extern config_data configuration; 
 
 static bool first_connection = false; 
@@ -149,6 +148,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
             }
             first_connection = true;
         }
+
         break;
 
     default:
@@ -180,16 +180,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             ESP_LOGI("DEBUG BLUFI", "MENSAJE NO ENVIADO");
         } 
          
-        if(xSemaphoreTake(semaphoreCustomData, pdMS_TO_TICKS(10000)))
-        {
-            gl_sta_connected = true;
-            gl_sta_is_connecting = false;
-            event = (wifi_event_sta_connected_t*) event_data;
-            memcpy(gl_sta_bssid, event->bssid, 6);
-            memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
-            gl_sta_ssid_len = event->ssid_len;
-            tiempo_reconexion = 0; 
-        }
+        gl_sta_connected = true;
+        gl_sta_is_connecting = false;
+        event = (wifi_event_sta_connected_t*) event_data;
+        memcpy(gl_sta_bssid, event->bssid, 6);
+        memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
+        gl_sta_ssid_len = event->ssid_len;
+        tiempo_reconexion = 0; 
+
 
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
@@ -408,7 +406,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         configuration.time_zone = strtol(ptr, NULL, 10);
         esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
         if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
-        xSemaphoreGive(semaphoreCustomData); 
             
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:

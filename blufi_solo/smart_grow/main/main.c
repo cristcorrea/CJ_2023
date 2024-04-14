@@ -36,7 +36,7 @@ SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del riego
 SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
-SemaphoreHandle_t semaphoreCustomData = NULL;       // En 
+
 
 TaskHandle_t msjTaskHandle;
 TaskHandle_t riegoHasta1Handle; 
@@ -308,7 +308,6 @@ void app_main(void)
     semaphoreWifiConection = xSemaphoreCreateBinary();
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreFecha         = xSemaphoreCreateBinary();
-    semaphoreCustomData    = xSemaphoreCreateBinary(); 
     semaphoreRiego         = xSemaphoreCreateMutex();
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     
