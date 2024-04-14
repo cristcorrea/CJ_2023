@@ -26,4 +26,3 @@ void blufi_start(void);
 void wifi_connect(void);
 void wifi_led_config(void); 
 void disable_bluetooth(void);
-void wifi_info(wifi_mode_t mode, esp_blufi_extra_info_t info);

@@ -62,12 +62,11 @@ extern TaskHandle_t reconexionHandle;
 
 extern config_data configuration;
 
-static bool first_connection = true;
+//static bool first_connection = true;
+
+static bool reconnection = false;
 
 int tiempo_reconexion = 0;
-
-wifi_mode_t mode;
-esp_blufi_extra_info_t info;
 
 
 static void record_wifi_conn_info(int rssi, uint8_t reason)
@@ -105,37 +104,31 @@ static int softap_get_current_connection_number(void)
     return 0;
 }
 
-void wifi_info(wifi_mode_t mode, esp_blufi_extra_info_t info){
-
-    esp_wifi_get_mode(&mode);
-    memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-    memcpy(info.sta_bssid, gl_sta_bssid, 6);
-    info.sta_bssid_set = true;
-    info.sta_ssid = gl_sta_ssid;
-    info.sta_ssid_len = gl_sta_ssid_len;
-
-}
 
 static void ip_event_handler(void *arg, esp_event_base_t event_base,
                              int32_t event_id, void *event_data)
 {
     
+    wifi_mode_t mode = {0};
+    esp_blufi_extra_info_t info = {0};
 
     switch (event_id)
     {
     case IP_EVENT_STA_GOT_IP:
     {
-
+        
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        wifi_info(mode, info);
-        //esp_wifi_get_mode(&mode);
 
-        //memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-        //memcpy(info.sta_bssid, gl_sta_bssid, 6);
-       // info.sta_bssid_set = true;
-       // info.sta_ssid = gl_sta_ssid;
-       // info.sta_ssid_len = gl_sta_ssid_len;
+        esp_wifi_get_mode(&mode);
+
+        memset(&info, 0, sizeof(esp_blufi_extra_info_t));
+        memcpy(info.sta_bssid, gl_sta_bssid, 6);
+        info.sta_bssid_set = true;
+        info.sta_ssid = gl_sta_ssid;
+        info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
+        wifi_retry = 0;
+
 
         /* Si se encuentra activo el bluetooth envía CONN_SUCCESS al móvil, desactiva el bluetooth y pone en 
         false first_connection. 
@@ -150,13 +143,17 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base,
             }
 
             disable_bluetooth();
-            first_connection = false; 
-        }else{
-            vTaskSuspend(reconexionHandle); 
+            //first_connection = false; 
         }
-
-        wifi_retry = 0;
-        //xSemaphoreGive(semaphoreWifiConection);
+        else if(reconnection)
+        {
+            vTaskSuspend(reconexionHandle);
+            reconnection = false;  
+        }
+        if(!configuration.semaforoWifiState)
+        {   
+            xSemaphoreGive(semaphoreWifiConection);
+        }
         break;
     }
     default:
@@ -169,6 +166,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
     wifi_event_sta_connected_t *event;
+    wifi_mode_t mode = {0};
+    esp_blufi_extra_info_t info = {0};
     //wifi_event_sta_disconnected_t *disconnected_event;
 
     switch (event_id)
@@ -194,7 +193,6 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 
     case WIFI_EVENT_STA_DISCONNECTED:
 
-        ESP_LOGI("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED");
         gl_sta_connected = false;
         gl_sta_got_ip = false;
         memset(gl_sta_ssid, 0, sizeof(gl_sta_ssid));
@@ -210,20 +208,27 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         2) Desconexión del router: por algún motivo se ha perdido la conexión Wi-Fi.      
         */
 
-        if(first_connection)
-        {
+        if(configuration.first_connection)
+        {   
+            
             if (wifi_retry < WIFI_CONNECTION_MAXIMUM_RETRY)
             {
-                wifi_connect(); // Intenta reconectar
+                wifi_connect(); 
                 wifi_retry++;
+                ESP_LOGI("BLUFI", "FIRST CONNECTION wifi_retry: %u", wifi_retry);
             }
             else
             {   
-                wifi_info(mode, info);
-                esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+                if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &info))
+                {
+                    ESP_LOGI("BLUFI", "MENSAJE DE REPORTE ENVIADO POR BLUETOOTH");
+                }else{ESP_LOGI("BLUFI", "FALLO EL ENVIO DEL MENSAJE");}
             }
-        }else{
+        }
+        else if(!reconnection)
+        {
             ESP_LOGI("Reconexion WIFI", "Habilita Task de Reconexion");
+            reconnection = true; 
             vTaskResume(reconexionHandle);
         }
         break;
@@ -429,7 +434,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         {
             ESP_LOGE("Blufi", "No pudo grabarse time_zone");
         }
-        xSemaphoreGive(semaphoreWifiConection);
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */

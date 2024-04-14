@@ -59,6 +59,7 @@ void mqttServerConection(void *params)
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // espera la conexión WiFi
         {
             mqtt_start();
+            configuration.semaforoWifiState = true; 
         }
     }
 }
@@ -306,7 +307,8 @@ void envioDatos(void *params)
 void reconexionWifi(void *params)
 {
     while(true)
-    {
+    {   
+        ESP_LOGI("TASK RECONEXION", "INTENTA RECONECTAR");
         wifi_connect();
         vTaskDelay(pdMS_TO_TICKS(10000));
     }
@@ -319,6 +321,7 @@ void app_main(void)
     semaphoreFecha         = xSemaphoreCreateBinary();
     semaphoreRiego         = xSemaphoreCreateMutex();
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
+    configuration.semaforoWifiState = false; 
     
     init_irs(); 
     init_nFault();
@@ -388,8 +391,13 @@ void app_main(void)
             }else{
                 configuration.hum_inf_2 = result;
             }
+
+            configuration.first_connection = false; 
+   
             nvs_close(my_handle);
         }
+    }else{
+        configuration.first_connection = true; 
     }
 
     xTaskCreate(mqttServerConection,

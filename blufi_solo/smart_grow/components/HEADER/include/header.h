@@ -12,7 +12,9 @@ typedef struct
     int control_riego_2;       // Controla el riego automatico del sensor 2
     char * cardId;              // topic tiempo real
     char cardIdC[10];             // topic para enviar a la nube
-    int time_zone; 
+    int time_zone;
+    uint8_t first_connection;
+    uint8_t semaforoWifiState;   
 
 }config_data;
 
