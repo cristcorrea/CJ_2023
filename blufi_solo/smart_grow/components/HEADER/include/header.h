@@ -12,7 +12,9 @@ typedef struct
     int control_riego_2;       // Controla el riego automatico del sensor 2
     char * cardId;              // topic tiempo real
     char cardIdC[10];             // topic para enviar a la nube
-    int time_zone; 
+    int time_zone;
+    uint8_t first_connection;
+    uint8_t semaforoWifiState;   
 
 }config_data;
 
@@ -32,7 +34,7 @@ typedef struct
 void recibe_confg_hum(char str[], config_data *cfg, int sensor);
 
 // REVISAR BYTESTOHEX PORQUE CREO QUE NO SE UTILIZA 
-//void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
+void bytesToHex(const unsigned char* bytes, int size, char* hexString); 
 
 /*
     @brief Envia datos del ultimo riego a servidor y app.
@@ -82,4 +84,3 @@ void parpadeo(void);
 
 */
 void enviarVersion(void);
-

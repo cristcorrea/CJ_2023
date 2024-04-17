@@ -19,21 +19,21 @@
 #include "freertos/queue.h"
 #include "esp_mac.h"
 #include "esp_bt_device.h"
+#include "esp_bt_main.h"
 
 #include "storage.h"
 #include "header.h"
 
-#define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 10
-#define EXAMPLE_INVALID_REASON                255
-#define EXAMPLE_INVALID_RSSI                  -128
-#define TAMANIO_ARRAY   18
+#define WIFI_CONNECTION_MAXIMUM_RETRY 10
+#define WIFI_RECONNECTION_MAXIMUM_RETRY 100
+#define EXAMPLE_INVALID_REASON 255
+#define EXAMPLE_INVALID_RSSI -128
+#define TAMANIO_ARRAY 18
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param);
 
-#define WIFI_LIST_NUM   10
-
+#define WIFI_LIST_NUM 10
 
 static wifi_config_t sta_config;
-
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -43,7 +43,7 @@ but we only care about one event - are we connected
 to the AP with an IP? */
 const int CONNECTED_BIT = BIT0;
 
-static uint8_t example_wifi_retry = 0;
+static uint8_t wifi_retry = 0;
 
 /* store the station info for send back to phone */
 static bool gl_sta_connected = false;
@@ -56,21 +56,28 @@ static wifi_sta_list_t gl_sta_list;
 static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
 
-extern SemaphoreHandle_t semaphoreWifiConection; 
+extern SemaphoreHandle_t semaphoreWifiConection;
 
-extern config_data configuration; 
+extern TaskHandle_t reconexionHandle; 
 
-static bool first_connection = false; 
+extern config_data configuration;
 
-int tiempo_reconexion = 0; 
 
-static void example_record_wifi_conn_info(int rssi, uint8_t reason)
+static bool reconnection = false;
+
+int tiempo_reconexion = 0;
+
+
+static void record_wifi_conn_info(int rssi, uint8_t reason)
 {
     memset(&gl_sta_conn_info, 0, sizeof(esp_blufi_extra_info_t));
-    if (gl_sta_is_connecting) {
+    if (gl_sta_is_connecting)
+    {
         gl_sta_conn_info.sta_max_conn_retry_set = true;
-        gl_sta_conn_info.sta_max_conn_retry = EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY;
-    } else {
+        gl_sta_conn_info.sta_max_conn_retry = WIFI_CONNECTION_MAXIMUM_RETRY;
+    }
+    else
+    {
         gl_sta_conn_info.sta_conn_rssi_set = true;
         gl_sta_conn_info.sta_conn_rssi = rssi;
         gl_sta_conn_info.sta_conn_end_reason_set = true;
@@ -78,25 +85,10 @@ static void example_record_wifi_conn_info(int rssi, uint8_t reason)
     }
 }
 
-void example_wifi_connect(void)
+void wifi_connect(void)
 {
-    example_wifi_retry = 0;
     gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
-    example_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-}
-
-static bool example_wifi_reconnect(void)
-{
-    bool ret;
-    if (gl_sta_is_connecting && example_wifi_retry++ < EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY) {
-        BLUFI_INFO("BLUFI WiFi starts reconnection\n");
-        gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
-        example_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-        ret = true;
-    } else {
-        ret = false;
-    }
-    return ret;
+    record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
 }
 
 static int softap_get_current_connection_number(void)
@@ -111,16 +103,21 @@ static int softap_get_current_connection_number(void)
     return 0;
 }
 
-static void ip_event_handler(void* arg, esp_event_base_t event_base,
-                                int32_t event_id, void* event_data)
+
+static void ip_event_handler(void *arg, esp_event_base_t event_base,
+                             int32_t event_id, void *event_data)
 {
-    wifi_mode_t mode;
+    
+    wifi_mode_t mode = {0};
+    esp_blufi_extra_info_t info = {0};
 
-    switch (event_id) {
-    case IP_EVENT_STA_GOT_IP: {
-        esp_blufi_extra_info_t info;
-
+    switch (event_id)
+    {
+    case IP_EVENT_STA_GOT_IP:
+    {
+        
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+
         esp_wifi_get_mode(&mode);
 
         memset(&info, 0, sizeof(esp_blufi_extra_info_t));
@@ -129,24 +126,33 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         info.sta_ssid = gl_sta_ssid;
         info.sta_ssid_len = gl_sta_ssid_len;
         gl_sta_got_ip = true;
+        wifi_retry = 0;
 
-        if (ble_is_connected) { 
 
-            if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == 0)
+        /* Si se encuentra activo el bluetooth envía CONN_SUCCESS al móvil, desactiva el bluetooth y pone en 
+        false first_connection. 
+        Luego libera el semaforo que habilita la comunicación MQTT*/
+
+        if (ble_is_connected)
+        {
+            ESP_LOGI("BLUFI", "Entra al ble connected");
+            if (esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == ESP_OK)
             {
                 ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
             }
 
-            esp_restart();
-
-        } else {
-            esp_blufi_deinit();
+            disable_bluetooth();
+            //first_connection = false; 
         }
-        if(!first_connection)
+        else if(reconnection)
         {
+            vTaskSuspend(reconexionHandle);
+            reconnection = false;  
+        }
+        if(!configuration.semaforoWifiState)
+        {   
             xSemaphoreGive(semaphoreWifiConection);
         }
-        first_connection = true; 
         break;
     }
     default:
@@ -155,111 +161,95 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
     return;
 }
 
-static void wifi_event_handler(void* arg, esp_event_base_t event_base,
-                                int32_t event_id, void* event_data)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
 {
     wifi_event_sta_connected_t *event;
-    wifi_event_sta_disconnected_t *disconnected_event;
+    wifi_mode_t mode = {0};
+    esp_blufi_extra_info_t info = {0};
+    //wifi_event_sta_disconnected_t *disconnected_event;
 
-    switch (event_id) {
+    switch (event_id)
+    {
     case WIFI_EVENT_STA_START:
-        example_wifi_connect();
+        wifi_connect();
         break;
     case WIFI_EVENT_STA_CONNECTED:
-        ESP_LOGE("WIFI_EVENT", "WIFI_EVENT_STA_CONNECTED\n");  
-        ///////////////////////////////
-        
-        const char  respuesta[] = "SG1";
-        
-        if(esp_blufi_send_custom_data((uint8_t*)respuesta, strlen(respuesta)) == ESP_OK) 
-        {
-            ESP_LOGI("DEBUG BLUFI", "MENSAJE ENVIADO");
-        }else{
-            ESP_LOGI("DEBUG BLUFI", "MENSAJE NO ENVIADO");
-        } 
-         
-        /////////////////////////////////
+
+        const char respuesta[] = "SG1";
+        esp_blufi_send_custom_data((uint8_t *)respuesta, strlen(respuesta));
+
         gl_sta_connected = true;
         gl_sta_is_connecting = false;
-        event = (wifi_event_sta_connected_t*) event_data;
+
+        event = (wifi_event_sta_connected_t *)event_data;
         memcpy(gl_sta_bssid, event->bssid, 6);
         memcpy(gl_sta_ssid, event->ssid, event->ssid_len);
         gl_sta_ssid_len = event->ssid_len;
-        tiempo_reconexion = 0; 
+        wifi_retry = 0;
+
         break;
+
     case WIFI_EVENT_STA_DISCONNECTED:
-         ESP_LOGE("WIFI_EVENT_HANDLER", "WIFI_EVENT_STA_DISCONNECTED\n");
-        /* Only handle reconnection during connecting */
 
-
-        if (gl_sta_connected == false && example_wifi_reconnect() == false) {
-            
-            wifi_mode_t mode;
-            esp_wifi_get_mode(&mode);
-            esp_blufi_extra_info_t info;
-            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-            esp_wifi_get_mode(&mode);
-            memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-            memcpy(info.sta_bssid, gl_sta_bssid, 6);
-            info.sta_bssid_set = true;
-            info.sta_ssid = gl_sta_ssid;
-            info.sta_ssid_len = gl_sta_ssid_len;
-            
-            //nvs_flash_erase();
-            //esp_restart();
-            if(ble_is_connected)
-            {
-                if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &info) == 0)
-                {
-                    ESP_LOGI("DEBUG BLUFI", "CONNECTION FAIL");
-                }
-            }else{
-                if(tiempo_reconexion < 900000)
-                {
-                    tiempo_reconexion += 30000;
-                }
-                vTaskDelay(pdMS_TO_TICKS(tiempo_reconexion));
-                example_wifi_connect();
-            }
-            gl_sta_is_connecting = false;
-            disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
-            example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
-        }
-        /* This is a workaround as ESP32 WiFi libs don't currently
-        auto-reassociate. */
-
-       
         gl_sta_connected = false;
         gl_sta_got_ip = false;
-        memset(gl_sta_ssid, 0, 32);
-        memset(gl_sta_bssid, 0, 6);
+        memset(gl_sta_ssid, 0, sizeof(gl_sta_ssid));
+        memset(gl_sta_bssid, 0, sizeof(gl_sta_bssid));
         gl_sta_ssid_len = 0;
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        
+        
+        // ACA TENGO QUE ANALIZAR SI BLE ESTA CONECTADO O NO PARA TOMAR UNA DECISION
+        /*
+        Hay dos escenarios posibles: 
+        1) Primer configuración: se ha ingresado mal el usuario o contraseña y no es posible conectarse. 
+        2) Desconexión del router: por algún motivo se ha perdido la conexión Wi-Fi.      
+        */
 
-        if(first_connection)
-       {
-            esp_err_t connect_err = esp_wifi_connect();
-            if (connect_err != ESP_OK) {
-                ESP_LOGE("WIFI_EVENT_HANDLER", "Error reconnecting: %s", esp_err_to_name(connect_err));
+        if(configuration.first_connection)
+        {   
+            
+            if (wifi_retry < WIFI_CONNECTION_MAXIMUM_RETRY)
+            {
+                wifi_connect(); 
+                wifi_retry++;
+                ESP_LOGI("BLUFI", "FIRST CONNECTION wifi_retry: %u", wifi_retry);
             }
-       }
-       
+            else
+            {   
+                if(esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &info))
+                {
+                    ESP_LOGI("BLUFI", "MENSAJE DE REPORTE ENVIADO POR BLUETOOTH");
+                }else{ESP_LOGI("BLUFI", "FALLO EL ENVIO DEL MENSAJE");}
+            }
+        }
+        else if(!reconnection)
+        {
+            ESP_LOGI("Reconexion WIFI", "Habilita Task de Reconexion");
+            reconnection = true; 
+            vTaskResume(reconexionHandle);
+        }
         break;
+
     case WIFI_EVENT_AP_START:
 
         break;
-    case WIFI_EVENT_SCAN_DONE: {
+    case WIFI_EVENT_SCAN_DONE:
+    {
 
         break;
     }
-    case WIFI_EVENT_AP_STACONNECTED: {
-        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        BLUFI_INFO("station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
+    case WIFI_EVENT_AP_STACONNECTED:
+    {
+        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+        BLUFI_INFO("station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
         break;
     }
-    case WIFI_EVENT_AP_STADISCONNECTED: {
-        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        BLUFI_INFO("station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
+    case WIFI_EVENT_AP_STADISCONNECTED:
+    {
+        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+        BLUFI_INFO("station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
         break;
     }
 
@@ -282,10 +272,43 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &ip_event_handler, NULL));
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    example_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-    ESP_ERROR_CHECK( esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
+void disable_bluetooth(void)
+{
+    esp_err_t ret;
+
+    // Primero, deshabilitar Bluedroid
+    ret = esp_bluedroid_disable();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE("BLUFI", "esp_bluedroid_disable() failed: %s", esp_err_to_name(ret));
+    }
+
+    // Desinicializar Bluedroid
+    ret = esp_bluedroid_deinit();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE("BLUFI", "esp_bluedroid_deinit() failed: %s", esp_err_to_name(ret));
+    }
+
+    // Deshabilitar el controlador de BT
+    ret = esp_bt_controller_disable();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE("BLUFI", "esp_bt_controller_disable() failed: %s", esp_err_to_name(ret));
+    }
+
+    // Desinicializar el controlador de BT
+    ret = esp_bt_controller_deinit();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE("BLUFI", "esp_bt_controller_deinit() failed: %s", esp_err_to_name(ret));
+    }
 }
 
 static esp_blufi_callbacks_t example_callbacks = {
@@ -296,13 +319,13 @@ static esp_blufi_callbacks_t example_callbacks = {
     .checksum_func = blufi_crc_checksum,
 };
 
-
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param)
 {
     /* actually, should post to blufi_task handle the procedure,
-    * now, as a example, we do it more simply */
+     * now, as a example, we do it more simply */
 
-    switch (event) {
+    switch (event)
+    {
     case ESP_BLUFI_EVENT_INIT_FINISH:
         BLUFI_INFO("BLUFI init finish\n");
 
@@ -311,7 +334,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
         BLUFI_INFO("BLUFI deinit finish\n");
         break;
-    case ESP_BLUFI_EVENT_BLE_CONNECT: 
+    case ESP_BLUFI_EVENT_BLE_CONNECT:
 
         BLUFI_INFO("BLUFI ble connect\n");
         ble_is_connected = true;
@@ -326,7 +349,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         break;
     case ESP_BLUFI_EVENT_SET_WIFI_OPMODE:
         BLUFI_INFO("BLUFI Set WIFI opmode %d\n", param->wifi_mode.op_mode);
-        ESP_ERROR_CHECK( esp_wifi_set_mode(param->wifi_mode.op_mode) );
+        ESP_ERROR_CHECK(esp_wifi_set_mode(param->wifi_mode.op_mode));
         break;
     case ESP_BLUFI_EVENT_REQ_CONNECT_TO_AP:
         BLUFI_INFO("BLUFI requset wifi connect to AP\n");
@@ -334,7 +357,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         so disconnect wifi before connection.
         */
         esp_wifi_disconnect();
-        example_wifi_connect();
+        wifi_connect();
         break;
     case ESP_BLUFI_EVENT_REQ_DISCONNECT_FROM_AP:
         BLUFI_INFO("BLUFI requset wifi disconnect from AP\n");
@@ -344,7 +367,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         BLUFI_ERROR("BLUFI report error, error code %d\n", param->report_error.state);
         esp_blufi_send_error_info(param->report_error.state);
         break;
-    case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
+    case ESP_BLUFI_EVENT_GET_WIFI_STATUS:
+    {
 
         break;
     }
@@ -356,7 +380,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         /* TODO */
         break;
     case ESP_BLUFI_EVENT_RECV_STA_BSSID:
-        memcpy(sta_config.sta.bssid, param->sta_bssid.bssid, 6); 
+        memcpy(sta_config.sta.bssid, param->sta_bssid.bssid, 6);
         sta_config.sta.bssid_set = 1;
         esp_wifi_set_config(WIFI_IF_STA, &sta_config);
         BLUFI_INFO("Recv STA BSSID %s\n", sta_config.sta.ssid);
@@ -391,20 +415,24 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_GET_WIFI_LIST:
 
         break;
-    
+
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
 
-        configuration.cardId = strndup((const char*)param->custom_data.data, 8);
-        if(configuration.cardId != NULL)
+        configuration.cardId = strndup((const char *)param->custom_data.data, 8);
+        ESP_LOGI("MQTT", "Entra en custom data de blufi %s", configuration.cardId);
+        if (configuration.cardId != NULL)
         {
-            NVS_write("cardId", configuration.cardId); 
+            NVS_write("cardId", configuration.cardId);
+            ESP_LOGI("MQTT", "Card ID: %s", configuration.cardId);
         }
 
-        char * ptr = (char*)param->custom_data.data + 9;
+        char *ptr = (char *)param->custom_data.data + 9;
         configuration.time_zone = strtol(ptr, NULL, 10);
-        esp_err_t err =  NVS_write_i8("time_zone", configuration.time_zone);
-        if(err != 0){ESP_LOGE("Blufi", "No pudo grabarse time_zone");}
-            
+        esp_err_t err = NVS_write_i8("time_zone", configuration.time_zone);
+        if (err != 0)
+        {
+            ESP_LOGE("Blufi", "No pudo grabarse time_zone");
+        }
         break;
     case ESP_BLUFI_EVENT_RECV_USERNAME:
         /* Not handle currently */
@@ -420,7 +448,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         break;
     case ESP_BLUFI_EVENT_RECV_CLIENT_PRIV_KEY:
         /* Not handle currently */
-        break;;
+        break;
+        ;
     case ESP_BLUFI_EVENT_RECV_SERVER_PRIV_KEY:
         /* Not handle currently */
         break;
@@ -431,36 +460,39 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
 void blufi_start()
 {
-esp_err_t ret;
+    esp_err_t ret;
 
-// Initialize NVS
-ret = nvs_flash_init();
-if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    ESP_ERROR_CHECK(nvs_flash_erase());
+    // Initialize NVS
     ret = nvs_flash_init();
-}
-ESP_ERROR_CHECK( ret );
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 
-initialise_wifi();
+    initialise_wifi();
 
-ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
-esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-ret = esp_bt_controller_init(&bt_cfg);
-if (ret) {
-    BLUFI_ERROR("%s initialize bt controller failed: %s\n", __func__, esp_err_to_name(ret));
-}
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    ret = esp_bt_controller_init(&bt_cfg);
+    if (ret)
+    {
+        BLUFI_ERROR("%s initialize bt controller failed: %s\n", __func__, esp_err_to_name(ret));
+    }
 
-ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
-if (ret) {
-    BLUFI_ERROR("%s enable bt controller failed: %s\n", __func__, esp_err_to_name(ret));
-    return;
-}
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
+    if (ret)
+    {
+        BLUFI_ERROR("%s enable bt controller failed: %s\n", __func__, esp_err_to_name(ret));
+        return;
+    }
 
-ret = esp_blufi_host_and_cb_init(&example_callbacks);
-if (ret) {
-    BLUFI_ERROR("%s initialise failed: %s\n", __func__, esp_err_to_name(ret));
-    return;
-}
-
+    ret = esp_blufi_host_and_cb_init(&example_callbacks);
+    if (ret)
+    {
+        BLUFI_ERROR("%s initialise failed: %s\n", __func__, esp_err_to_name(ret));
+        return;
+    }
 }
