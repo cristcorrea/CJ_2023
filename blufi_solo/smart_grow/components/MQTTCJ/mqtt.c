@@ -47,10 +47,10 @@ esp_mqtt_client_handle_t client;
 
 void enviarDatos(char * topic, bool fecha)
 {
-    habilitarSensorSuelo(250);
-    int hum_suelo_1 = humidity(SENSOR1);
+    habilitarSensorSuelo(250);  // habilita sensores y espera 250 ms
+    int hum_suelo_1 = humidity(SENSOR1); // si esta conectado mide
     int hum_suelo_2 = humidity(SENSOR2);
-    desHabilitarSensorSuelo(); 
+    desHabilitarSensorSuelo(); // deshabilita sensores 
     int humedad = -1; 
     float temperatura_amb; 
     float lux; 

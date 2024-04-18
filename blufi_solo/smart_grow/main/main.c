@@ -59,6 +59,7 @@ void mqttServerConection(void *params)
         if (xSemaphoreTake(semaphoreWifiConection, portMAX_DELAY)) // espera la conexión WiFi
         {
             mqtt_start();
+            configuration.semaforoWifiState = true; 
         }
     }
 }
@@ -296,9 +297,9 @@ void envioDatos(void *params)
 
         enviarDatos(configuration.cardId, false);
 
-        if(primerEnvio)
+        if(primerEnvio) // Retrasa el primer envio de datos a la espera de que finalice la inicialización
         {
-            vTaskDelay(pdMS_TO_TICKS(4000));
+            vTaskDelay(pdMS_TO_TICKS(1000));
             enviarDatos(configuration.cardIdC, true);
             primerEnvio = false; 
         }else{

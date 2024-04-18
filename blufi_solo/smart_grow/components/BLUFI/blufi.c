@@ -128,7 +128,8 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base,
         gl_sta_got_ip = true;
         wifi_retry = 0;
 
-
+        ESP_LOGI("GOT IP", "ble is conected: %s - reconnection: %s - semaforoWifiState: %s", ble_is_connected ? "true":"false", 
+        reconnection ? "true":"false", configuration.semaforoWifiState ? "true":"false");
         /* Si se encuentra activo el bluetooth envía CONN_SUCCESS al móvil, desactiva el bluetooth y pone en 
         false first_connection. 
         Luego libera el semaforo que habilita la comunicación MQTT*/
@@ -200,11 +201,18 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         
         
-        // ACA TENGO QUE ANALIZAR SI BLE ESTA CONECTADO O NO PARA TOMAR UNA DECISION
         /*
-        Hay dos escenarios posibles: 
-        1) Primer configuración: se ha ingresado mal el usuario o contraseña y no es posible conectarse. 
-        2) Desconexión del router: por algún motivo se ha perdido la conexión Wi-Fi.      
+            Causas de reconexion: 
+            1) Usuario/contraseña mal ingresados durante la configuración. 
+            Solución: Se debe intentar 10 veces y enviar falla. 
+            2) Al encenderse no se conecta en el primer intento.
+            Solución: Se intenta reconectar reiteradamente cada 10 segundos. 
+            Nota: MQTT no se ha habilitado aún.  
+            3) Se pierde la conexión por causas externas. 
+            Solución: se intenta reconectar reiteradamente cada 10 segundos. 
+            Nota: MQTT ya se esta ejecutando. Evitar pasar por el semaforo. 
+            
+
         */
 
         if(configuration.first_connection)
