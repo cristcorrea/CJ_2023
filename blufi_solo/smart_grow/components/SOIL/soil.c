@@ -84,7 +84,7 @@ int adc_read(adc_channel_t channel)
 int read_humidity(adc_channel_t sensor)
 {
     int result = adc_read(sensor); 
-    
+    ESP_LOGI("SENSOR SUELO", "LEIDO: %i", result);
     result = ((result-2560)/9) * (-1);
     
     if(result > 100)
@@ -124,7 +124,7 @@ int  humidity(adc_channel_t sensor)
     return value; 
 }
 
-void habilitarSensorSuelo(uint8_t time)
+void habilitarSensorSuelo(uint16_t time)
 {
     gpio_set_level(SENSORS_ENABLE, 0);
     vTaskDelay(pdMS_TO_TICKS(time));
