@@ -15,6 +15,9 @@ typedef struct
     int time_zone;
     uint8_t first_connection;
     uint8_t semaforoWifiState;   
+    uint8_t soilHumidity1;
+    uint8_t soilHumidity2; 
+    uint16_t intentosReconectar; 
 
 }config_data;
 

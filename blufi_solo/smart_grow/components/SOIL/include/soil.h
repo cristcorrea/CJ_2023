@@ -23,7 +23,6 @@ int sensorConectado(adc_channel_t sensor);
 */
 int read_humidity(adc_channel_t sensor);
 
-int adc_read(adc_channel_t channel);
 
 /*
     @brief Habilita la alimentación de los sensores de humedad de suelo y espera 250ms. 

@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "soc/soc_caps.h"
 #include "esp_log.h"
 #include "esp_adc/adc_oneshot.h"
@@ -13,11 +14,12 @@
 #include "header.h"
 
 #define TAG "Soil"
+#define WINDOW_SIZE 5
 
 
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
-
+extern SemaphoreHandle_t    semaphoreSensorSuelo; 
 
 void soilConfig(void)
 {
@@ -33,7 +35,7 @@ void soilConfig(void)
 
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_12,
-        .atten = ADC_ATTEN_DB_11, 
+        .atten = ADC_ATTEN_DB_6, 
     };
 
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR1, &config));
@@ -64,29 +66,71 @@ void soilConfig(void)
     gpio_config(&sensors_ena);
 }
 
-int adc_read(adc_channel_t channel)
+
+int read_humidity(adc_channel_t channel)
+{
+    uint16_t array_size = 500; 
+    int values[array_size];
+    uint8_t samples[4096] = {0};  // Inicializa el histograma a 0
+
+    // Lee valores del sensor ADC y acumúlalos
+    for (int i = 0; i < array_size; i++)
+    {
+        adc_oneshot_read(adc1_handle, channel, &values[i]);
+        vTaskDelay(1);
+    }
+
+    // Llena el histograma
+    for (int j = 0; j < array_size; j++)
+    {
+        samples[values[j]]++;
+    }
+
+    // Encuentra la moda
+    int max_count = 0;
+    int mode_value = 0;
+
+    // Recorre el histograma para encontrar la moda
+    for (int k = 0; k < 4096; k++)
+    {
+        if (samples[k] > max_count)
+        {
+            max_count = samples[k];
+            mode_value = k;
+        }
+    }
+
+    mode_value = (4095 - mode_value)/6.17; 
+
+    if(mode_value > 100)
+    {
+        mode_value = 100;
+    }
+    if(mode_value < 0)
+    {
+        mode_value = 0; 
+    }
+    ESP_LOGI("Lee humedad", " %i ", mode_value); 
+
+    return mode_value;
+}
+
+/*
+int read_humidity(adc_channel_t channel)
 {
     int adc_reading = 0; 
     int result = 0; 
- 
-    for(int i = 0; i < 500; i++)
+    
+    for(int i = 0; i < 3000; i++)
     {
         adc_oneshot_read(adc1_handle, channel, &adc_reading);
+        adc_reading = (4095 - adc_reading)/6.17;
         result += adc_reading; 
-        vTaskDelay(pdMS_TO_TICKS(2));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
-    result /= 500;
 
-    return result;
-}
+    result /= 3000;
 
-
-int read_humidity(adc_channel_t sensor)
-{
-    int result = adc_read(sensor); 
-    ESP_LOGI("SENSOR SUELO", "LEIDO: %i", result);
-    result = ((result-2560)/9) * (-1);
-    
     if(result > 100)
     {
         result = 100;
@@ -95,13 +139,16 @@ int read_humidity(adc_channel_t sensor)
     {
         result = 0; 
     }
-    
+
     return result;
 }
+*/
 
 int sensorConectado(adc_channel_t sensor)
-{
-    return gpio_get_level(sensor);
+{   
+     
+    return gpio_get_level(sensor); 
+ 
 }
 
 int  humidity(adc_channel_t sensor)
@@ -109,7 +156,7 @@ int  humidity(adc_channel_t sensor)
     int value = 0; 
 
     if(sensor == SENSOR1)
-    {
+    {   
         if(sensorConectado(S1_STATE))
         {
             value = read_humidity(SENSOR1);
@@ -125,7 +172,9 @@ int  humidity(adc_channel_t sensor)
 }
 
 void habilitarSensorSuelo(uint16_t time)
-{
+{   
+    xSemaphoreTake(semaphoreSensorSuelo, portMAX_DELAY); 
+    ESP_LOGI("SOIL", "Toma sensores ");
     gpio_set_level(SENSORS_ENABLE, 0);
     vTaskDelay(pdMS_TO_TICKS(time));
 }
@@ -133,4 +182,6 @@ void habilitarSensorSuelo(uint16_t time)
 void desHabilitarSensorSuelo(void)
 {
     gpio_set_level(SENSORS_ENABLE, 1);
+    xSemaphoreGive(semaphoreSensorSuelo);
+    ESP_LOGI("SOIL", "Libera sensores ");
 }

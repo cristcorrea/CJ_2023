@@ -25,7 +25,6 @@
 #include "header.h"
 
 #define WIFI_CONNECTION_MAXIMUM_RETRY 10
-#define WIFI_RECONNECTION_MAXIMUM_RETRY 100
 #define EXAMPLE_INVALID_REASON 255
 #define EXAMPLE_INVALID_RSSI -128
 #define TAMANIO_ARRAY 18
@@ -154,6 +153,8 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base,
         {   
             xSemaphoreGive(semaphoreWifiConection);
         }
+        configuration.intentosReconectar = 0; 
+        
         break;
     }
     default:

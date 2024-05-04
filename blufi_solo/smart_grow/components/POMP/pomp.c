@@ -236,6 +236,7 @@ void enviarEstadoRiego(gpio_num_t valve, int total, int parcial)
 
 void regar(int lts_final, gpio_num_t valve){
 
+    ESP_LOGI("RIEGO", "Quiere regar"); 
     int lts_actual = 0;
     int contador = 0; 
     int tiempo_sin_pulsos = 0; 

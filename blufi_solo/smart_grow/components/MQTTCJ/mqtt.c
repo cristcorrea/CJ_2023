@@ -40,6 +40,7 @@ extern const uint8_t hivemq_certificate_pem_end[]   asm("_binary_hivemq_certific
 extern config_data configuration;
 extern QueueHandle_t riegoQueue; 
 extern SemaphoreHandle_t semaphoreFecha;
+extern TaskHandle_t humidityMeasureHandle; 
 
 esp_mqtt_client_handle_t client; 
 
@@ -47,10 +48,14 @@ esp_mqtt_client_handle_t client;
 
 void enviarDatos(char * topic, bool fecha)
 {
-    habilitarSensorSuelo(650);  // habilita sensores y espera 250 ms
-    int hum_suelo_1 = humidity(SENSOR1); // si esta conectado mide
-    int hum_suelo_2 = humidity(SENSOR2);
-    desHabilitarSensorSuelo(); // deshabilita sensores 
+    /*
+    if(!configuration.control_riego_1 && !configuration.control_riego_2)
+    {
+        vTaskResume(humidityMeasureHandle);
+        vTaskDelay(pdMS_TO_TICKS(100));  
+        vTaskSuspend(humidityMeasureHandle);
+    }
+    */
     int humedad = -1; 
     float temperatura_amb; 
     float lux; 
@@ -72,7 +77,25 @@ void enviarDatos(char * topic, bool fecha)
 
     size_t message_size; 
     char *hora = queHoraEs();
+    if(fecha)
+    {
+        message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i,%s",
+            configuration.soilHumidity1, configuration.soilHumidity2,  humedad, temperatura_amb, lux_rounded, hora) + 1;
+    }else{
+        message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i",
+            configuration.soilHumidity1, configuration.soilHumidity2,  humedad, temperatura_amb, lux_rounded) + 1;
+    }
 
+    char *message = (char *)malloc(message_size);
+
+    if(message != NULL){              
+        snprintf(message, message_size , "%i,%i,%i,%.1f,%i,%s",
+                configuration.soilHumidity1, configuration.soilHumidity2, humedad, temperatura_amb, lux_rounded, hora);           
+        enviar_mensaje_mqtt(topic, message);
+        free(message);
+        message = NULL;
+    }
+    /*
     if(fecha)
     {
         message_size = snprintf(NULL, 0, "%i,%i,%i,%.1f,%i,%s",
@@ -91,6 +114,7 @@ void enviarDatos(char * topic, bool fecha)
         free(message);
         message = NULL;
     }
+    */
     free(hora);
 }   
 
@@ -117,6 +141,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         free(topic_sus);
         topic_sus = NULL; 
         xSemaphoreGive(semaphoreFecha);
+        vTaskResume(humidityMeasureHandle); 
         encenderLedWifi();
         break;
 

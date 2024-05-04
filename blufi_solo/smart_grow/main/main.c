@@ -29,6 +29,8 @@
 
 #define TOUCH   TOUCH_PAD_NUM5
 #define TOUCH_VALUE_MIN   330//348
+#define WIFI_RECONNECTION_MAXIMUM_RETRY 360
+
 
 #define TAG1 "CREACION"
 
@@ -36,6 +38,7 @@ SemaphoreHandle_t semaphoreWifiConection = NULL;    // en blufi.c
 SemaphoreHandle_t semaphoreOta = NULL;              // en ntp.c
 SemaphoreHandle_t semaphoreRiego = NULL;            // Controla los recursos del riego
 SemaphoreHandle_t semaphoreFecha = NULL;            // En mqtt, habilita tarea de poner en hora 
+SemaphoreHandle_t semaphoreSensorSuelo = NULL;      // Controla la consulta al sensor de suelo     
 
 TaskHandle_t msjTaskHandle;
 TaskHandle_t riegoHasta1Handle; 
@@ -43,6 +46,7 @@ TaskHandle_t riegoHasta2Handle;
 TaskHandle_t riegoAuto1Handle; 
 TaskHandle_t riegoAuto2Handle;
 TaskHandle_t reconexionHandle; 
+TaskHandle_t humidityMeasureHandle; 
 QueueHandle_t riegoQueue; 
 config_data configuration;
 
@@ -150,18 +154,19 @@ void riegoAuto1(void *params)
     while(true)
     {    
          if(configuration.control_riego_1)
-        {
-            habilitarSensorSuelo(250);
+        {   
+            ESP_LOGI("RIEGO 1 AUTO", "Entra a riego auto 1"); 
+            habilitarSensorSuelo(10);
             if(sensorConectado(S1_STATE))
             {
-                ESP_LOGI("RIEGO AUTO 1", "ENTRA A RIEGO AUTO 1");
-                if(humidity(SENSOR1) < configuration.hum_inf_1) 
+                if(configuration.soilHumidity1 < configuration.hum_inf_1) 
                 {
                     vTaskResume(riegoHasta1Handle);
-                    vTaskSuspend(riegoAuto1Handle);
                 }
             }
             desHabilitarSensorSuelo();
+            vTaskSuspend(riegoAuto1Handle);
+
         }
         vTaskDelay(pdMS_TO_TICKS(20000));
     }
@@ -173,16 +178,15 @@ void riegoAuto1(void *params)
 */
 void riegoAuto2(void *params) 
 {   
-
     while(true)
     {
         if(configuration.control_riego_2)
         {
-            habilitarSensorSuelo(250);
+            habilitarSensorSuelo(10);
             if(sensorConectado(S2_STATE))
             {
                 ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
-                if(humidity(SENSOR2) < configuration.hum_inf_2)
+                if(configuration.soilHumidity2 < configuration.hum_inf_2)
                 {
                     vTaskResume(riegoHasta2Handle);
                     vTaskSuspend(riegoAuto2Handle);
@@ -204,17 +208,22 @@ void riegaHasta1(void * params)
     riego1.valvula = VALVE1;
     while(true)
     {
-        habilitarSensorSuelo(250);
-        if(sensorConectado(S1_STATE) && configuration.control_riego_1 
-            && (humidity(SENSOR1) < configuration.hum_sup_1))
+        habilitarSensorSuelo(10); 
+        if(sensorConectado(S1_STATE) && configuration.control_riego_1)
         {
-            xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
-        }else{
-            vTaskResume(riegoAuto1Handle);
-            vTaskSuspend(riegoHasta1Handle);
-        }
-        desHabilitarSensorSuelo();
-        vTaskDelay(pdMS_TO_TICKS(100000));
+            if(configuration.soilHumidity1 < (configuration.hum_sup_1 - 5))
+            {
+                xQueueSend(riegoQueue, &riego1, portMAX_DELAY);
+            }
+            else if ((configuration.hum_sup_1 - 3) < configuration.soilHumidity1 && configuration.soilHumidity1 < (configuration.hum_sup_1 + 3))
+            {
+                vTaskResume(riegoAuto1Handle);
+                vTaskSuspend(riegoHasta1Handle);
+            }
+
+        } 
+        desHabilitarSensorSuelo(); 
+        vTaskDelay(pdMS_TO_TICKS(300000)); // espera 5 minutos
     }
     
 }
@@ -229,18 +238,21 @@ void riegaHasta2(void * params)
     riego2.valvula = VALVE2;
     while(true)
     {
-        habilitarSensorSuelo(250);
-        if(sensorConectado(S2_STATE) && configuration.control_riego_2 
-            && (humidity(SENSOR2) < configuration.hum_sup_2))
+        habilitarSensorSuelo(10);
+        if(sensorConectado(S2_STATE) && configuration.control_riego_2)
         {
-            ESP_LOGI("RIEGO HASTA 2", "ENVIA PETICION DE RIEGO");
-            xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
-        }else{
-            vTaskResume(riegoAuto2Handle);
-            vTaskSuspend(riegoHasta2Handle);
+            if(configuration.soilHumidity2 < (configuration.hum_sup_2 - 5))
+            {
+                xQueueSend(riegoQueue, &riego2, portMAX_DELAY);
+            }
+            else if ((configuration.hum_sup_2 - 3) < configuration.soilHumidity2 && configuration.soilHumidity2 < (configuration.hum_sup_2 + 3))
+            {
+                vTaskResume(riegoAuto2Handle);
+                vTaskSuspend(riegoHasta2Handle);
+            }
         }
-        desHabilitarSensorSuelo();
-        vTaskDelay(pdMS_TO_TICKS(100000));
+        desHabilitarSensorSuelo(); 
+        vTaskDelay(pdMS_TO_TICKS(300000));
     }
     
 }
@@ -278,6 +290,7 @@ void ajusteFecha(void *params)
             if(anio != 1970)
             {
                 ESP_LOGI("Ajuste de hora", "Año obtenido: %i", anio);
+                vTaskResume(humidityMeasureHandle);
                 //free(configuration.time_zone);
                 vTaskDelete(NULL);
             }
@@ -315,8 +328,35 @@ void reconexionWifi(void *params)
     while(true)
     {   
         ESP_LOGI("TASK RECONEXION", "INTENTA RECONECTAR");
-        wifi_connect();
+        if(configuration.intentosReconectar <= WIFI_RECONNECTION_MAXIMUM_RETRY)
+        {
+            wifi_connect();
+            configuration.intentosReconectar++; 
+        }else{
+            esp_restart(); 
+        }
         vTaskDelay(pdMS_TO_TICKS(10000));
+    }
+}
+
+void humidityMeasure(void *params)
+{
+    int time; 
+
+    while(true)
+    {   
+        if(!configuration.control_riego_1 && !configuration.control_riego_2)
+        {
+            time = 30000; 
+        }
+        else{
+            time = 10000; 
+        }
+        habilitarSensorSuelo(1000);  // habilita sensores y espera 1000 ms
+        configuration.soilHumidity1 = humidity(SENSOR1);
+        configuration.soilHumidity2 = humidity(SENSOR2);  
+        desHabilitarSensorSuelo(); 
+        vTaskDelay(pdMS_TO_TICKS(time));
     }
 }
 
@@ -326,9 +366,11 @@ void app_main(void)
     semaphoreOta           = xSemaphoreCreateBinary();
     semaphoreFecha         = xSemaphoreCreateBinary();
     semaphoreRiego         = xSemaphoreCreateMutex();
+    semaphoreSensorSuelo   = xSemaphoreCreateMutex(); 
     riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
     configuration.semaforoWifiState = false; 
-    
+    configuration.intentosReconectar = 0; 
+    xSemaphoreGive(semaphoreSensorSuelo); 
     init_irs(); 
     init_nFault();
     soilConfig();
@@ -415,7 +457,7 @@ void app_main(void)
 
     xTaskCreate(ota_update,
                 "Instala nueva versión de firmware",
-                8048,
+                8192,
                 NULL,
                 1,
                 NULL);
@@ -512,10 +554,22 @@ void app_main(void)
         vTaskSuspend(riegoHasta2Handle);
     }
 
-    if (eTaskGetState(msjTaskHandle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "envioDatos SUSPENDIDA");
+    if(xTaskCreate(humidityMeasure,
+                "Mide humedad",
+                8192,
+                NULL,
+                1,
+                &humidityMeasureHandle) != pdPASS)
+    {
+        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta2");
+    }else{
+        vTaskSuspend(humidityMeasureHandle);
+    }
+
+    if (eTaskGetState(humidityMeasureHandle) == eSuspended) {
+        ESP_LOGI("ARRANQUE", "humidityMeasure SUSPENDIDA");
     } else {
-        ESP_LOGE("ARRANQUE", "envioDatos NO SE SUSPENDIÓ");
+        ESP_LOGE("ARRANQUE", "humidityMeasure NO SE SUSPENDIÓ");
     }
 
     if (eTaskGetState(riegoHasta1Handle) == eSuspended) {
@@ -531,11 +585,10 @@ void app_main(void)
     }
     
     if (eTaskGetState(reconexionHandle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "riegaHasta2 SUSPENDIDA");
+        ESP_LOGI("ARRANQUE", "reconexion SUSPENDIDA");
     } else {
-        ESP_LOGE("ARRANQUE", "riegaHasta2 NO SE SUSPENDIÓ");
+        ESP_LOGE("ARRANQUE", "reconexion NO SE SUSPENDIÓ");
     }
-
 
     if (eTaskGetState(msjTaskHandle) == eSuspended) {
         ESP_LOGI("ARRANQUE", "envioDatos SUSPENDIDA");
@@ -543,17 +596,7 @@ void app_main(void)
         ESP_LOGE("ARRANQUE", "envioDatos NO SE SUSPENDIÓ");
     }
 
-    if (eTaskGetState(riegoHasta1Handle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "riegaHasta1 SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "riegaHasta1 NO SE SUSPENDIÓ");
-    }
 
-    if (eTaskGetState(riegoHasta2Handle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "riegaHasta2 SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "riegaHasta2 NO SE SUSPENDIÓ");
-    }
 
 }
 
