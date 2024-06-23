@@ -123,73 +123,10 @@ char* queHoraEs() {
     }
 
     result[len] = '\0';
+
+    free(strftime_buf); 
+
     return result;
 }
 
 
-/*
-char * queHoraEs()
-{
-    time_t rawtime;
-    struct tm *timeinfo;
-
-    time(&rawtime); // Obtener la hora actual en segundos desde la época Unix
-    timeinfo = localtime(&rawtime); // Convertir a estructura tm con hora local
-
-    // Crear una cadena de caracteres formateada para la hora actual
-    char *current_time_str = (char *)malloc(9 * sizeof(char)); // HH:MM:SS\0
-    snprintf(current_time_str, 9, "%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-
-    return current_time_str;
-}
-*/
-
-/*
-char * queHoraEs() {
-    time_t now = 0;
-    struct tm timeinfo = { 0 };
-    time(&now);
-    setenv("TZ", configuration.time_zone, 1); 
-    tzset();
-    localtime_r(&now, &timeinfo);
-    char strftime_buf[64];
-    strftime(strftime_buf, sizeof(strftime_buf), "%a,%b,%d,%T,%Y", &timeinfo);
-
-    size_t len = strlen(strftime_buf);
-    char *result = (char *)malloc(len + 1); 
-    if (result != NULL) {
-        strcpy(result, strftime_buf);
-    }
-    
-    return result;
-}
-
-char * queHoraEs(){
-    time_t now = 0;
-    struct tm timeinfo = { 0 };
-    time(&now);
-    setenv("TZ", configuration.time_zone, 1); 
-    tzset();
-    localtime_r(&now, &timeinfo);
-    char * strftime_buf = malloc(64);
-    strftime(strftime_buf, 64, "%c", &timeinfo);
-
-    size_t len = strlen(strftime_buf);
-    char * result = (char *)malloc(len + 1); 
-    for(size_t i = 0; i < len; i++)
-    {
-        if(strftime_buf[i] == ' ')
-        {
-            result[i] = ',';
-        }else{
-            result[i] = strftime_buf[i];
-        }
-    }
-    if(result[8] == ',')
-    {
-        result[8] = '0';
-    }
-    result[len] = '\0';
-    return result;
-}
-*/

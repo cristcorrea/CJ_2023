@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ota.h"
+#include "esp_log.h"
 
 #define TOUCH_LED GPIO_NUM_4
 #define WIFI_LED GPIO_NUM_2
@@ -126,5 +127,52 @@ void enviarVersion()
         //enviar_mensaje_mqtt(configuration.cardId, message);
         free(message);
     }
+}
+
+void enviarAlarma(uint8_t numAlarma)
+{
+    size_t message_size;
+    char *hora = queHoraEs();
+    message_size = snprintf(NULL, 0, "%s,%u,%s", "A", numAlarma, hora) + 1;
+    char *message = (char *)malloc(message_size);
+    if(message != NULL)
+    {
+        snprintf(message, message_size, "%s,%u,%s", "A", numAlarma, hora);
+        int mensaje = (enviar_mensaje_mqtt(configuration.cardIdC, message) > 0) ? 1 : 0; 
+        free(message); 
+        free(hora);
+        if(mensaje > 0){
+            ESP_LOGE("Alarma", "Mensaje enviado A%i", numAlarma);
+        }else{
+            ESP_LOGE("Alarma", "Mensaje no enviado"); 
+        }
+    } 
+}
+
+void enviarEstadoAutomatico(uint8_t sensor, uint8_t estado)
+{
+    size_t message_size;
+    message_size = snprintf(NULL, 0, "%s,%u", "A", sensor) + 1;
+    char *message = (char *)malloc(message_size);
+    if(message != NULL)
+    {
+        snprintf(message, message_size, "%s,%u,%u", "A", sensor, estado);
+        enviar_mensaje_mqtt(configuration.cardId, message);
+        free(message); 
+    } 
+
+}
+void revisarTemperatura(float temp)
+{
+
+    if(temp > 40)
+    {
+        enviarAlarma(5);
+    }
+    else if(temp < 10)
+    {
+        enviarAlarma(6); 
+    }
+
 }
 

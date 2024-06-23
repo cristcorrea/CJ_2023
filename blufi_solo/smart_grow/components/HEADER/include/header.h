@@ -87,3 +87,10 @@ void parpadeo(void);
 
 */
 void enviarVersion(void);
+
+
+void enviarAlarma(uint8_t numAlarma); 
+
+void enviarEstadoAutomatico(uint8_t numAlarma, uint8_t estado); 
+
+void revisarTemperatura(float);

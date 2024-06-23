@@ -328,6 +328,8 @@ static esp_blufi_callbacks_t example_callbacks = {
     .checksum_func = blufi_crc_checksum,
 };
 
+
+
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param)
 {
     /* actually, should post to blufi_task handle the procedure,

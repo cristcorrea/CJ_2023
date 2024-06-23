@@ -16,13 +16,52 @@
 #define TAG "Soil"
 #define WINDOW_SIZE 5
 
+#define GPIO_INPUT_PIN_SEL  ((1ULL << GPIO_NUM_17) | (1ULL << GPIO_NUM_23) | (1ULL << GPIO_NUM_25) | (1ULL << GPIO_NUM_26))
+#define ESP_INTR_FLAG_DEFAULT 0
+
 
 // Create an ADC Unit Handle 
 adc_oneshot_unit_handle_t adc1_handle; 
 extern SemaphoreHandle_t    semaphoreSensorSuelo; 
 
+// Callback para el servicio de interrupciones
+static void IRAM_ATTR gpio_isr_handler(void* arg) {
+    int pin_num = (int)arg;
+    uint8_t alarma = 0; 
+    if(pin_num == 17 || pin_num == 25 || pin_num == 26)
+    {
+        alarma = 4; //falla riego 
+    }
+    else if(pin_num == 23)
+    {
+        alarma = 2; // falla sensores humedad suelo
+    }
+    if(alarma != 0)
+    {
+        enviarAlarma(alarma); 
+    }
+}
+
+
 void soilConfig(void)
 {
+
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_ANYEDGE;  // Interrupción en ambos flancos
+    io_conf.mode = GPIO_MODE_INPUT;         // Modo de entrada
+    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL; // Seleccionar pines
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;  // Desactivar pull-up
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE; // Desactivar pull-down
+    gpio_config(&io_conf);
+
+    // Instalación del servicio de interrupciones
+    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+
+    // Añadir manejador de interrupciones para cada pin
+    gpio_isr_handler_add(GPIO_NUM_17, gpio_isr_handler, (void*)GPIO_NUM_17); // Short circuit flow sensor
+    gpio_isr_handler_add(GPIO_NUM_23, gpio_isr_handler, (void*)GPIO_NUM_23); // Short circuit humidity sensors 
+    gpio_isr_handler_add(GPIO_NUM_25, gpio_isr_handler, (void*)GPIO_NUM_25); // Valves fault indicator
+    gpio_isr_handler_add(GPIO_NUM_26, gpio_isr_handler, (void*)GPIO_NUM_26); // Pomp fault indicator
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
         .ulp_mode = ADC_ULP_MODE_DISABLE,
@@ -115,38 +154,9 @@ int read_humidity(adc_channel_t channel)
     return mode_value;
 }
 
-/*
-int read_humidity(adc_channel_t channel)
-{
-    int adc_reading = 0; 
-    int result = 0; 
-    
-    for(int i = 0; i < 3000; i++)
-    {
-        adc_oneshot_read(adc1_handle, channel, &adc_reading);
-        adc_reading = (4095 - adc_reading)/6.17;
-        result += adc_reading; 
-        vTaskDelay(pdMS_TO_TICKS(1));
-    }
-
-    result /= 3000;
-
-    if(result > 100)
-    {
-        result = 100;
-    }
-    if(result < 0)
-    {
-        result = 0; 
-    }
-
-    return result;
-}
-*/
 
 int sensorConectado(adc_channel_t sensor)
 {   
-     
     return gpio_get_level(sensor); 
  
 }

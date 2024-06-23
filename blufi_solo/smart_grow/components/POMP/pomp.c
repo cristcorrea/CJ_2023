@@ -252,7 +252,7 @@ void regar(int lts_final, gpio_num_t valve){
 
     flow_frequency = 0; 
 
-    while((contador < pulsos_total) && (tiempo_sin_pulsos < TIEMPO_MAX_SIN_PULSOS) && stop){ 
+    while((contador < pulsos_total) && (tiempo_sin_pulsos <= TIEMPO_MAX_SIN_PULSOS) && stop){ 
 
         contador += flow_frequency;
 
@@ -270,6 +270,10 @@ void regar(int lts_final, gpio_num_t valve){
             contador_envio = 0;    
         }
 
+        if(tiempo_sin_pulsos >= TIEMPO_MAX_SIN_PULSOS)
+        {
+            enviarAlarma(3); 
+        }
         flow_frequency = 0;
 
         vTaskDelay(pdMS_TO_TICKS(100));

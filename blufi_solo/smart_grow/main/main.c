@@ -188,7 +188,7 @@ void riegoAuto2(void *params)
                 ESP_LOGI("RIEGO AUTO 2", "ENTRA A RIEGO AUTO 2");
                 if(configuration.soilHumidity2 < configuration.hum_inf_2)
                 {
-                    vTaskResume(riegoHasta2Handle);
+                    vTaskResume(riegoHasta2Handle); 
                     vTaskSuspend(riegoAuto2Handle);
                 }
             }
@@ -352,7 +352,7 @@ void humidityMeasure(void *params)
         else{
             time = 10000; 
         }
-        habilitarSensorSuelo(1000);  // habilita sensores y espera 1000 ms
+        habilitarSensorSuelo(600);  // habilita sensores y espera 1000 ms
         configuration.soilHumidity1 = humidity(SENSOR1);
         configuration.soilHumidity2 = humidity(SENSOR2);  
         desHabilitarSensorSuelo(); 
@@ -360,27 +360,63 @@ void humidityMeasure(void *params)
     }
 }
 
-void app_main(void)
-{
+
+void checkMemoryTask(void *pvParameters) {
+    while(1) {
+        size_t freeHeapSize = esp_get_free_heap_size();
+        ESP_LOGI("MEM_CHECK", "Free heap size: %d bytes", freeHeapSize);
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay de 10 segundos
+    }
+}
+
+void initialize_semaphores() {
     semaphoreWifiConection = xSemaphoreCreateBinary();
-    semaphoreOta           = xSemaphoreCreateBinary();
-    semaphoreFecha         = xSemaphoreCreateBinary();
-    semaphoreRiego         = xSemaphoreCreateMutex();
-    semaphoreSensorSuelo   = xSemaphoreCreateMutex(); 
-    riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
-    configuration.semaforoWifiState = false; 
-    configuration.intentosReconectar = 0; 
-    xSemaphoreGive(semaphoreSensorSuelo); 
-    init_irs(); 
-    init_nFault();
-    soilConfig();
-    touchConfig();
-    touchLedConfig();
-    wifiLedConfig();
-    riego_config();
-    blufi_start();
-  
-    
+    semaphoreOta = xSemaphoreCreateBinary();
+    semaphoreFecha = xSemaphoreCreateBinary();
+    semaphoreRiego = xSemaphoreCreateMutex();
+    semaphoreSensorSuelo = xSemaphoreCreateMutex();
+    // Verificar que todos los semáforos fueron creados correctamente
+}
+
+
+
+/**
+ * @brief Crea una tarea y verifica si fue creada exitosamente.
+ * 
+ * @param task_function Puntero a la función de la tarea.
+ * @param task_name Nombre de la tarea para propósitos de depuración.
+ * @param stack_depth Profundidad de la pila de la tarea.
+ * @param parameters Parámetros pasados a la tarea.
+ * @param priority Prioridad de la tarea.
+ * @param task_handle Handle de la tarea, puede ser NULL si no es necesario.
+ * @return true si la tarea fue creada exitosamente, false en caso contrario.
+ */
+bool create_and_validate_task(TaskFunction_t task_function, const char* task_name, const uint32_t stack_depth, void *parameters, const UBaseType_t priority, TaskHandle_t *task_handle)
+{
+    BaseType_t result;
+
+    // Crear la tarea
+    result = xTaskCreate(task_function, task_name, stack_depth, parameters, priority, task_handle);
+
+    // Verificar si la tarea fue creada correctamente
+    if (result != pdPASS) {
+        ESP_LOGE(task_name, "Fallo al crear la tarea");
+        return false;
+    }
+
+    // Si se proporcionó un handle de tarea, suspenderla inicialmente si es necesario
+    if (task_handle && *task_handle) {
+        vTaskSuspend(*task_handle);
+        ESP_LOGI(task_name, "Tarea creada y suspendida exitosamente");
+    } else {
+        ESP_LOGI(task_name, "Tarea creada exitosamente");
+    }
+
+    return true;
+}
+
+void read_and_set_configuration()
+{
     if(NVS_read("cardId", &configuration.cardId) == ESP_OK)
     {
         nvs_handle_t my_handle;
@@ -447,158 +483,52 @@ void app_main(void)
     }else{
         configuration.first_connection = true; 
     }
+    configuration.semaforoWifiState = false; 
+    configuration.intentosReconectar = 0; 
+    xSemaphoreGive(semaphoreSensorSuelo); 
+}
 
-    xTaskCreate(mqttServerConection,
-                "Conectando con HiveMQ Broker",
-                4096,
-                NULL,
-                1,
-                NULL);
+void start_all_tasks() {
+    create_and_validate_task(mqttServerConection, "Conectando con HiveMQ Broker", 4096, NULL, 1, NULL);
+    create_and_validate_task(ota_update, "Instala nueva versión de firmware", 8192, NULL, 1, NULL);
+    create_and_validate_task(sensorCofig, "Inicia configuracion de sensores", 2048, NULL, 1, NULL);
+    create_and_validate_task(touchSensor, "Sensor touch", 2048, NULL, 1, NULL);
+    create_and_validate_task(riegoAuto1, "Riego automatico 1", 2048, NULL, 1, &riegoAuto1Handle);
+    create_and_validate_task(riegoAuto2, "Riego automatico 2", 2048, NULL, 1, &riegoAuto2Handle);
+    create_and_validate_task(controlRiego, "Maneja la cola de riego", 4096, NULL, 1, NULL);
+    create_and_validate_task(ajusteFecha, "Ajusta la hora y la fecha", 2048, NULL, 1, NULL);
+    create_and_validate_task(reconexionWifi, "Gestiona la reconexion Wi-Fi", 2048, NULL, 2, &reconexionHandle);
+    create_and_validate_task(envioDatos, "Envia datos cada una hora", 4096, NULL, 1, &msjTaskHandle);
+    create_and_validate_task(riegaHasta1, "Riego automatico 1", 2048, NULL, 1, &riegoHasta1Handle);
+    create_and_validate_task(riegaHasta2, "Riego automatico 2", 2048, NULL, 1, &riegoHasta2Handle);
+    create_and_validate_task(humidityMeasure, "Mide humedad", 8192, NULL, 1, &humidityMeasureHandle);
+}
 
-    xTaskCreate(ota_update,
-                "Instala nueva versión de firmware",
-                8192,
-                NULL,
-                1,
-                NULL);
-    
 
-    xTaskCreate(sensorCofig,
-                "Inicia configuracion de sensores",
-                2048,
-                NULL,
-                1,
-                NULL);
-    
-    xTaskCreate(touchSensor,
-                "Sensor touch",
-                2048,
-                NULL,
-                1,
-                NULL);
-    
-    xTaskCreate(riegoAuto1,
-                "Riego automatico 1",
-                2048,
-                NULL,
-                1,
-                &riegoAuto1Handle);
+void app_main(void)
+{
 
-    xTaskCreate(riegoAuto2,
-                "Riego automatico 2",
-                2048,
-                NULL,
-                1,
-                &riegoAuto2Handle);
+    initialize_semaphores();
+    riegoQueue             = xQueueCreate(20, sizeof(mensajeRiego));
 
-    xTaskCreate(controlRiego,
-                "Maneja la cola de riego",
-                4096,
-                NULL,
-                1,
-                NULL);
+    init_irs(); 
+    init_nFault();
+    soilConfig();
+    touchConfig();
+    touchLedConfig();
+    wifiLedConfig();
+    riego_config();
+    blufi_start();
+    read_and_set_configuration();
+  
+    start_all_tasks();
 
-    xTaskCreate(ajusteFecha,
-                "Ajusta la hora y la fecha",
-                2048,
-                NULL,
-                1,
-                NULL);
-
-    if(xTaskCreate(reconexionWifi,
-                "Gestiona la reconexion Wi-Fi",
-                2048,
-                NULL,
-                1,
-                &reconexionHandle) != pdPASS)
-    {
-        ESP_LOGE(TAG1, "FALLA AL CREAR reconexionWifi");
-    }else{
-        vTaskSuspend(reconexionHandle);
-    }
-
-    if(xTaskCreate(envioDatos,
-                "Envia datos cada una hora",
-                4096,
-                NULL,
-                1,
-                &msjTaskHandle) != pdPASS)
-    {
-        ESP_LOGE(TAG1, "FALLA AL CREAR envioDatos");
-    }else{
-        vTaskSuspend(msjTaskHandle);
-    }
-
-    if(xTaskCreate(riegaHasta1,
-                "Riego automatico 1",
-                2048,
-                NULL,
-                1,
-                &riegoHasta1Handle) != pdPASS)
-    {
-        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta1");
-    }else{
-        vTaskSuspend(riegoHasta1Handle);
-    }
-    
-
-    if(xTaskCreate(riegaHasta2,
-                "Riego automatico 2",
-                2048,
-                NULL,
-                1,
-                &riegoHasta2Handle) != pdPASS)
-    {
-        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta2");
-    }else{
-        vTaskSuspend(riegoHasta2Handle);
-    }
-
-    if(xTaskCreate(humidityMeasure,
-                "Mide humedad",
-                8192,
-                NULL,
-                1,
-                &humidityMeasureHandle) != pdPASS)
-    {
-        ESP_LOGE(TAG1, "FALLA AL CREAR riegoHasta2");
-    }else{
-        vTaskSuspend(humidityMeasureHandle);
-    }
-
-    if (eTaskGetState(humidityMeasureHandle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "humidityMeasure SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "humidityMeasure NO SE SUSPENDIÓ");
-    }
-
-    if (eTaskGetState(riegoHasta1Handle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "riegaHasta1 SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "riegaHasta1 NO SE SUSPENDIÓ");
-    }
-
-    if (eTaskGetState(riegoHasta2Handle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "riegaHasta2 SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "riegaHasta2 NO SE SUSPENDIÓ");
-    }
-    
-    if (eTaskGetState(reconexionHandle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "reconexion SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "reconexion NO SE SUSPENDIÓ");
-    }
-
-    if (eTaskGetState(msjTaskHandle) == eSuspended) {
-        ESP_LOGI("ARRANQUE", "envioDatos SUSPENDIDA");
-    } else {
-        ESP_LOGE("ARRANQUE", "envioDatos NO SE SUSPENDIÓ");
-    }
-
+    xTaskCreate(&checkMemoryTask, "memory_check_task", 2048, NULL, 1, NULL);
 
 
 }
+
+
 
 
 
