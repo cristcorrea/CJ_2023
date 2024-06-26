@@ -28,7 +28,7 @@
 #include "ota.h"
 
 #define TOUCH   TOUCH_PAD_NUM5
-#define TOUCH_VALUE_MIN   330//348
+#define TOUCH_VALUE_MIN   200//330
 #define WIFI_RECONNECTION_MAXIMUM_RETRY 360
 
 
@@ -523,7 +523,7 @@ void app_main(void)
   
     start_all_tasks();
 
-    xTaskCreate(&checkMemoryTask, "memory_check_task", 2048, NULL, 1, NULL);
+    //xTaskCreate(&checkMemoryTask, "memory_check_task", 2048, NULL, 1, NULL);
 
 
 }
