@@ -89,8 +89,9 @@ uint8_t* readDHT()
 	gpio_set_level(gpio_num, 0);
 	esp_rom_delay_us( 20000 );
 	gpio_set_level( gpio_num, 1 );
-	esp_rom_delay_us( 25 );
+	esp_rom_delay_us( 20 );
 	gpio_set_direction( gpio_num, GPIO_MODE_INPUT );
+
 
 	uSec = getSignalLevel( 85, 0 );
 

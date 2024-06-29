@@ -102,6 +102,21 @@ static int softap_get_current_connection_number(void)
     return 0;
 }
 
+u_int8_t bt_status()
+{
+    u_int8_t ret = 0; 
+
+    esp_bluedroid_status_t bd_status = esp_bluedroid_get_status();
+    if (bd_status == ESP_BLUEDROID_STATUS_ENABLED) {
+        ESP_LOGI("BD_STATUS", "Bluetooth is enabled");
+        ret = 1; 
+    } else {
+        ESP_LOGI("BD_STATUS", "Bluetooth is not enabled");
+    }
+
+    return ret; 
+}
+
 
 static void ip_event_handler(void *arg, esp_event_base_t event_base,
                              int32_t event_id, void *event_data)
@@ -114,7 +129,7 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base,
     {
     case IP_EVENT_STA_GOT_IP:
     {
-        
+
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 
         esp_wifi_get_mode(&mode);
@@ -133,22 +148,28 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base,
         false first_connection. 
         Luego libera el semaforo que habilita la comunicación MQTT*/
 
-        if (ble_is_connected)
+
+        if (ble_is_connected) 
         {
             ESP_LOGI("BLUFI", "Entra al ble connected");
             if (esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info) == ESP_OK)
             {
                 ESP_LOGI("DEBUG BLUFI", "SUCCES ENVIADO");
             }
-
-            disable_bluetooth();
-            //first_connection = false; 
         }
+
+        if(bt_status())
+        {   
+            disable_bluetooth();
+        }
+
         else if(reconnection)
         {
-            vTaskSuspend(reconexionHandle);
             reconnection = false;  
         }
+
+        vTaskSuspend(reconexionHandle);
+
         if(!configuration.semaforoWifiState)
         {   
             xSemaphoreGive(semaphoreWifiConection);
@@ -468,6 +489,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         break;
     }
 }
+
 
 void blufi_start()
 {
