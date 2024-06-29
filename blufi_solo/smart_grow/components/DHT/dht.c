@@ -29,6 +29,7 @@ int getSignalLevel( int usTimeOut, bool state )
 {
 
 	int uSec = 0;
+
 	while( gpio_get_level(gpio_num)==state ) {
 
 		if( uSec > usTimeOut )
@@ -104,10 +105,12 @@ uint8_t* readDHT()
 			return readDHT(); 
 		} 
 
-		uSec = getSignalLevel( 85, 1 );
+		uSec = getSignalLevel( 90, 1 );
+
 		if( uSec<0 ) {
 			ESP_LOGI("DHT", "Falla 2");
 			intentos++;
+			vTaskDelay(pdMS_TO_TICKS(100));
 			return readDHT();
 		}
 
@@ -118,6 +121,7 @@ uint8_t* readDHT()
 			if( uSec<0 ){
 				ESP_LOGI("DHT", "Falla 3");
 				intentos++;
+				vTaskDelay(pdMS_TO_TICKS(100));
 				return readDHT();
 			}
 
@@ -125,6 +129,7 @@ uint8_t* readDHT()
 			if( uSec<0 ){
 				ESP_LOGI("DHT", "Falla 4");
 				intentos++;
+				vTaskDelay(pdMS_TO_TICKS(100));
 				return readDHT();
 			}
 
