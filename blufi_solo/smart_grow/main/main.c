@@ -352,7 +352,7 @@ void humidityMeasure(void *params)
         else{
             time = 10000; 
         }
-        habilitarSensorSuelo(600);  // habilita sensores y espera 1000 ms
+        habilitarSensorSuelo(600);  // habilita sensores y espera 600 ms
         configuration.soilHumidity1 = humidity(SENSOR1);
         configuration.soilHumidity2 = humidity(SENSOR2);  
         desHabilitarSensorSuelo(); 
