@@ -14,7 +14,6 @@
 #include "header.h"
 
 #define TAG "Soil"
-#define WINDOW_SIZE 5
 
 #define GPIO_INPUT_PIN_SEL  ((1ULL << GPIO_NUM_17) | (1ULL << GPIO_NUM_23) | (1ULL << GPIO_NUM_25) | (1ULL << GPIO_NUM_26))
 #define ESP_INTR_FLAG_DEFAULT 0
@@ -139,7 +138,7 @@ int read_humidity(adc_channel_t channel)
         }
     }
 
-    ESP_LOGI("SOIL", "Moda:  %i", values); 
+    ESP_LOGI("SOIL", "Moda:  %i", mode_value); 
 
     mode_value = (4095 - mode_value)/6.17; 
 
