@@ -74,7 +74,7 @@ void soilConfig(void)
 
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_12,
-        .atten = ADC_ATTEN_DB_6, 
+        .atten = ADC_ATTEN_DB_0, 
     };
 
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, SENSOR1, &config));
@@ -139,6 +139,8 @@ int read_humidity(adc_channel_t channel)
         }
     }
 
+    ESP_LOGI("SOIL", "Moda:  %i", values); 
+
     mode_value = (4095 - mode_value)/6.17; 
 
     if(mode_value > 100)
@@ -149,7 +151,7 @@ int read_humidity(adc_channel_t channel)
     {
         mode_value = 0; 
     }
-    ESP_LOGI("Lee humedad", " %i ", mode_value); 
+    ESP_LOGI("Antigua humedad", " %i ", mode_value); 
 
     return mode_value;
 }
