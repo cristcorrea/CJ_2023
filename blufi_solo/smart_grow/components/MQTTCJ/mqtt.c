@@ -30,6 +30,7 @@
 #include "dht.h"
 #include "bh1750.h"
 #include "ntp.h"
+#include "credentials.h"
 
 #define TAG "MQTT_HANDLER"
 
@@ -222,29 +223,26 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-
-
 void mqtt_start()
 {
-
     esp_mqtt_client_config_t mqtt_config = {
         .broker = {
-            .address.uri = "mqtts://036430ed518042ee99dd7a8c48c578a7.s2.eu.hivemq.cloud:8883",
-            .verification.certificate = (const char *)hivemq_certificate_pem_start, 
+            .address.uri = MQTT_BROKER_URI,  // URI del broker MQTT
+            .verification.certificate = (const char *)hivemq_certificate_pem_start,
         },
         .credentials = {
-            .username = "cjindoors",
+            .username = MQTT_USERNAME,  // Usar el username definido en mqtt_credentials.h
         },
         .credentials.authentication = {
-            .password = "433603asd",
+            .password = MQTT_PASSWORD,  // Usar el password definido en mqtt_credentials.h
         },
-
     };
-    client = esp_mqtt_client_init(&mqtt_config); 
+
+    client = esp_mqtt_client_init(&mqtt_config);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
     esp_mqtt_client_start(client);
-
 }
+
 
 int enviar_mensaje_mqtt(char * topic, char * mensaje)
 {

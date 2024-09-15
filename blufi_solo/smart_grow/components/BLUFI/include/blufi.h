@@ -25,4 +25,5 @@ esp_err_t esp_blufi_host_deinit(void);
 void blufi_start(void);
 void wifi_connect(void);
 void disable_bluetooth(void); 
+void configure_gap_advertising(const char *device_name); 
 

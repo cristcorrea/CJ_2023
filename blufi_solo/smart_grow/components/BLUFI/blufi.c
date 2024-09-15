@@ -491,6 +491,8 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 }
 
 
+
+
 void blufi_start()
 {
     esp_err_t ret;
@@ -513,6 +515,7 @@ void blufi_start()
     if (ret)
     {
         BLUFI_ERROR("%s initialize bt controller failed: %s\n", __func__, esp_err_to_name(ret));
+        return;
     }
 
     ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
@@ -522,10 +525,17 @@ void blufi_start()
         return;
     }
 
+
     ret = esp_blufi_host_and_cb_init(&example_callbacks);
     if (ret)
     {
         BLUFI_ERROR("%s initialise failed: %s\n", __func__, esp_err_to_name(ret));
         return;
     }
+
+    const char *device_name = "Smart Grow 1.0";
+
+    configure_gap_advertising(device_name);
+
 }
+

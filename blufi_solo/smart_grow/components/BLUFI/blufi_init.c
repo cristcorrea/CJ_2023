@@ -10,6 +10,7 @@
 #include "esp_log.h"
 #include "esp_blufi.h"
 #include "blufi.h"
+#include "esp_gap_ble_api.h"
 #ifdef CONFIG_BT_BLUEDROID_ENABLED
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -26,6 +27,56 @@
 #include "console/console.h"
 #endif
 
+void configure_gap_advertising(const char *device_name) {
+    esp_err_t ret;
+
+    // Configurar los datos de publicidad
+    esp_ble_adv_data_t adv_data = {
+        .set_scan_rsp = false,
+        .include_name = true, // Incluir el nombre del dispositivo en los datos de publicidad
+        .min_interval = 0x20,
+        .max_interval = 0x40,
+        .appearance = 0x180,
+        .manufacturer_len = 0, // Si no tienes datos de fabricante
+        .p_manufacturer_data = NULL,
+        .service_data_len = 0,
+        .p_service_data = NULL,
+        .service_uuid_len = 0,
+        .p_service_uuid = NULL,
+        .flag = (ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT),
+    };
+
+    // Configurar el nombre del dispositivo en los datos de publicidad
+    ret = esp_ble_gap_set_device_name(device_name);
+    if (ret != ESP_OK) {
+        ESP_LOGE("GAP", "Failed to set device name: %s", esp_err_to_name(ret));
+        return;
+    }
+
+    // Configurar la publicidad con los datos actualizados
+    ret = esp_ble_gap_config_adv_data(&adv_data);
+    if (ret != ESP_OK) {
+        ESP_LOGE("GAP", "Failed to configure advertising data: %s", esp_err_to_name(ret));
+        return;
+    }
+
+    // Iniciar la publicidad
+    esp_ble_adv_params_t adv_params = {
+        .adv_int_min = 0x20,
+        .adv_int_max = 0x40,
+        .adv_type = ADV_TYPE_IND,
+        .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
+        .channel_map = ADV_CHNL_ALL,
+        .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+    };
+
+    ret = esp_ble_gap_start_advertising(&adv_params);
+    if (ret != ESP_OK) {
+        ESP_LOGE("GAP", "Failed to start advertising: %s", esp_err_to_name(ret));
+    }
+}
+
+
 #ifdef CONFIG_BT_BLUEDROID_ENABLED
 esp_err_t esp_blufi_host_init(void)
 {
@@ -41,6 +92,7 @@ esp_err_t esp_blufi_host_init(void)
         BLUFI_ERROR("%s init bluedroid failed: %s\n", __func__, esp_err_to_name(ret));
         return ESP_FAIL;
     }
+
     BLUFI_INFO("BD ADDR: "ESP_BD_ADDR_STR"\n", ESP_BD_ADDR_HEX(esp_bt_dev_get_address()));
 
     return ESP_OK;
