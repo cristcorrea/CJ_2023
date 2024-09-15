@@ -1,5 +1,5 @@
 build/
 .vscode/
-components/MQTTCJ/include/mqtt_credentials.h
+components/MQTTCJ/include/credentials.h
 ../../wifi-mqtt/station/build/
 
